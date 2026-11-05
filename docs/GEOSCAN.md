@@ -96,6 +96,8 @@ python geoscan.py --fil opptak.nmea     (spel av eit opptak, skriv retta NMEA ti
 
 ## Ikkje avklart
 
+Sjå [OPNE-SPORSMAL.md](OPNE-SPORSMAL.md) for den fullstendige lista.
+
 - Eksportformatet frå GRED HD/OneVision for objekt (kolonnar, tid, koordinatsystem). Treng ei eksempelfil.
 - Om OneVision brukar heading frå NMEA (HDT) til å leggje skannebeltet, eller berre sporet.
 - Mastehøgda og kvar referansepunktet på Stream C er definert (midt i antennerekkja?).

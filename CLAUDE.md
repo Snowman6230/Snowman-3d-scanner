@@ -13,6 +13,13 @@ Skriv alltid på nynorsk: kode-kommentarar, dokumentasjon og commit-meldingar.
 - `docs/Overlevering_GNSS-rover_til_snowman.docx` (og `.md`): overleveringa frå Norman Hole 5.11.2026. Ho omtalar Trimble R12i, NTRIP mountpoint TH og NMEA til OneVision (IDS Stream C georadar).
 - `docs/Samanlikning_GNSS-rover_mot_SNOWMAN-Snodjupne.md`: kva Snødjupne allereie løyser, og kva som manglar.
 
+## Opne spørsmål – spør eigaren
+
+`docs/OPNE-SPORSMAL.md` listar det som manglar: mastehøgd, referansepunktet til OneVision, ekstra IMU,
+eksportformat frå GRED HD og meir. Eigaren var ikkje sikker 5.11.2026 og vil bli spurt seinare.
+**Ved byrjinga av nytt arbeid i dette repoet: spør eigaren om dei opne punkta** før du byggjer vidare på
+mellombelse verdiar. Flytt svar til «Avklart» med dato.
+
 ## Faste reglar
 
 - Passord, brukarnamn og NTRIP-tenesteopplysingar skal aldri inn i repoet.
