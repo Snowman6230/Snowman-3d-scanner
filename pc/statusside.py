@@ -1,5 +1,5 @@
-# SNOWMAN by Alpindata – Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte.
-"""Statusside for operatøren: http://localhost:8088 (berre på denne PC-en, med mindre status_lan er sett).
+# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+"""Statusside for operatøren i Snowman Geoscan: http://localhost:8088 (berre på denne PC-en, med mindre status_lan er sett).
 Viser fix, helling, forskyving, NTRIP og portar. Oppdaterer seg kvart sekund. /status gir JSON."""
 import json
 import threading
@@ -7,11 +7,12 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 SIDE = """<!doctype html><html lang="nn"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>SNOWMAN Geoscan</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Snowman Geoscan</title>
 <style>
 :root{--bg:#0f1418;--kort:#1a2228;--tekst:#e8eef2;--svak:#8a9aa6;--ok:#3ecf74;--var:#f2b33d;--feil:#ef5b5b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tekst);font:16px/1.4 system-ui,sans-serif;padding:16px}
-h1{font-size:18px;margin:0 0 12px;color:var(--svak);font-weight:600;letter-spacing:.04em}
+h1{font-size:22px;margin:0;color:var(--tekst);font-weight:700}
+.prod{color:var(--svak);font-size:13px;margin:2px 0 14px}
 .rad{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .k{background:var(--kort);border-radius:10px;padding:14px}
 .l{color:var(--svak);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
@@ -21,7 +22,8 @@ h1{font-size:18px;margin:0 0 12px;color:var(--svak);font-weight:600;letter-spaci
 svg{display:block;margin:6px auto 0}
 pre{white-space:pre-wrap;color:var(--svak);font-size:13px;margin:0}
 </style></head><body>
-<h1>SNOWMAN GEOSCAN <span id="ver" style="font-weight:400"></span></h1>
+<h1>Snowman Geoscan <span id="ver" style="font-weight:400;color:var(--svak);font-size:15px"></span></h1>
+<div class="prod">Alpindata v/Hans Petter B. Sørensen</div>
 <div class="k" id="demo" style="display:none;margin-bottom:12px;background:#5a1f1f;color:#fff;font-weight:700">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
 <div class="k" id="oppd" style="display:none;margin-bottom:12px;border:1px solid var(--var)">
  <span id="otekst"></span> <button id="obtn" onclick="oppdater()" style="margin-left:8px;padding:6px 14px;border-radius:6px;border:0;background:var(--var);color:#111;font-weight:700;cursor:pointer">Oppdater no</button>

@@ -1,4 +1,4 @@
-# SNOWMAN by Alpindata – Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte.
+# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
 """NTRIP i Geoscan: hentar RTCM frå casteren og sender det til mottakaren (R12i har ikkje eige internett).
 Erstattar den delen av Trimble Access som sender korreksjonar.
 

@@ -1,4 +1,10 @@
-# Endringslogg – SNOWMAN Geoscan
+# Endringslogg – Snowman Geoscan
+
+*Alpindata v/Hans Petter B. Sørensen*
+
+## 0.2.2 – 5. november 2026
+- Namnet er no **Snowman Geoscan**, med «Alpindata v/Hans Petter B. Sørensen» under, på statussida, ved oppstart,
+  i startfilene og i dokumenta.
 
 ## 0.2.1 – 5. november 2026
 - START-DEMO.bat og geoscan_config_demo.json: demo med eitt klikk, med simulert mottakar og NTRIP-caster. Han er

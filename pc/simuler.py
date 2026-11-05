@@ -1,4 +1,4 @@
-# SNOWMAN by Alpindata – Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte.
+# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Simulator for testing utan utstyr: ein mottakar som køyrer georadarvogna fram og tilbake i ein sidebakke,
 og (valfritt) ein falsk NTRIP-caster. Alt er SIMULERT – ikkje bruk resultata som målingar.
 

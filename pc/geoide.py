@@ -1,4 +1,4 @@
-# SNOWMAN by Alpindata – Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte.
+# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Kartverket sin geoidemodell HREF2018B (NN2000 over EUREF89): N(lat, lon) i meter, NN2000 = ellipsoidisk − N.
 
 Opphav: kopiert frå SNOWMAN Snødjupne, pc/v1.6/terrain.py (klassen Geoid og _geokeys), Snowman6230/Snowman-Snowdeept

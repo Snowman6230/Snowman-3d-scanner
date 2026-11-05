@@ -1,5 +1,5 @@
-# SNOWMAN by Alpindata – Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte.
-"""SNOWMAN Geoscan – hellingskorrigert GNSS-posisjon til IDS Stream C (OneVision).
+# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+"""Snowman Geoscan – hellingskorrigert GNSS-posisjon til IDS Stream C (OneVision).
 
     mottakar (NMEA: GGA + helling) ──┐
     eigen IMU (valfri, PASHR o.l.) ──┼─► geoscan.py ─► korrigert NMEA ─┬─► seriell (com0com) → OneVision
@@ -27,7 +27,9 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.2.1"
+VERSJON = "0.2.2"
+NAMN = "Snowman Geoscan"
+PRODUSENT = "Alpindata v/Hans Petter B. Sørensen"
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
     "ut_seriell": [{"port": "COM34", "baud": 115200}],
@@ -347,6 +349,7 @@ class App:
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"]} for o in self.ut.ports],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25,
+                "namn": NAMN, "produsent": PRODUSENT,
                 "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}
 
 
@@ -387,7 +390,8 @@ def main(argv=None):
     k = app.k
     if cfg.get("demo"):
         print("*** DEMO: simulert mottakar og NTRIP-caster. Dette er IKKJE ekte målingar. ***")
-    print(f"SNOWMAN Geoscan {VERSJON} – spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
+    print(f"{NAMN} {VERSJON}\n{PRODUSENT}\n")
+    print(f"Spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
           f"utgang «{cfg['utgang']}», TCP {cfg.get('tcp_port')}"
           + (f", status http://localhost:{cfg['status_port']}" if cfg.get("status_port") else "") + ". Ctrl+C stoppar.")
     try:

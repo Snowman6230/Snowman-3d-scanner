@@ -1,4 +1,7 @@
-# Snowman-3d-scanner
+# Snowman-3d-scanner – Snowman Geoscan
+
+Programmet heiter **Snowman Geoscan**. Under namnet står alltid «Alpindata v/Hans Petter B. Sørensen»
+(statusside, oppstart, dokument). Konstantane `NAMN` og `PRODUSENT` i `pc/geoscan.py`.
 
 Oppdrag for Norman Hole, Hole Anlegg AS. Eigar: Hans Petter Brunstad Sørensen (Alpindata).
 Skriv alltid på nynorsk: kode-kommentarar, dokumentasjon og commit-meldingar.

@@ -1,5 +1,8 @@
-# Snowman-3d-scanner
+# Snowman Geoscan
 
+*Alpindata v/Hans Petter B. Sørensen*
+
+Repo: Snowman-3d-scanner.
 Oppdrag for Norman Hole, Hole Anlegg AS.
 
 Eige prosjekt, skilt frå SNOWMAN Snødjupne (Snowman6230/Snowman-Snowdeept).
@@ -8,7 +11,7 @@ Eige prosjekt, skilt frå SNOWMAN Snødjupne (Snowman6230/Snowman-Snowdeept).
 
 - [Overlevering: GNSS-rover til snowman](docs/Overlevering_GNSS-rover_til_snowman.md) ([.docx](docs/Overlevering_GNSS-rover_til_snowman.docx))
 - [Samanlikning med SNOWMAN Snødjupne](docs/Samanlikning_GNSS-rover_mot_SNOWMAN-Snodjupne.md)
-- [SNOWMAN Geoscan – hellingskorreksjon for IDS Stream C](docs/GEOSCAN.md)
+- [Snowman Geoscan – hellingskorreksjon for IDS Stream C](docs/GEOSCAN.md)
 - [Opne spørsmål](docs/OPNE-SPORSMAL.md) – det som manglar før drift
 - [Testplan](docs/TESTPLAN.md) – start med `pc\START-DEMO.bat`
 - [Endringslogg](ENDRINGSLOGG.md)

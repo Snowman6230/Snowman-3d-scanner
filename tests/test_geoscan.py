@@ -293,7 +293,7 @@ def test_ende_til_ende_simulator_ntrip_tcp_status(tmp_path):
     assert st["korr"]["korrigert"] and st["korr"]["hellingskjelde"] == "PASHR"
     assert st["ntrip"]["tilstand"] == "tilkopla" and st["ntrip"]["byte"] > 0
     assert m.rtcm_bytes > 0 and c.gga > 0                      # RTCM kom fram til «mottakaren», GGA til casteren
-    assert "SNOWMAN GEOSCAN" in side
+    assert "Snowman Geoscan" in side and "Alpindata v/Hans Petter B. Sørensen" in side
     assert list((tmp_path / "logg").glob("raa_*.nmea")) and list((tmp_path / "logg").glob("geoscan_*.csv"))
 
 

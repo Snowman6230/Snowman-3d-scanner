@@ -1,4 +1,6 @@
-# Testplan – SNOWMAN Geoscan
+# Testplan – Snowman Geoscan
+
+*Alpindata v/Hans Petter B. Sørensen*
 
 Fire steg, frå skrivebordet til felt. Ta neste steg først når det førre er godkjent.
 

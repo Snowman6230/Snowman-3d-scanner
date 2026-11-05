@@ -1,5 +1,5 @@
-# SNOWMAN by Alpindata – Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte.
-"""Oppdater SNOWMAN Geoscan frå GitHub utan å installere på nytt.
+# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+"""Oppdater Snowman Geoscan frå GitHub utan å installere på nytt.
 
 Same prinsipp som Snødjupne (pc/v1.6/start_snowman.py, oppdater()): med git blir det «git pull», utan git blir
 siste versjon lasta ned som zip og berre endra filer skrivne inn i pc-mappa. I tillegg her:
@@ -46,7 +46,7 @@ def _token():
 
 
 def _get(url, accept=None, timeout=60):
-    req = urllib.request.Request(url, headers={"User-Agent": "SNOWMAN-Geoscan-oppdatering"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Snowman-Geoscan-oppdatering"})
     if accept:
         req.add_header("Accept", accept)
     t = _token()
@@ -213,7 +213,7 @@ def update(log=print):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Oppdater SNOWMAN Geoscan frå GitHub")
+    ap = argparse.ArgumentParser(description="Oppdater Snowman Geoscan frå GitHub")
     ap.add_argument("--sjekk", action="store_true", help="berre sjå om det finst ein nyare versjon")
     ap.add_argument("--tilbake", action="store_true", help="rull tilbake til førre versjon")
     a = ap.parse_args(argv)
