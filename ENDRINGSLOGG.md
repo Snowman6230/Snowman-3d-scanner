@@ -2,6 +2,9 @@
 
 *Alpindata v/Hans Petter B. Sørensen*
 
+## 0.3.1 – 5. november 2026
+- Data frå operatøren (innsendt/, pakkar/, resultat/, logg_demo/) blir aldri lagt i git og aldri rørt av oppdateringa.
+
 ## 0.3.0 – 5. november 2026
 Klar til testing hos Norman Hole.
 - Nytt grensesnitt i nettlesaren med fire faner. Det opnar seg av seg sjølv ved oppstart.

@@ -5,7 +5,8 @@ Same prinsipp som Snødjupne (pc/v1.6/start_snowman.py, oppdater()): med git bli
 siste versjon lasta ned som zip og berre endra filer skrivne inn i pc-mappa. I tillegg her:
   - den nye versjonen blir kompilert og sjekka FØR noko blir skrive (ein øydelagd versjon blir aldri lagd inn)
   - filene som blir bytte ut, blir lagra i pc/reserve/<versjon>_<tid>/, så «tilbake» kan rulle tilbake
-  - aldri rørt: geoscan_config.json, ntrip_lokal.json, oppdatering_lokal.json, logg/, reserve/
+  - aldri rørt: geoscan_config.json, ntrip_lokal.json, oppdatering_lokal.json, logg/, reserve/,
+    innsendt/, pakkar/, resultat/ (data frå operatøren)
   - nye innstillingar kjem automatisk (geoscan.py fyller inn standardverdiar for nøklar som manglar)
 
 Repoet er privat. Nedlasting krev då ein GitHub-nøkkel med berre lesetilgang i pc/oppdatering_lokal.json:
@@ -34,7 +35,7 @@ HER = Path(__file__).resolve().parent
 REPO = "Snowman6230/Snowman-3d-scanner"
 GREIN = "main"
 ALDRI = {"geoscan_config.json", "ntrip_lokal.json", "oppdatering_lokal.json"}
-ALDRI_MAPPER = {"logg", "reserve", "__pycache__", ".venv"}
+ALDRI_MAPPER = {"logg", "logg_demo", "reserve", "innsendt", "pakkar", "resultat", "__pycache__", ".venv"}
 
 
 def _token():

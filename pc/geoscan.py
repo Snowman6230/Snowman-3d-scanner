@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.3.0"
+VERSJON = "0.3.1"
 NAMN = "Snowman Geoscan"
 PRODUSENT = "Alpindata v/Hans Petter B. Sørensen"
 STANDARD = {

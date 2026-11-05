@@ -387,3 +387,10 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
             assert e.code == 400 and "mastehøgd" in _json.loads(e.read())["feil"]
     finally:
         stop.set()
+
+
+def test_oppdatering_rorer_aldri_data_fra_operatoren():
+    import oppdater as O
+    files = O._files_from_zip(_zip({"pc/geoscan.py": 'VERSJON = "9.9.9"\n', "pc/innsendt/svar.json": "{}",
+                                    "pc/pakkar/a.zip": "x", "pc/resultat/r.dxf": "x", "pc/ntrip_lokal.json": "{}"}))
+    assert list(files) == [("geoscan.py",)]
