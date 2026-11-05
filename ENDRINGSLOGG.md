@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.7.4 – 5. november 2026
+- Det svarte vindauget er roleg: ei line berre når fix, helling, NTRIP, portar eller feil endrar seg, og elles
+  éi line i minuttet (statuslinje_sek). Før kom det ei line annakvart sekund.
+- START-GEOSCAN.bat og START-DEMO.bat startar vindauget (og simulatoren) minimert. Vindauget seier at det må
+  vere ope medan ein skannar.
+
 ## 0.7.3 – 5. november 2026
 - CSV-filene frå Resultat og korriger_objekt.py blir no skrivne som UTF-8 med BOM. Utan BOM las Excel «–» og
   «ø» som «â€“» og «Ã¸» (melde av Hans Petter). CSV-eksporten frå nettlesaren hadde alt BOM.

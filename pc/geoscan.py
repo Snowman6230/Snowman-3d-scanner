@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.7.3"
+VERSJON = "0.7.4"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -50,6 +50,7 @@ STANDARD = {
     "sjekk_oppdatering": True,
     "opne_nettlesar": True,
     "vis_oppstartlogo": True,
+    "statuslinje_sek": 60,
     "ntrip": {"pa": False, "rtcm_til": None, "gga_intervall": 10},
 }
 
@@ -372,6 +373,13 @@ class App:
                 "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}
 
 
+def tilstand(app):
+    """Det som er verdt ei ny line i vindauget når det endrar seg: fix, helling på/av, NTRIP, portar og ut-feil."""
+    s, n = app.k.status, app.ntrip.status
+    return (s.get("fix"), bool(s.get("korrigert")), n.get("tilstand"), tuple(sorted(app.state.items())),
+            tuple(bool(o["feil"]) for o in app.ut.ports))
+
+
 def status_line(app):
     s = app.k.status
     fixnamn = {0: "INGEN", 1: "GPS", 2: "DGPS", 4: "RTK FIX", 5: "RTK FLOAT", 6: "INS", 9: "SBAS"}
@@ -450,6 +458,11 @@ def main(argv=None):
     print(f"Spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
           f"utgang «{cfg['utgang']}», TCP {cfg.get('tcp_port')}"
           + (f", status http://localhost:{cfg['status_port']}" if cfg.get("status_port") else "") + ". Ctrl+C stoppar.")
+    print("Vindauget må vere ope medan du skannar – det kan liggje minimert. Lukkar du det, stoppar Snowman Geoscan.\n"
+          "Alt blir vist i nettlesaren (http://localhost:%s). Her kjem berre ei line når noko endrar seg, og elles éi i minuttet.\n"
+          % cfg.get("status_port"), flush=True)
+    sist, sist_t = None, 0.0
+    intervall = float(cfg.get("statuslinje_sek", 60))
     try:
         while True:
             time.sleep(2)
@@ -457,7 +470,10 @@ def main(argv=None):
                 print("Ny versjon lagd inn – startar på nytt.", flush=True)
                 time.sleep(1)
                 sys.exit(3)          # START-GEOSCAN.bat startar på nytt ved kode 3
-            print(status_line(app), flush=True)
+            nokkel = tilstand(app)
+            if nokkel != sist or time.time() - sist_t >= intervall:
+                print(status_line(app), flush=True)
+                sist, sist_t = nokkel, time.time()
     except KeyboardInterrupt:
         pass
 
