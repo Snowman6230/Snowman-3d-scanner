@@ -138,7 +138,8 @@ def correct_geojson(gj, logg, zmode="auto", maxdist=1.0):
     """Rett alle punkt i ein FeatureCollection på staden. zmode: «djupn» (z positiv nedover), «hoegd» (NN2000),
     eller «auto» (høgd om alle z > 20 m). Returnerer (retta, utan loggpunkt, zmode).
     Kvart objekt får eigenskapane djupn_for_m, djupn_retta_m (loddrett djupn under bakken, eitt tal per punkt)
-    og flytta_cm, så djupna kan visast og eksporterast utan å vite om z var djupn eller høgd."""
+    og flytta_cm, så djupna kan visast og eksporterast utan å vite om z var djupn eller høgd. hoegd_nn2000_m er
+    høgda over havet for objektet (bakken frå loggen − loddrett djupn), bakke_nn2000_m høgda på bakken over."""
     pts = [p for f in gj.get("features", []) for p in _points((f.get("geometry") or {}).get("coordinates"))]
     if zmode == "auto":
         zmode = "hoegd" if pts and all(len(p) > 2 and p[2] > 20 for p in pts) else "djupn"
@@ -146,28 +147,34 @@ def correct_geojson(gj, logg, zmode="auto", maxdist=1.0):
     for f in gj.get("features", []):
         maxch, n_ok, n = 0.0, 0, 0
         d_for, d_etter, flytta = [], [], []      # per punkt: djupn før/etter (m, loddrett under bakken) og flytting
+        h_obj, h_bakke = [], []                   # per punkt: høgd NN2000 for objektet og for bakken over det
         for p in _points((f.get("geometry") or {}).get("coordinates")):
             n += 1
             if len(p) < 3:
-                d_for.append(None), d_etter.append(None), flytta.append(None)
+                d_for.append(None), d_etter.append(None), flytta.append(None), h_obj.append(None), h_bakke.append(None)
                 continue
             rec, _ = logg.nearest(p[0], p[1], None, maxdist)
             if rec is None or (zmode == "hoegd" and rec.get("h_bakke") is None):
                 miss += 1
                 d0 = round(p[2], 3) if zmode == "djupn" else None
                 d_for.append(d0), d_etter.append(d0), flytta.append(None)   # urørt: same djupn som før
+                h_obj.append(round(p[2], 3) if zmode == "hoegd" else None), h_bakke.append(None)
                 continue
             d = p[2] if zmode == "djupn" else rec["h_bakke"] - p[2]
             E2, N2, dv, ch = correct_object(p[0], p[1], abs(d), rec)
             p[0], p[1] = round(E2, 3), round(N2, 3)
             p[2] = round(dv if zmode == "djupn" else rec["h_bakke"] - dv, 3)
             d_for.append(round(abs(d), 3)), d_etter.append(round(dv, 3)), flytta.append(round(ch * 100, 1))
+            hb = rec.get("h_bakke")
+            h_bakke.append(None if hb is None else round(hb, 3))
+            h_obj.append(None if hb is None else round(hb - dv, 3))
             maxch, n_ok = max(maxch, ch), n_ok + 1
             ok += 1
         pr = f.setdefault("properties", {})
         pr["helling_retta"] = f"{n_ok}/{n}"
         pr["helling_maks_endring_cm"] = round(maxch * 100, 1)
         pr["djupn_for_m"], pr["djupn_retta_m"], pr["flytta_cm"] = d_for, d_etter, flytta
+        pr["hoegd_nn2000_m"], pr["bakke_nn2000_m"] = h_obj, h_bakke
     return ok, miss, zmode
 
 

@@ -41,6 +41,7 @@ def hent(cfg_path, cfg):
         "mottakar_kompenserer": bool(cfg.get("mottakar_kompenserer")),
         "utgang": cfg.get("utgang", "rett_antenne"),
         "djupn_sanntid": cfg.get("djupn_sanntid", 0.0),
+        "radar_djupn": cfg.get("radar_djupn", 2.5),
         "sone": str(cfg.get("sone", "32")),
         "opptak": bool(cfg.get("opptak", True)),
         "status_lan": bool(cfg.get("status_lan")),
@@ -83,7 +84,8 @@ def lagre(cfg_path, d):
     if d.get("utgang") not in ("rett_antenne", "referansepunkt"):
         raise ValueError("ukjend utgang")
     cfg["utgang"] = d["utgang"]
-    cfg["djupn_sanntid"] = _f(d.get("djupn_sanntid", 0), 0, 5, "djupn i sanntid")
+    cfg["djupn_sanntid"] = _f(d.get("djupn_sanntid", 0), 0, 20, "djupn i sanntid")
+    cfg["radar_djupn"] = _f(d.get("radar_djupn", 2.5), 0.5, 30, "djupast georadaren skannar")
     if str(d.get("sone")) not in ("32", "33", "35", "auto"):
         raise ValueError("UTM-sone må vere 32, 33, 35 eller auto")
     cfg["sone"] = str(d["sone"])

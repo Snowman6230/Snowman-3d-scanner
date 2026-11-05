@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.4.0"
+VERSJON = "0.5.0"
 NAMN = "Snowman Geoscan"
 PRODUSENT = "Alpindata v/Hans Petter B. Sørensen"
 STANDARD = {
@@ -38,6 +38,7 @@ STANDARD = {
     "utgang": "rett_antenne",
     "mottakar_kompenserer": False,
     "djupn_sanntid": 0.0,
+    "radar_djupn": 2.5,
     "sone": "32",
     "hoegd": "nn2000",
     "kurs_kjelde": "auto",
@@ -347,13 +348,14 @@ class App:
         n["alder"] = None if not n.get("sist_data") else round(time.time() - n["sist_data"], 1)
         n.pop("sist_data", None)
         d25 = None
+        rd = float(self.cfg.get("radar_djupn") or 2.5)
         if k.get("korrigert") and k.get("stamp") is not None:
             t = math.radians(math.hypot(k["stamp"], k["krenging"]))
-            d25 = round(2.5 * math.sin(t) * 100, 1)
+            d25 = round(rd * math.sin(t) * 100, 1)
         return {"korr": k, "ntrip": n, "inn": dict(self.state),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"]} for o in self.ut.ports],
-                "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25,
+                "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25, "radar_djupn": rd,
                 "namn": NAMN, "produsent": PRODUSENT,
                 "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}
 

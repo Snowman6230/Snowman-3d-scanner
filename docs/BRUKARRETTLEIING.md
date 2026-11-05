@@ -58,6 +58,31 @@ Fana **Resultat**:
   kartet** for å få djupna skriven ved punkta.
 - **Djupneprofil:** trykk på eit objekt i tabellen eller på kartet. Då ser du korleis røyret eller kabelen går
   nedover i bakken langs heile lengda.
+- **Koordinatar til objekt under bakken:** klikk på eller ved eit røyr eller ein kabel på kartet (innan 2 m).
+  **Posisjon under bakken** viser då for akkurat den staden:
+  - **austing og nording** (EUREF89 UTM)
+  - breidd og lengd
+  - **djupn** (loddrett under bakken)
+  - **høgd over havet** (NN2000) for objektet og bakken
+  - kor mykje hellinga flytta objektet
+
+  Kopier tala, opne staden i eit kart, eller trykk **Eksporter punktet**. I djupneprofilen ligg **Koordinatar for
+  alle punkt**, ei liste for heile objektet. Tverrsnittet viser koordinatane der objekta kryssar lina.
+- **Velje og eksportere:**
+  1. Klikk på eit objekt på kartet for å velje det. Det får ein kvit kant, og eit nytt klikk fjernar det.
+     Du kan òg krysse av i tabellen, eller bruke **Vel alle**.
+  2. Vel format i eksportlinja over tabellen, og trykk **Eksporter valde**:
+     - **Utsetting:** punktfil for Trimble Access/R12i, ei line per punkt: `punktnamn,nord,aust,høgd,kode`.
+       Høgda er NN2000-høgda til objektet, og koden har lag og djupn, til dømes `Vatn_PE_d1.48`. Importer i
+       Trimble Access som kommaseparert fil med feltrekkjefølgja namn, nord, aust, høgd, kode. Set så ut punkta med
+       R12i og grav til djupna i koden.
+     - **CSV for Excel:** alle punkt med koordinatar, djupn før og etter, høgd og flytting.
+     - **GeoJSON:** til GIS, i EUREF89 UTM + NN2000.
+     - **DXF:** til CAD, med djupna som tekst.
+
+  Profilen har òg knappen **Eksporter dette objektet**.
+- **Djupare enn 2,5 m:** set **Djupast georadaren skannar** under Innstillingar → Retting og lagring (opptil
+  30 m). Det styrer «Grav nedover», og kva djupn Status reknar feilen for. Fargeskalaen går til over 5 m.
 - **Tverrsnitt på valfri stad:**
   1. Trykk **✚ Tverrsnitt**, og klikk to punkt på kartet, A og B, til dømes på tvers av ei grøft.
   2. Under kartet kjem eit snitt ned i bakken langs lina A–B. Det viser kvar røyr og kablar kryssar, og kor djupt
@@ -72,6 +97,11 @@ Fana **Resultat**:
 - **Last ned** dei retta objekta som **GeoJSON, CSV eller DXF** (for AutoCAD, Gemini og GIS). DXF-fila har djupna som
   tekst ved kvart punkt (laget `<lag>_DJUPN`), og CSV-fila har djupna før og etter for kvart punkt. Filene ligg
   òg i mappa `pc\resultat`.
+
+**Kor nøyaktig er det?** Posisjonen er så god som RTK-fixen, typisk 2–3 cm. Rettinga for helling fjernar
+feilen frå at vogna står skrått. Sjølve djupna frå georadaren avheng av kor godt bølgjefarten i bakken er
+kalibrert i GRED HD/OneVision (hyperbeltilpassing). Ein feil der gir ein feil i djupna i prosent. Kontrollgrav
+difor der det er viktig.
 
 **Sjølve radarbiletet** cm for cm, som djupnesnitt eller radargram, ser du i OneVision og GRED HD som før. Snowman
 Geoscan har berre objekta du eksporterer, ikkje radardataa.

@@ -2,6 +2,28 @@
 
 *Alpindata v/Hans Petter B. Sørensen*
 
+## 0.5.0 – 5. november 2026
+- **Koordinatar til objekt under bakken.** Klikk på eller ved eit objekt (innan 2 m) for å sjå:
+  - austing og nording (EUREF89 UTM) og breidd/lengd
+  - djupn før og etter retting
+  - høgd over havet (NN2000) for objektet og bakken
+  - kor mykje hellinga flytta objektet
+
+  Tala kan kopierast, opnast i kart og eksporterast.
+- Punktliste med koordinatar for heile objektet i djupneprofilen. Tverrsnittet har koordinatar og høgd for kvar
+  kryssing.
+- **Velje og eksportere:** klikk på objekt på kartet, eller kryss av i tabellen. Eksporter utvalet som:
+  - **Utsetting:** punktfil for Trimble Access/R12i (namn, nord, aust, høgd, kode)
+  - **CSV** for Excel
+  - **GeoJSON** (EPSG 5972/5973 = UTM + NN2000)
+  - **DXF** med djupnetekst
+
+  Eksporten blir laga i nettlesaren og fungerer utan nett. Profilen har «Eksporter dette objektet», og
+  posisjonspanelet har «Eksporter punktet».
+- Ny innstilling: «Djupast georadaren skannar» (radar_djupn, standard 2,5 m, opptil 30 m). Ho styrer Status og
+  «Grav nedover». Fargeskalaen for djupn er utvida til over 5 m.
+- Per punkt i GeoJSON/CSV: hoegd_nn2000_m og bakke_nn2000_m.
+
 ## 0.4.0 – 5. november 2026
 - **Djupna synest på Resultat:**
   - Tabellen viser djupna før og etter retting, med snitt og spenn.

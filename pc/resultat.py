@@ -97,6 +97,9 @@ def _to_latlon(gj, zone):
         return None
     g = copy.deepcopy(gj)
     for f in g.get("features", []):
+        pts = list(KO._points((f.get("geometry") or {}).get("coordinates")))
+        pr = f.setdefault("properties", {})
+        pr["utm_e"], pr["utm_n"] = [round(p[0], 3) for p in pts], [round(p[1], 3) for p in pts]   # til koordinatvisinga
         for p in KO._points((f.get("geometry") or {}).get("coordinates")):
             lat, lon = K.utm_inverse(p[0], p[1], zone)
             p[0], p[1] = round(lon, 8), round(lat, 8)
@@ -109,15 +112,18 @@ def skriv_csv(gj, path):
     Semikolon og desimalkomma, så fila opnar rett i norsk Excel."""
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, delimiter=";")
-        w.writerow(["objekt", "lag", "type", "punkt", "E", "N", "z", "djupn_for_m", "djupn_retta_m", "flytta_cm"])
+        w.writerow(["objekt", "lag", "type", "punkt", "E", "N", "z", "djupn_for_m", "djupn_retta_m", "flytta_cm",
+                    "hoegd_nn2000_m", "bakke_nn2000_m"])
         for i, ft in enumerate(gj.get("features", [])):
             pr = ft.get("properties") or {}
-            d0, d1, fl = (pr.get(k) or [] for k in ("djupn_for_m", "djupn_retta_m", "flytta_cm"))
+            d0, d1, fl, ho, hb = (pr.get(k) or [] for k in ("djupn_for_m", "djupn_retta_m", "flytta_cm",
+                                                             "hoegd_nn2000_m", "bakke_nn2000_m"))
             g = lambda a, j: "" if j >= len(a) or a[j] is None else str(a[j]).replace(".", ",")
             for j, p in enumerate(KO._points((ft.get("geometry") or {}).get("coordinates"))):
                 w.writerow([pr.get("id", i + 1), pr.get("layer", ""), pr.get("type", ""), j + 1,
                             f"{p[0]:.3f}".replace(".", ","), f"{p[1]:.3f}".replace(".", ","),
-                            "" if len(p) < 3 else f"{p[2]:.3f}".replace(".", ","), g(d0, j), g(d1, j), g(fl, j)])
+                            "" if len(p) < 3 else f"{p[2]:.3f}".replace(".", ","), g(d0, j), g(d1, j), g(fl, j),
+                            g(ho, j), g(hb, j)])
 
 
 def _lines(c, depth=0):

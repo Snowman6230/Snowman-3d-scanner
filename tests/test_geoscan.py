@@ -368,6 +368,11 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         assert t0["djupn_for"]["snitt"] == 2.0 and 1.985 < t0["djupn_etter"]["snitt"] < 1.996   # 2,0 · cos 6°
         pr = r["etter"]["features"][0]["properties"]
         assert len(pr["djupn_retta_m"]) == len(r["etter"]["features"][0]["geometry"]["coordinates"])
+        # koordinatar og høgd over havet for objektet under bakken
+        assert len(pr["utm_e"]) == len(pr["djupn_retta_m"]) and abs(pr["utm_e"][0] - pts[0][0]) < 0.5
+        hb, ho, d1 = pr["bakke_nn2000_m"][0], pr["hoegd_nn2000_m"][0], pr["djupn_retta_m"][0]
+        assert hb is not None and abs(ho - (hb - d1)) < 0.002
+        assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - 1.4)) < 0.05      # simulert antenne − mast
         csvtxt = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read().decode()
         assert "djupn_retta_m" in csvtxt.splitlines()[0] and ";1,989;" in csvtxt and "." not in csvtxt.splitlines()[1]
         assert r["filer"]["geojson"] == "røyr_retta.geojson"
@@ -385,6 +390,8 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         post("api/innstillingar", dict(ii, mottakar="COM23", mast="1,45", sone="33", passord=""))
         saved = _json.loads(cfgp.read_text())
         assert saved["spakarm"]["opp"] == 1.45 and saved["sone"] == "33" and saved["inn"][0]["port"] == "COM23"
+        post("api/innstillingar", dict(ii, mottakar="COM23", radar_djupn="6,0", passord=""))
+        assert _json.loads(cfgp.read_text())["radar_djupn"] == 6.0
         assert _json.loads((tmp_path / "ntrip_lokal.json").read_text())["passord"] == "hemmeleg"
         assert app.oppd["omstart"]
         try:
