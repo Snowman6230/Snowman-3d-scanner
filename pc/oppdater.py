@@ -76,6 +76,17 @@ def remote_version():
     return version_of(data.decode("utf-8", "replace"))
 
 
+def remote_melding():
+    """Tittelen på den nyaste meldinga på GitHub (pc/meldingar.json), til «Ny versjon»-lina. None utan nett."""
+    try:
+        data = _get(f"https://api.github.com/repos/{REPO}/contents/pc/meldingar.json?ref={GREIN}",
+                    accept="application/vnd.github.raw", timeout=15)
+        m = (json.loads(data.decode("utf-8")).get("meldingar") or [])
+        return m[0].get("tittel") if m else None
+    except Exception:
+        return None
+
+
 def check():
     """(lokal, på GitHub, nyare?) – eller (lokal, None, False) utan nett/tilgang."""
     lok = local_version()

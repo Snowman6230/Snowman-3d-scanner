@@ -4,6 +4,9 @@
 
 Fire steg, frå skrivebordet til felt. Ta neste steg først når det førre er godkjent.
 
+Stega ligg som **testsjekkliste** i programmet, under «Send inn». Fyll ut der, lag pakke og send henne til
+**hansps@alpindata.no**. Svara kjem tilbake som melding i programmet med neste versjon.
+
 ## Steg 1 – Demo utan utstyr (kva Windows-PC som helst, 10 min)
 
 1. Installer Python 3.11 eller nyare frå python.org. Kryss av for **«Add python.exe to PATH»**.

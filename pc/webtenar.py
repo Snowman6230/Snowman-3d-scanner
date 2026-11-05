@@ -90,7 +90,11 @@ def start(app, port=8088, lan=False):
                     return self._send(RES.spor(f) if f.is_file() else [])
                 if path == "/api/innsending":
                     return self._send({"sporsmal": INS.SPORSMAL, "svar": INS.svar_les(), "filer": INS.filer(),
-                                       "filtypar": INS.FILTYPAR})
+                                       "filtypar": INS.FILTYPAR, "sjekkliste": INS.SJEKKLISTE, "status": INS.STATUS,
+                                       "sjekk": INS.sjekk_les(), "epost": opphav.KONTAKT_EPOST,
+                                       "sjekk_svar": INS.meldingar()["sjekk_svar"]})
+                if path == "/api/meldingar":
+                    return self._send(INS.meldingar())
                 if path == "/api/resultatfiler":
                     d = HER / "resultat"
                     fl = sorted(d.iterdir(), key=lambda p: -p.stat().st_mtime) if d.exists() else []
@@ -126,6 +130,24 @@ def start(app, port=8088, lan=False):
                     d = json.loads(self._body() or b"{}")
                     INN.lagre(app.cfg_path, d)
                     app.oppd["omstart"] = True       # nye innstillingar gjeld etter omstart (START-GEOSCAN.bat)
+                    return self._send({"ok": True})
+                if path == "/api/melding-lest":
+                    INS.melding_lest(json.loads(self._body() or b"{}").get("id", ""))
+                    return self._send({"ok": True})
+                if path == "/api/sjekkliste":
+                    return self._send({"ok": True, "sjekk": INS.sjekk_lagre(json.loads(self._body() or b"{}"))})
+                if path == "/api/opne-mappe":
+                    import os
+                    import subprocess
+                    import sys as _sys
+                    d = HER / "pakkar"
+                    d.mkdir(exist_ok=True)
+                    if os.name == "nt":
+                        os.startfile(str(d))                     # Utforskaren, så pakka kan dragast inn i e-posten
+                    elif _sys.platform == "darwin":
+                        subprocess.Popen(["open", str(d)])
+                    else:
+                        subprocess.Popen(["xdg-open", str(d)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     return self._send({"ok": True})
                 if path == "/api/svar":
                     return self._send({"ok": True, "svar": INS.svar_lagre(json.loads(self._body() or b"{}"))})

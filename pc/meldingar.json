@@ -1,0 +1,13 @@
+{
+ "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
+ "meldingar": [
+  {
+   "id": "2026-11-05-velkomen",
+   "dato": "2026-11-05",
+   "versjon": "0.7.0",
+   "tittel": "Velkomen til testinga av Snowman Geoscan",
+   "tekst": "Start med demoen (steg 1) og gå gjennom testsjekklista under «Send inn». Lag så ei pakke og send henne til hansps@alpindata.no. Når eg har gått gjennom ho, kjem det ein ny versjon med svar her og ved punkta i sjekklista.",
+   "sjekk": {}
+  }
+ ]
+}

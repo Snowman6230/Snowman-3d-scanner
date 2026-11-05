@@ -40,6 +40,100 @@ SPORSMAL = [
     {"id": "anna", "tekst": "Anna du vil fortelje (feil, ønske, observasjonar)", "type": "langtekst", "hjelp": ""},
 ]
 
+# Testsjekklista (same steg som docs/TESTPLAN.md). Status per punkt: "" (ikkje testa), ok, delvis, feil, irrelevant.
+SJEKKLISTE = [
+    {"steg": "Steg 1 – Demo utan utstyr", "punkt": [
+        {"id": "d1", "tekst": "Programmet startar med oppstartbiletet, og nettlesaren opnar seg med Snowman Geoscan"},
+        {"id": "d2", "tekst": "Status viser DEMO, RTK FIX, helling ±6° som skiftar ved snuing, og NTRIP «tilkopla»"},
+        {"id": "d3", "tekst": "Resultat: sporet blir vist, og eksempelfila blir retta (kart, tabell, profil)"},
+        {"id": "d4", "tekst": "Grav nedover, tverrsnitt, koordinatar og eksport (utsetting, CSV, GeoJSON, DXF) fungerer"},
+        {"id": "d5", "tekst": "Rapporten kan skrivast ut eller lagrast som PDF"}]},
+    {"steg": "Steg 2 – R12i innandørs", "punkt": [
+        {"id": "r1", "tekst": "Trimble Access er lukka, og mottakarporten (t.d. COM23) står som «open»"},
+        {"id": "r2", "tekst": "Fix og satellittar blir viste (DGPS er greitt innandørs)"},
+        {"id": "r3", "tekst": "Posisjonen er fornuftig – rett stad på kartet"}]},
+    {"steg": "Steg 3 – NTRIP og RTK ute", "punkt": [
+        {"id": "n1", "tekst": "NTRIP står som «tilkopla», og kB-teljaren går"},
+        {"id": "n2", "tekst": "RTK FIX ute – skriv om RTCM gjekk over USB eller Bluetooth port 2"},
+        {"id": "n3", "tekst": "Kor lang tid tok det til RTK FIX? (minutt)"}]},
+    {"steg": "Steg 4 – Felt med vogna", "punkt": [
+        {"id": "f1", "tekst": "Statisk: posisjonen ligg i ro innan 1–2 cm når vogna blir vippa 5–10° til sidene"},
+        {"id": "f2", "tekst": "OneVision viser «GNSS connection OK» med RTK gjennom com0com (COM24)"},
+        {"id": "f3", "tekst": "R12i held tilt-kompensasjonen når vogna blir trekt (ingen hopp etter fortauskantar)"},
+        {"id": "f4", "tekst": "Djupn: røyr skanna begge vegar i sidebakke fell saman etter retting (krev ekstra IMU)"},
+        {"id": "f5", "tekst": "Ei ekte eksportfil frå GRED HD/OneVision blir lesen og retta under Resultat"}]},
+]
+STATUS = {"": "ikkje testa", "ok": "godkjent", "delvis": "delvis", "feil": "ikkje godkjent", "irrelevant": "ikkje relevant"}
+
+
+def sjekk_les():
+    try:
+        return json.loads((_dir() / "sjekkliste.json").read_text(encoding="utf-8"))
+    except Exception:
+        return {"punkt": {}, "lagra": None}
+
+
+def sjekk_lagre(data):
+    cur = sjekk_les()
+    ids = {p["id"] for st in SJEKKLISTE for p in st["punkt"]}
+    for k, v in (data.get("punkt") or {}).items():
+        if k in ids and isinstance(v, dict):
+            s = str(v.get("status") or "")
+            cur["punkt"][k] = {"status": s if s in STATUS else "", "kommentar": str(v.get("kommentar") or "")[:2000],
+                               "tid": time.strftime("%Y-%m-%d %H:%M")}
+    cur["lagra"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    (_dir() / "sjekkliste.json").write_text(json.dumps(cur, ensure_ascii=False, indent=1), encoding="utf-8")
+    return cur
+
+
+def sjekk_tekst():
+    cur, o = sjekk_les(), []
+    n = {k: 0 for k in STATUS}
+    for st in SJEKKLISTE:
+        o += ["", st["steg"], "-" * len(st["steg"])]
+        for p in st["punkt"]:
+            v = cur["punkt"].get(p["id"], {})
+            s = v.get("status", "")
+            n[s] = n.get(s, 0) + 1
+            o.append(f"[{ {'ok': 'OK', 'delvis': '~', 'feil': 'X', 'irrelevant': '-'}.get(s, ' ') }] {p['tekst']}  –  {STATUS.get(s, s)}"
+                     + (f" ({v.get('tid')})" if v.get("tid") and s else ""))
+            if v.get("kommentar"):
+                o.append(f"      Kommentar: {v['kommentar']}")
+    total = sum(n.values())
+    return [f"Testsjekkliste: {n['ok']} godkjent, {n['delvis']} delvis, {n['feil']} ikkje godkjent, "
+            f"{n['irrelevant']} ikkje relevant, {n['']} ikkje testa (av {total})"] + o
+
+
+# ---------- meldingar frå utviklaren (pc/meldingar.json, kjem med oppdateringa) ----------
+def meldingar():
+    """Meldingane med «lest» frå denne PC-en, og svara på sjekklista samla per punkt (nyaste vinn)."""
+    try:
+        m = json.loads((HER / "meldingar.json").read_text(encoding="utf-8")).get("meldingar") or []
+    except Exception:
+        m = []
+    try:
+        lest = set(json.loads((_dir() / "lest.json").read_text(encoding="utf-8")))
+    except Exception:
+        lest = set()
+    svar = {}
+    for x in reversed(m):                 # eldste først, så den nyaste står att
+        for pid, v in (x.get("sjekk") or {}).items():
+            v = v if isinstance(v, dict) else {"tekst": str(v)}
+            svar[pid] = {"tekst": v.get("tekst", ""), "prov_att": bool(v.get("prov_att")), "versjon": x.get("versjon"),
+                         "dato": x.get("dato")}
+    return {"meldingar": [dict(x, lest=x.get("id") in lest) for x in m], "sjekk_svar": svar}
+
+
+def melding_lest(mid):
+    p = _dir() / "lest.json"
+    try:
+        lest = set(json.loads(p.read_text(encoding="utf-8")))
+    except Exception:
+        lest = set()
+    lest.add(str(mid)[:100])
+    p.write_text(json.dumps(sorted(lest)), encoding="utf-8")
+
+
 FILTYPAR = {"eksport": "Eksport frå GRED HD / OneVision (GeoJSON, CSV, DXF, SHP-zip)",
             "oppsett": "Oppsettfiler (t.d. SCANNH.xml frå R12i, OneVision-oppsett)",
             "bilete": "Bilete (vogna, masta, skjermbilete)", "anna": "Anna"}
@@ -131,11 +225,15 @@ def lag_pakke(cfg_path, loggdir, versjon, med_raa=True, dagar=None, status=None)
         z.comment = opphav.generator(versjon).encode("utf-8")[:60000]
         z.writestr("svar.json", json.dumps(sv, ensure_ascii=False, indent=1))
         tekst = [f"{opphav.NAMN} {versjon} – pakke til utviklar", opphav.PRODUSENT, opphav.SIGNATUR,
+                 f"Send til: {opphav.KONTAKT_EPOST}",
                  f"Laga {time.strftime('%Y-%m-%d %H:%M')}"
                  + (f" av {sv.get('namn')}" if sv.get("namn") else ""), ""]
         for s in SPORSMAL:
             tekst += [s["tekst"], "  " + (sv["svar"].get(s["id"]) or "(ikkje svara)"), ""]
         z.writestr("SVAR.txt", "\n".join(tekst))
+        z.writestr("sjekkliste.json", json.dumps(sjekk_les(), ensure_ascii=False, indent=1))
+        z.writestr("SJEKKLISTE.txt", "\n".join([f"{opphav.NAMN} {versjon} – testsjekkliste", opphav.PRODUSENT,
+                                                 time.strftime("%Y-%m-%d %H:%M"), ""] + sjekk_tekst()))
         for p in (_dir() / "filer").iterdir():
             if p.is_file():
                 z.write(p, f"filer/{p.name}")

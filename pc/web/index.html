@@ -29,10 +29,15 @@ main{max-width:1200px;margin:0 auto;padding:14px 16px 40px}
 .v{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:4px}
 .s{color:var(--svak);font-size:13px;margin-top:4px}
 .ok{color:var(--ok)}.var{color:var(--var)}.feil{color:var(--feil)}
+select.ok{border-color:var(--ok)}select.var{border-color:var(--var)}select.feil{border-color:var(--feil)}
 h2{font-size:16px;margin:0 0 8px}
 .hj{color:var(--svak);font-size:13px}
 p.hj{margin:4px 0 10px}
 pre{white-space:pre-wrap;color:var(--svak);font-size:13px;margin:0}
+.mld{border:1px solid var(--blaa);background:var(--kort);border-radius:10px;padding:12px 14px;margin:10px 0 0}
+.mld b{color:var(--blaa)}.mld p{margin:4px 0 8px}
+.sjsvar{grid-column:1/-1;background:var(--kort2);border-left:3px solid var(--blaa);padding:6px 10px;border-radius:6px;font-size:13px}
+.sjsvar.prov{border-left-color:var(--var)}
 .banner{border-radius:10px;padding:12px 14px;margin:10px 0 0;font-weight:600}
 .demo{background:#5a1f1f}
 .oppd{border:1px solid var(--var);background:var(--kort)}
@@ -75,6 +80,7 @@ svg{display:block;margin:6px auto 0}
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
     <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
     <pre id="ologg" style="margin-top:6px"></pre></div>
+  <div id="meldingar"></div>
   <nav>
     <button data-f="status" class="aktiv">Status</button>
     <button data-f="resultat">Resultat</button>
@@ -117,6 +123,7 @@ svg{display:block;margin:6px auto 0}
     vel fila her. Ho blir retta for hellinga og lagra, så utviklaren òg kan sjå henne.</p>
     <div class="verktoy">
       <label class="b">Vel eksportfil …<input type="file" id="eksport" accept=".geojson,.json,.csv,.txt" style="display:none"></label>
+      <button class="b gra" id="demoeks" style="display:none" onclick="provEksempel()">Prøv med eksempelfil (DEMO)</button>
       <label style="font-size:13px;color:var(--svak)">z er
         <select id="zmode"><option value="auto">finn ut sjølv</option><option value="djupn">djupn (m under bakken)</option><option value="hoegd">høgd (NN2000)</option></select></label>
       <label style="font-size:13px;color:var(--svak)">UTM-sone
@@ -215,6 +222,13 @@ svg{display:block;margin:6px auto 0}
 <!-- ================= SEND INN ================= -->
 <section id="f-send" class="fane">
   <div class="k">
+    <div class="verktoy" style="justify-content:space-between"><h2 style="margin:0">Testsjekkliste</h2><b id="sjstat" class="hj"></b></div>
+    <p class="hj">Gå gjennom stega i rekkjefølgje (sjå også docs/TESTPLAN.md). Vel resultat for kvart punkt og skriv kva du såg.
+      Alt blir lagra med ein gong på denne PC-en, og kjem med i pakka til Hans Petter.</p>
+    <div id="sjekkliste"></div>
+    <span class="melding" id="sjmeld"></span>
+  </div>
+  <div class="k">
     <h2>Svar på spørsmåla</h2>
     <p class="hj">Svara trengst for å stille inn rettinga rett. Svar det du veit – resten kan du fylle ut seinare. Alt blir lagra på denne PC-en.</p>
     <div class="felt" style="margin-bottom:12px"><label><span>Namnet ditt</span><input id="snamn"></label></div>
@@ -233,9 +247,10 @@ svg{display:block;margin:6px auto 0}
     <div class="tabell" style="margin-top:10px"><table id="ftab"><thead><tr><th>Fil</th><th>Type</th><th class="n">kB</th><th>Lagt inn</th><th></th></tr></thead><tbody></tbody></table></div>
   </div>
   <div class="k">
-    <h2>Lag pakke til Hans Petter</h2>
+    <h2>Lag pakke og send til Hans Petter</h2>
     <p class="hj">Pakka (ei zip-fil) inneheld svara, filene over, loggane frå skanningane og innstillingane – <b>aldri passord eller
-    brukarnamn</b>. Send henne på e-post eller del henne via OneDrive/Google Drive.</p>
+    brukarnamn</b>. Send henne på e-post til <b><a id="epost1" style="color:var(--blaa)" href="mailto:hansps@alpindata.no">hansps@alpindata.no</a></b>
+    (er fila over 20 MB, del henne via OneDrive/Google Drive og send lenkja).</p>
     <div class="verktoy">
       <label style="font-size:13px;color:var(--svak)"><input type="checkbox" id="praa" checked>ta med rådata (større fil, men turen kan spelast av att)</label>
       <label style="font-size:13px;color:var(--svak)">loggar frå
@@ -336,7 +351,7 @@ let radarDjupn=2.5;
 const FIX={0:["INGEN","feil"],1:["GPS","feil"],2:["DGPS","var"],4:["RTK FIX","ok"],5:["RTK FLOAT","var"],6:["INS","var"],9:["SBAS","var"]};
 async function tikk(){let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
   const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;
-  OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";visOppd(s.oppdatering);
+  OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);
   if(fane!="status")return;
   const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
   set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
@@ -351,7 +366,7 @@ async function tikk(){let s;try{s=await (await fetch("status")).json()}catch(e){
   $("portar").textContent=Object.entries(s.inn).map(([p,v])=>"inn "+p+": "+v)
     .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n")}
 function visOppd(o){const vis=o.nyare||o.koyrer||o.logg.length||o.omstart;$("oppd").style.display=vis?"block":"none";
-  $("otekst").textContent=o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?"Ny versjon v"+o.github+" finst.":"";
+  $("otekst").textContent=o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?"Ny versjon v"+o.github+" finst"+(o.melding?": «"+o.melding+"»":".")+" ":"";
   $("obtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none";$("ologg").textContent=o.logg.join("\n");
   if(o.omstart)ventOmstart()}
 async function oppdater(){if(!confirm("Hente og leggje inn ny versjon? Snowman Geoscan startar på nytt."))return;
@@ -360,6 +375,16 @@ let venter=false;
 function ventOmstart(){if(venter)return;venter=true;setTimeout(function sjekk(){fetch("status").then(r=>r.json()).then(s=>{
   if(!s.oppdatering.omstart)location.reload();else setTimeout(sjekk,1500)}).catch(()=>setTimeout(sjekk,1500))},2500)}
 setInterval(tikk,1000);tikk();
+// ---------- meldingar frå utviklaren (pc/meldingar.json) ----------
+async function lastMeldingar(){let d;try{d=await api("api/meldingar")}catch(e){return}
+  const ulest=d.meldingar.filter(m=>!m.lest);
+  $("meldingar").innerHTML=ulest.map(m=>`<div class="mld"><b>💬 Melding frå Hans Petter</b> <span class="hj">${esc(m.dato||"")}${m.versjon?" · v"+esc(m.versjon):""}</span>
+    <p><b style="color:var(--tekst)">${esc(m.tittel||"")}</b><br>${esc(m.tekst||"").replace(/\n/g,"<br>")}</p>
+    ${Object.keys(m.sjekk||{}).length?`<p class="hj">Svar på ${Object.keys(m.sjekk).length} punkt i testsjekklista – sjå «Send inn».</p>`:""}
+    <button class="b" onclick="lestMelding('${esc(m.id)}')">OK, lese</button>
+    ${Object.keys(m.sjekk||{}).length?` <button class="b gra" onclick="visFane('send');lestMelding('${esc(m.id)}')">Gå til sjekklista</button>`:""}</div>`).join("")}
+async function lestMelding(id){try{await post("api/melding-lest",{id})}catch(e){}lastMeldingar()}
+lastMeldingar();
 
 // ---------- resultat: kart ----------
 let kart=null,grunn=null,grunnGra=false,lagSpor=null,lagObj=null;
@@ -392,13 +417,16 @@ async function lastOkter(){let o;try{o=await api("api/okter")}catch(e){return}co
     const cb=tr.querySelector("input");cb.onclick=e=>{e.stopPropagation();cb.checked?valde.add(r.fil):valde.delete(r.fil)};
     tr.onclick=()=>{[...tb.rows].forEach(x=>x.style.background="");tr.style.background="var(--kort2)";visSpor(r.fil)};tb.appendChild(tr);
     if(i==0&&!lagSpor.getLayers().length)visSpor(r.fil)})}
-$("eksport").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const m=$("rmeld");
+async function provEksempel(){try{const b=await (await fetch("vendor/demo-eksport.geojson")).blob();
+  rettFil(new File([b],"demo-eksport.geojson",{type:"application/geo+json"}))}catch(e){$("rmeld").textContent="Fann ikkje eksempelfila."}}
+$("eksport").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)rettFil(f)};
+async function rettFil(f){const m=$("rmeld");
   m.className="melding";m.textContent="Lastar opp "+f.name+" …";
   try{const up=await api("api/last-opp?type=eksport&namn="+encodeURIComponent(f.name),{method:"POST",body:f});
     m.textContent="Rettar …";
     const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde]});
     visResultat(r,f.name);m.textContent="";lastResFiler()}
-  catch(err){m.className="melding feil";m.textContent="Kunne ikkje rette: "+err.message}};
+  catch(err){m.className="melding feil";m.textContent="Kunne ikkje rette: "+err.message}}
 // djupn → farge (grunt = lys, djupt = mørk lilla)
 const djFarge=d=>d==null?"#4ea8ff":d<0.5?"#9be7ff":d<1?"#4ea8ff":d<1.5?"#6a6cff":d<2?"#a855f7":d<3?"#e04fd0":d<5?"#ff6b6b":"#ffb347";
 const fm=(x,d=2)=>x==null?"–":F(+x,d);
@@ -736,7 +764,25 @@ async function lastResFiler(){let l;try{l=await api("api/resultatfiler")}catch(e
   $("rfiler").innerHTML=l.length?l.map(f=>`<a style="color:var(--blaa)" href="last-ned/resultat/${encodeURIComponent(f.fil)}">${esc(f.fil)}</a> (${f.kb} kB)`).join("<br>"):"Ingen enno."}
 
 // ---------- send inn ----------
+const SJF={"":"","ok":"ok","delvis":"var","feil":"feil","irrelevant":""};
+let sjTimer=null;
+function visSjekk(d){EPOST=d.epost||EPOST;$("epost1").textContent=EPOST;$("epost1").href="mailto:"+EPOST;
+  const v=d.sjekk.punkt||{};$("sjekkliste").innerHTML=d.sjekkliste.map(st=>`<h3 style="margin:14px 0 6px;font-size:14px">${esc(st.steg)}</h3>`+
+    st.punkt.map(p=>{const x=v[p.id]||{};return `<div class="sp" style="display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:6px 10px;align-items:start;margin-bottom:10px">
+      <div>${esc(p.tekst)}</div>
+      <select data-sj="${p.id}" class="${SJF[x.status||""]}">${Object.entries(d.status).map(([k,t])=>`<option value="${k}" ${k==(x.status||"")?"selected":""}>${esc(t)}</option>`).join("")}</select>
+      <input data-sjk="${p.id}" placeholder="Kva såg du? (valfritt)" value="${esc(x.kommentar||"")}" style="grid-column:1/-1">
+      ${(d.sjekk_svar||{})[p.id]?(()=>{const sv=d.sjekk_svar[p.id];return `<div class="sjsvar ${sv.prov_att?"prov":""}">💬 <b>Hans Petter${sv.versjon?" (v"+esc(sv.versjon)+")":""}:</b> ${esc(sv.tekst)}${sv.prov_att?' <b class="var">– prøv på nytt</b>':""}</div>`})():""}</div>`}).join("")).join("");
+  oppdaterSjStat();
+  document.querySelectorAll("[data-sj]").forEach(e=>e.onchange=()=>{e.className=SJF[e.value];lagreSjekk()});
+  document.querySelectorAll("[data-sjk]").forEach(e=>e.oninput=()=>{clearTimeout(sjTimer);sjTimer=setTimeout(lagreSjekk,800)})}
+function oppdaterSjStat(){const s=[...document.querySelectorAll("[data-sj]")].map(e=>e.value),n=k=>s.filter(x=>x==k).length;
+  $("sjstat").textContent=`${n("ok")} av ${s.length} godkjent`+(n("feil")?` · ${n("feil")} ikkje godkjent`:"")+(n("delvis")?` · ${n("delvis")} delvis`:"")}
+async function lagreSjekk(){const punkt={};document.querySelectorAll("[data-sj]").forEach(e=>{const id=e.dataset.sj;
+    punkt[id]={status:e.value,kommentar:document.querySelector(`[data-sjk="${id}"]`).value}});oppdaterSjStat();
+  try{const r=await post("api/sjekkliste",{punkt});set("sjmeld","Lagra "+r.sjekk.lagra,"ok")}catch(e){set("sjmeld",e.message,"feil")}}
 async function lastInnsending(){let d;try{d=await api("api/innsending")}catch(e){return}
+  visSjekk(d);
   $("snamn").value=d.svar.namn||"";
   $("sporsmal").innerHTML=d.sporsmal.map(s=>`<div class=sp><div class=t>${esc(s.tekst)}</div>${s.hjelp?`<div class="hj">${esc(s.hjelp)}</div>`:""}
     ${s.type=="langtekst"?`<textarea data-id="${s.id}">${esc(d.svar.svar[s.id]||"")}</textarea>`:
@@ -757,7 +803,14 @@ $("ffiler").onchange=async e=>{const fl=[...e.target.files];e.target.value="";le
 async function lagPakke(){set("pmeld","Lagar pakke …");
   try{const r=await post("api/pakke",{med_raa:$("praa").checked,dagar:$("pdagar").value});
     $("pmeld").className="melding ok";$("pmeld").innerHTML=`Pakka er klar (${F(r.mb,1)} MB): <a class="b" style="text-decoration:none" href="last-ned/pakke/${encodeURIComponent(r.fil)}">Last ned ${esc(r.fil)}</a>
-    <div class="hj">Ho ligg òg i mappa pc\\pakkar på denne PC-en.</div>`}catch(e){set("pmeld",e.message,"feil")}}
+    <div class="verktoy" style="margin-top:8px"><button class="b gra" onclick="post('api/opne-mappe')">Opne mappa med pakka</button>
+      <a class="b" href="${mailtoLenke(r)}">✉ Skriv e-post til ${esc(EPOST)}</a></div>
+    <div class="hj" style="margin-top:6px">1) Trykk «Skriv e-post» – e-postprogrammet opnar seg med mottakar og tekst. 2) Trykk «Opne mappa med pakka»
+      og dra fila <b>${esc(r.fil)}</b> inn i e-posten. 3) Send.</div>`}catch(e){set("pmeld",e.message,"feil")}}
+let EPOST="hansps@alpindata.no";
+function mailtoLenke(r){const sv=$("snamn").value||"",d=new Date().toLocaleDateString("nb-NO");
+  const tekst=`Hei Hans Petter,\n\nVedlagt er testpakka frå Snowman Geoscan (${r.fil}, ${F(r.mb,1)} MB).\n\nSjekkliste: ${$("sjstat").textContent}\n\nHelsing ${sv}`;
+  return `mailto:${EPOST}?subject=${encodeURIComponent("Snowman Geoscan – testpakke "+d+(sv?" – "+sv:""))}&body=${encodeURIComponent(tekst)}`}
 
 // ---------- innstillingar ----------
 let innst=null;

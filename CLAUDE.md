@@ -26,6 +26,19 @@ eksportformat frå GRED HD og meir. Eigaren var ikkje sikker 5.11.2026 og vil bl
 **Ved byrjinga av nytt arbeid i dette repoet: spør eigaren om dei opne punkta** før du byggjer vidare på
 mellombelse verdiar. Flytt svar til «Avklart» med dato.
 
+## Testpakkar frå Norman og svar tilbake
+
+Norman fyller ut testsjekklista og spørsmåla under «Send inn», og sender pakka (zip) til hansps@alpindata.no.
+Når Hans Petter gir deg ei pakke:
+
+1. Les `SJEKKLISTE.txt`, `SVAR.txt`, `filer/`, `logg/` og `system.json`. Rådata (`logg/raa_*.nmea`) kan
+   spelast av med `python pc/geoscan.py --fil …`.
+2. Flytt svar på opne spørsmål til «Avklart» i `docs/OPNE-SPORSMAL.md`, og rett innstillingar og kode.
+3. **Svar Norman** med ei ny melding øvst i `pc/meldingar.json`. Ho skal ha `id` (unik), `dato`, `versjon`,
+   `tittel` og `tekst`, og `sjekk` med svar per punkt (`{"n2": {"tekst": "…", "prov_att": true}}`).
+4. Auk `VERSJON`, skriv i `ENDRINGSLOGG.md`, test og push. Norman ser tittelen på meldinga i
+   «Ny versjon»-lina. Etter oppdateringa ser han meldinga øvst og svara ved punkta i sjekklista.
+
 ## Faste reglar
 
 - Passord, brukarnamn og NTRIP-tenesteopplysingar skal aldri inn i repoet.

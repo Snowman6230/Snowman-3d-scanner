@@ -2,6 +2,19 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.7.0 – 5. november 2026
+- **Testsjekkliste** under «Send inn» med dei fire stega frå testplanen (16 punkt). Kvart punkt har status og
+  kommentar. Ho blir lagra med ein gong (innsendt/sjekkliste.json), og pakka får SJEKKLISTE.txt og
+  sjekkliste.json.
+- **Send til hansps@alpindata.no:** e-postknapp med ferdig emne og tekst, og knappen «Opne mappa med pakka», så
+  zip-fila kan dragast inn i e-posten. Adressa ligg i opphav.KONTAKT_EPOST og står i SVAR.txt.
+- **Meldingar frå utviklaren** (pc/meldingar.json, kjem med oppdateringa):
+  - ulesne meldingar står øvst i programmet til operatøren trykker «OK, lese»
+  - svar ved punkta i sjekklista, med «prøv på nytt»
+  - «Ny versjon»-lina viser tittelen på den nyaste meldinga
+- Demo: knappen «Prøv med eksempelfil (DEMO)» under Resultat, med ei oppdikta eksportfil som passar til
+  simulatoren.
+
 ## 0.6.1 – 5. november 2026
 - Produsentnamnet er no «Alpindata HP Brunstad Sørensen» (utan «v/») overalt: logo, oppstartbilete, rapportar,
   eksportfiler, nettlesar og dokument. Signaturen (SNWGEO-…) er uendra, så eldre filer blir framleis kjende att.

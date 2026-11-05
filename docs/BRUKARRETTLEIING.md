@@ -122,16 +122,31 @@ Trykk **📄 Lag rapport** i eksportlinja. Rapporten tek med dei valde objekta, 
 Trykk **Skriv ut / lagre som PDF**, eller last ned rapporten som HTML. Namnet og signaturen til Snowman Geoscan
 står nedst på kvar side.
 
-## 6. Send inn det Hans Petter treng
+## 6. Testsjekklista, og send inn det Hans Petter treng
 
 Fana **Send inn**:
+
+0. **Testsjekklista** øvst har same fire steg som testplanen: demo, R12i inne, RTK ute og felt. For kvart punkt
+   vel du *godkjent*, *delvis*, *ikkje godkjent* eller *ikkje relevant*, og skriv kva du såg. Alt blir lagra med
+   ein gong. I demoen kan du prøve Resultat med knappen **Prøv med eksempelfil (DEMO)**.
 
 1. Svar på spørsmåla, til dømes mastehøgda og antenneoppsettet i OneVision. Det som er ukjent, kan stå tomt.
    Trykk **Lagre svara**.
 2. Legg ved filer: ei ekte eksportfil, SCANNH.xml frå R12i, bilete av vogna og masta, og skjermbilete av
    GPS-oppsettet i OneVision.
-3. Trykk **Lag pakke** og så **Last ned**. Send zip-fila til Hans Petter på e-post eller via OneDrive. Pakka har
+3. Trykk **Lag pakke**. Trykk så **✉ Skriv e-post til hansps@alpindata.no**: e-postprogrammet opnar seg med
+   mottakar og tekst. Trykk **Opne mappa med pakka**, dra zip-fila inn i e-posten og send. Er fila over 20 MB,
+   del henne via OneDrive og send lenkja. Gammal tekst under, for nedlasting: trykk **Lag pakke** og så **Last ned**. Send zip-fila til Hans Petter på e-post eller via OneDrive. Pakka har
    aldri passord eller brukarnamn med seg.
+
+### Svar frå Hans Petter
+
+Når Hans Petter har gått gjennom pakka, kjem det ein ny versjon. «Ny versjon»-lina viser kva han gjeld. Etter
+oppdateringa ser du:
+- **Ei melding øvst i programmet.** Ho ligg der til du trykker **OK, lese**.
+- **Svar ved punkta i sjekklista** (💬). Punkt merkte **prøv på nytt** testar du igjen og oppdaterer resultatet.
+
+Lag så ei ny pakke.
 
 ## 7. Oppdatere
 

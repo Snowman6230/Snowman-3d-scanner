@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.6.1"
+VERSJON = "0.7.0"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -269,7 +269,7 @@ class App:
             self.rec = open(d / time.strftime("raa_%Y%m%d_%H%M%S.nmea"), "a", encoding="ascii", errors="replace")
             self.rec.write(f"# {NAMN} {VERSJON} - Alpindata HP Brunstad Sorensen - {SIGNATUR}\n")
         self.ntrip = NT.NtripTeneste(NT.load(cfg, HER), self, VERSJON)
-        self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "koyrer": False, "logg": [], "omstart": False}
+        self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "melding": None, "koyrer": False, "logg": [], "omstart": False}
 
     def start(self):
         for spec in self.cfg["inn"]:
@@ -325,7 +325,7 @@ class App:
     def check_update(self):
         import oppdater
         lok, rem, nyare = oppdater.check()
-        self.oppd.update(github=rem, nyare=nyare)
+        self.oppd.update(github=rem, nyare=nyare, melding=oppdater.remote_melding() if nyare else None)
 
     def run_update(self):
         """Køyrt frå statussida. Ved ny versjon: avslutt med kode 3, så START-GEOSCAN.bat startar på nytt."""

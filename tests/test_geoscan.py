@@ -440,3 +440,37 @@ def test_signatur_og_retta_csv_kan_lesast_att(tmp_path):
     assert head == ["Aust", "Nord", "Djupn"] and rows == [["1", "2", "3"]]
     assert OP.SIGNATUR.startswith("SNWGEO-") and OP.sjekk_signatur(OP.generator("1.0"))
     assert not OP.sjekk_signatur("anna program")
+
+
+def test_sjekkliste_meldingar_og_pakke(tmp_path, monkeypatch):
+    """Norman fyller ut sjekklista → pakka har SJEKKLISTE.txt og e-postadressa. Utviklaren svarar i
+    meldingar.json → svaret kjem ved punktet, og meldinga kan merkjast som lesen."""
+    import json as _json
+    import zipfile as _zf
+    import innsending as INS
+    import opphav as OP
+    monkeypatch.setattr(INS, "HER", tmp_path)
+    INS.sjekk_lagre({"punkt": {"d1": {"status": "ok", "kommentar": "fint"}, "n2": {"status": "feil", "kommentar": "berre FLOAT"},
+                               "xx": {"status": "ok"}, "d2": {"status": "tull"}}})
+    s = INS.sjekk_les()["punkt"]
+    assert s["d1"]["status"] == "ok" and s["n2"]["kommentar"] == "berre FLOAT" and "xx" not in s and s["d2"]["status"] == ""
+    zp = INS.lag_pakke(tmp_path / "geoscan_config.json", tmp_path / "logg", "0.7.0")
+    with _zf.ZipFile(zp) as z:
+        sj = z.read("SJEKKLISTE.txt").decode()
+        assert "1 godkjent" in sj and "1 ikkje godkjent" in sj and "berre FLOAT" in sj and "[X]" in sj
+        assert OP.KONTAKT_EPOST in z.read("SVAR.txt").decode() and "sjekkliste.json" in z.namelist()
+    (tmp_path / "meldingar.json").write_text(_json.dumps({"meldingar": [
+        {"id": "b", "versjon": "0.7.1", "tittel": "Retta RTK", "sjekk": {"n2": {"tekst": "Bruk COM20", "prov_att": True}}},
+        {"id": "a", "versjon": "0.7.0", "tittel": "Velkomen", "sjekk": {"n2": "gammalt svar", "d1": "takk"}}]}), encoding="utf-8")
+    m = INS.meldingar()
+    assert m["sjekk_svar"]["n2"] == {"tekst": "Bruk COM20", "prov_att": True, "versjon": "0.7.1", "dato": None}
+    assert m["sjekk_svar"]["d1"]["tekst"] == "takk" and not any(x["lest"] for x in m["meldingar"])
+    INS.melding_lest("b")
+    assert [x["lest"] for x in INS.meldingar()["meldingar"]] == [True, False]
+
+
+def test_meldingar_json_i_repoet_er_gyldig():
+    import json as _json
+    m = _json.loads((Path(__file__).resolve().parent.parent / "pc" / "meldingar.json").read_text(encoding="utf-8"))
+    ids = [x["id"] for x in m["meldingar"]]
+    assert ids and len(ids) == len(set(ids)) and all(x.get("tittel") for x in m["meldingar"])
