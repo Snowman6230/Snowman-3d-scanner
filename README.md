@@ -1,6 +1,6 @@
 # Snowman Geoscan
 
-*Alpindata v/Hans Petter B. Sørensen*
+*Alpindata HP Brunstad Sørensen*
 
 Repo: Snowman-3d-scanner.
 Oppdrag for Norman Hole, Hole Anlegg AS.

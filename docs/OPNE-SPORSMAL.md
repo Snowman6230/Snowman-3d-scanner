@@ -1,6 +1,6 @@
 # Opne spørsmål – Snowman Geoscan
 
-*Alpindata v/Hans Petter B. Sørensen*
+*Alpindata HP Brunstad Sørensen*
 
 Ting som manglar før hellingskorreksjonen kan setjast i drift. Eigaren (Hans Petter) er ikkje sikker på desse enno.
 **Spør eigaren om dei** når arbeidet held fram, og flytt svaret til «Avklart» med dato.

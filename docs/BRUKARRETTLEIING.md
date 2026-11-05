@@ -1,6 +1,6 @@
 # Snowman Geoscan – brukarrettleiing
 
-*Alpindata v/Hans Petter B. Sørensen*
+*Alpindata HP Brunstad Sørensen*
 
 Snowman Geoscan rettar GNSS-posisjonen til IDS Stream C for hellinga til vogna. Programmet gjer to ting:
 

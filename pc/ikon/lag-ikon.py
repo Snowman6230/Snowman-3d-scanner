@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Lagar ikona og logoen til Snowman Geoscan frå éi kjelde.
 
 Same uttrykk som SNOWMAN Snødjupne (pc/v1.6/ikon/lag-ikon.py i Snowman6230/Snowman-Snowdeept): natthimmel,
@@ -10,7 +10,7 @@ eit nedgrave røyr.
 Skriv:
   geoscan.svg            hovudikon (512 × 512), kjeldefil
   geoscan-enkel.svg      forenkla ikon for små storleikar (16–32 px)
-  geoscan-logo.svg       logo med tekst (fjelltoppar, SNOWMAN GEOSCAN, Alpindata v/Hans Petter B. Sørensen)
+  geoscan-logo.svg       logo med tekst (fjelltoppar, SNOWMAN GEOSCAN, Alpindata HP Brunstad Sørensen)
   geoscan-256.png, geoscan-512.png, geoscan.ico (16–256 px)   – snarvegar og oppstartbilete
   oppstart.png           oppstartbiletet (ikon + logo) som blir vist når programmet startar
   ../web/vendor/geoscan-ikon.png (64 px), ../web/vendor/geoscan-logo.svg   – nettlesaren
@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 HER = Path(__file__).resolve().parent
-NAMN, PRODUSENT = "Snowman Geoscan", "Alpindata v/Hans Petter B. Sørensen"
+NAMN, PRODUSENT = "Snowman Geoscan", "Alpindata HP Brunstad Sørensen"
 
 # Frå SNOWMAN-logoen (viewBox 120 × 30) – same form som i Snødjupne
 PEAKS = "M14 30 L46 2 L66 20 L74 13 L104 30 Z"

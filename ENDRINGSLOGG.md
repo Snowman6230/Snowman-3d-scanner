@@ -1,6 +1,10 @@
 # Endringslogg – Snowman Geoscan
 
-*Alpindata v/Hans Petter B. Sørensen*
+*Alpindata HP Brunstad Sørensen*
+
+## 0.6.1 – 5. november 2026
+- Produsentnamnet er no «Alpindata HP Brunstad Sørensen» (utan «v/») overalt: logo, oppstartbilete, rapportar,
+  eksportfiler, nettlesar og dokument. Signaturen (SNWGEO-…) er uendra, så eldre filer blir framleis kjende att.
 
 ## 0.6.0 – 5. november 2026
 - **Logo:** same uttrykk som SNOWMAN Snødjupne (natthimmel, fjelltoppar, snø), men med georadarvogna, GNSS-mast,
@@ -89,7 +93,7 @@ Klar til testing hos Norman Hole.
 - docs/BRUKARRETTLEIING.md for operatøren.
 
 ## 0.2.2 – 5. november 2026
-- Namnet er no **Snowman Geoscan**, med «Alpindata v/Hans Petter B. Sørensen» under, på statussida, ved oppstart,
+- Namnet er no **Snowman Geoscan**, med «Alpindata HP Brunstad Sørensen» under, på statussida, ved oppstart,
   i startfilene og i dokumenta.
 
 ## 0.2.1 – 5. november 2026

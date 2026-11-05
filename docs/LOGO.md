@@ -1,6 +1,6 @@
 # Snowman Geoscan – logo, namn og opphav
 
-*Alpindata v/Hans Petter B. Sørensen*
+*Alpindata HP Brunstad Sørensen*
 
 ## Logo og ikon
 
@@ -15,7 +15,7 @@ GNSS-masta på snøflata. Radarbølgjene går ned i bakken mot eit nedgrave røy
 |---|---|
 | `pc/ikon/geoscan.svg` | Hovudikonet (512 × 512), kjeldefil |
 | `pc/ikon/geoscan-enkel.svg` | Forenkla ikon for 16–48 px |
-| `pc/ikon/geoscan-logo.svg` | Logo med tekst: fjelltoppar, SNOWMAN, GEOSCAN og «Alpindata v/Hans Petter B. Sørensen» |
+| `pc/ikon/geoscan-logo.svg` | Logo med tekst: fjelltoppar, SNOWMAN, GEOSCAN og «Alpindata HP Brunstad Sørensen» |
 | `pc/ikon/geoscan.ico` | Snarvegane på skrivebordet (16–256 px) |
 | `pc/ikon/oppstart.png` | Oppstartbiletet som blir vist når programmet startar |
 | `pc/web/vendor/geoscan-ikon.*`, `geoscan-logo.svg` | Nettlesaren: fane-ikon, toppfelt og rapportar |

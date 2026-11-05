@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """NMEA: sjekksum, tolking og omskriving av posisjonen i GGA, RMC, GLL og PTNL,GGK.
 
 Talker-ID-en blir aldri endra ($INGGA blir verande $INGGA). Alle felt utanom posisjon og høgd blir som dei var.

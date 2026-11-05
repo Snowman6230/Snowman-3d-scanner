@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Hellingskorreksjon for georadar (IDS Stream C): GNSS-antenna står på ein mast over radaren. Når radaren
 hallar, står antenna ikkje rett over referansepunktet på radaren, og posisjonen til OneVision blir forskoven.
 

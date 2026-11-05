@@ -4,7 +4,7 @@ title Snowman Geoscan - installasjon
 cd /d "%~dp0"
 echo.
 echo   Snowman Geoscan
-echo   Alpindata v/Hans Petter B. Sorensen
+echo   Alpindata HP Brunstad Sorensen
 echo   ---------------------------------------
 echo.
 python -c "import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)" >nul 2>&1
@@ -14,7 +14,7 @@ python -m pip install --upgrade --disable-pip-version-check -r requirements.txt
 if errorlevel 1 goto pipfeil
 echo.
 echo Lagar snarvegar pa skrivebordet ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop'); $w=New-Object -ComObject WScript.Shell; foreach($p in @(@('Snowman Geoscan','START-GEOSCAN.bat'),@('Snowman Geoscan DEMO','START-DEMO.bat'))){ $s=$w.CreateShortcut((Join-Path $d ($p[0]+'.lnk'))); $s.TargetPath=(Join-Path '%~dp0' $p[1]); $s.WorkingDirectory='%~dp0'; $s.IconLocation=(Join-Path '%~dp0' 'ikon\geoscan.ico'); $s.Description='Snowman Geoscan - Alpindata v/Hans Petter B. Sorensen'; $s.Save() }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$d=[Environment]::GetFolderPath('Desktop'); $w=New-Object -ComObject WScript.Shell; foreach($p in @(@('Snowman Geoscan','START-GEOSCAN.bat'),@('Snowman Geoscan DEMO','START-DEMO.bat'))){ $s=$w.CreateShortcut((Join-Path $d ($p[0]+'.lnk'))); $s.TargetPath=(Join-Path '%~dp0' $p[1]); $s.WorkingDirectory='%~dp0'; $s.IconLocation=(Join-Path '%~dp0' 'ikon\geoscan.ico'); $s.Description='Snowman Geoscan - Alpindata HP Brunstad Sorensen'; $s.Save() }"
 echo.
 echo Ferdig. Start med snarvegen "Snowman Geoscan" pa skrivebordet,
 echo eller prov forst "Snowman Geoscan DEMO" (simulert, utan utstyr).

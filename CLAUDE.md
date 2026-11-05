@@ -1,6 +1,6 @@
 # Snowman-3d-scanner – Snowman Geoscan
 
-Programmet heiter **Snowman Geoscan**. Under namnet står alltid «Alpindata v/Hans Petter B. Sørensen»
+Programmet heiter **Snowman Geoscan**. Under namnet står alltid «Alpindata HP Brunstad Sørensen»
 (statusside, oppstart, dokument). Namn, produsent og signatur ligg i `pc/opphav.py`. Alt programmet lagar
 (rapportar, eksportfiler, pakkar, loggar) skal ha med namnet: synleg i rapportar og gøymt som metadata i
 datafiler (sjå `docs/LOGO.md`). Logoen er same uttrykk som SNOWMAN Snødjupne, men med georadar. Kjelda er

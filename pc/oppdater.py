@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Oppdater Snowman Geoscan frå GitHub utan å installere på nytt.
 
 Same prinsipp som Snødjupne (pc/v1.6/start_snowman.py, oppdater()): med git blir det «git pull», utan git blir

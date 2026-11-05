@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Rett objekt frå georadaren (rør, kablar, holrom) for hellinga – djupnfeilen.
 
 OneVision/GRED HD legg eit objekt loddrett under radaren. Når bakken hallar, ligg det eigentleg vinkelrett på

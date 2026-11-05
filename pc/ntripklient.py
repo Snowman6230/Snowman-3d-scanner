@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 # Opphav: kopiert uendra frå SNOWMAN Snødjupne, pc/v1.6/ntripklient.py (Snowman6230/Snowman-Snowdeept, commit 8a05dc4).
 """NTRIP-klient: kopling til casteren (NTRIP 1 og 2), og kjeldetabellen (lista over mountpoints).
 

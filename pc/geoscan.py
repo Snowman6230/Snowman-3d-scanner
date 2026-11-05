@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Snowman Geoscan – hellingskorrigert GNSS-posisjon til IDS Stream C (OneVision).
 
     mottakar (NMEA: GGA + helling) ──┐
@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.6.0"
+VERSJON = "0.6.1"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -267,7 +267,7 @@ class App:
             d = HER / cfg["logg"]
             d.mkdir(exist_ok=True)
             self.rec = open(d / time.strftime("raa_%Y%m%d_%H%M%S.nmea"), "a", encoding="ascii", errors="replace")
-            self.rec.write(f"# {NAMN} {VERSJON} - Alpindata v/Hans Petter B. Sorensen - {SIGNATUR}\n")
+            self.rec.write(f"# {NAMN} {VERSJON} - Alpindata HP Brunstad Sorensen - {SIGNATUR}\n")
         self.ntrip = NT.NtripTeneste(NT.load(cfg, HER), self, VERSJON)
         self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "koyrer": False, "logg": [], "omstart": False}
 

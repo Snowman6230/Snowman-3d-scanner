@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Opphavet til Snowman Geoscan: namn, produsent og signatur. Alt programmet lagar (rapportar, eksportfiler,
 pakkar, loggar og nettsida) får namnet med seg – synleg i rapportar, og gøymt som metadata i datafiler, så
 opphavet kan visast også når fila er sendt vidare.
@@ -10,7 +10,7 @@ import base64
 import hashlib
 
 NAMN = "Snowman Geoscan"
-PRODUSENT = "Alpindata v/Hans Petter B. Sørensen"
+PRODUSENT = "Alpindata HP Brunstad Sørensen"
 COPYRIGHT = "Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte."
 _KJERNE = "SNOWMAN GEOSCAN|ALPINDATA|HANS PETTER BRUNSTAD SØRENSEN|SYKKYLVEN|2026"
 SIGNATUR = "SNWGEO-" + hashlib.sha256(_KJERNE.encode("utf-8")).hexdigest()[:16].upper()

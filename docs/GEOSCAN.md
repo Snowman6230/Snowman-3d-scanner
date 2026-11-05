@@ -1,6 +1,6 @@
 # Snowman Geoscan – hellingskorreksjon for IDS Stream C
 
-*Alpindata v/Hans Petter B. Sørensen*
+*Alpindata HP Brunstad Sørensen*
 
 Same prinsipp som i SNOWMAN Snødjupne: hellinga på maskina rettar både posisjonen og høgda/djupna. Snødjupne
 reknar det for ei tråkkemaskin, Geoscan for ein georadar som skannar ned til ca. 2,5 m.

@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """«Send inn»: svar på dei opne spørsmåla, filer frå operatøren (eksportar, oppsettfiler, bilete), og éi pakke
 (zip) med alt utviklaren treng. Pakka inneheld aldri passord eller brukarnamn.
 

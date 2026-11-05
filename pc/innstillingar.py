@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Innstillingar frå nettlesaren: les og skriv geoscan_config.json og ntrip_lokal.json (innlogging).
 Passordet blir aldri sendt til nettlesaren – berre om det finst. Tomt passordfelt = behald det gamle."""
 import json

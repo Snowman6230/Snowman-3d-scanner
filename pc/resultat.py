@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Resultat etter skanninga: loggøktene (spor med helling) og retting av eksportfiler frå GRED HD / OneVision.
 Brukt av Resultat-fana i nettlesaren (webtenar.py). Alt blir rekna lokalt på PC-en.
 

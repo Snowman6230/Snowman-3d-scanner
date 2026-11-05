@@ -293,7 +293,7 @@ def test_ende_til_ende_simulator_ntrip_tcp_status(tmp_path):
     assert st["korr"]["korrigert"] and st["korr"]["hellingskjelde"] == "PASHR"
     assert st["ntrip"]["tilstand"] == "tilkopla" and st["ntrip"]["byte"] > 0
     assert m.rtcm_bytes > 0 and c.gga > 0                      # RTCM kom fram til «mottakaren», GGA til casteren
-    assert "Snowman Geoscan" in side and "Alpindata v/Hans Petter B. Sørensen" in side
+    assert "Snowman Geoscan" in side and "Alpindata HP Brunstad Sørensen" in side
     assert list((tmp_path / "logg").glob("raa_*.nmea")) and list((tmp_path / "logg").glob("geoscan_*.csv"))
 
 
@@ -374,13 +374,13 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         assert hb is not None and abs(ho - (hb - d1)) < 0.002
         assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - 1.4)) < 0.05      # simulert antenne − mast
         csvtxt = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read().decode()
-        assert csvtxt.startswith("Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen")      # tittellina
+        assert csvtxt.startswith("Snowman Geoscan – Alpindata HP Brunstad Sørensen")      # tittellina
         assert "djupn_retta_m" in csvtxt.splitlines()[1] and ";1,989;" in csvtxt and "." not in csvtxt.splitlines()[2]
         # namnet og signaturen er med i alle filtypane
         import opphav as OP
         gjtxt = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["geojson"]), timeout=5).read()
         assert OP.sjekk_signatur(dxf) and OP.sjekk_signatur(csvtxt) and OP.sjekk_signatur(gjtxt)
-        assert "SNOWMAN_GEOSCAN" in dxf and "Alpindata v/Hans Petter B. Sørensen" in dxf
+        assert "SNOWMAN_GEOSCAN" in dxf and "Alpindata HP Brunstad Sørensen" in dxf
         assert r["filer"]["geojson"] == "røyr_retta.geojson"
         # svar og pakke
         post("api/svar", {"namn": "Norman", "svar": {"mast": "1,45", "ukjend": "x"}})

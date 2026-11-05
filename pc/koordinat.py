@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """GRS80 (EUREF89) ↔ UTM, og meridiankonvergens.
 
 Opphav: utm_forward/utm_inverse og konstantane er kopierte frå SNOWMAN Snødjupne, pc/v1.6/terrain.py

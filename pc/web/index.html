@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Snowman Geoscan</title>
-<meta name="generator" content="Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen">
-<meta name="author" content="Alpindata v/Hans Petter B. Sørensen">
+<meta name="generator" content="Snowman Geoscan – Alpindata HP Brunstad Sørensen">
+<meta name="author" content="Alpindata HP Brunstad Sørensen">
 <meta name="copyright" content="© 2026 Hans Petter Brunstad Sørensen (Alpindata)">
 <link rel="icon" type="image/png" href="vendor/geoscan-ikon.png">
 <link rel="stylesheet" href="vendor/leaflet.css">
@@ -70,7 +70,7 @@ svg{display:block;margin:6px auto 0}
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
     <img src="vendor/geoscan-ikon.svg" alt="" width="48" height="48" style="border-radius:11px">
     <div><h1>Snowman Geoscan <span id="ver"></span></h1>
-    <div class="prod" style="margin:0">Alpindata v/Hans Petter B. Sørensen</div></div></div>
+    <div class="prod" style="margin:0">Alpindata HP Brunstad Sørensen</div></div></div>
   <div id="demo" class="banner demo" style="display:none">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
     <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
@@ -491,7 +491,7 @@ function punktAv(fi){const f=siste.etter.features[fi],pr=f.properties||{},ll=[];
     hb:g("bakke_nn2000_m",i),fl:g("flytta_cm",i),lat:p[0],lon:p[1]}))}
 const objNamn=fi=>{const pr=siste.etter.features[fi].properties||{};return{id:pr.id??(fi+1),lag:pr.layer||"",type:pr.type||"",skildring:pr.description||"",pr}};
 const EPSG={32:5972,33:5973,35:5975};
-let OPPHAV={namn:"Snowman Geoscan",produsent:"Alpindata v/Hans Petter B. Sørensen",signatur:"",versjon:""};
+let OPPHAV={namn:"Snowman Geoscan",produsent:"Alpindata HP Brunstad Sørensen",signatur:"",versjon:""};
 const generatorTekst=()=>`${OPPHAV.namn} ${OPPHAV.versjon} – ${OPPHAV.produsent} – ${OPPHAV.signatur}`;
 function cp1252(s){/* DXF R12 skal vere Windows-1252: æøå og latin-1 er like, nokre teikn har eigne kodar */
   const sp={"€":0x80,"…":0x85,"–":0x96,"—":0x97,"‘":0x91,"’":0x92,"“":0x93,"”":0x94,"•":0x95},b=new Uint8Array(s.length);

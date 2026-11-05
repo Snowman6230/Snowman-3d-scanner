@@ -1,4 +1,4 @@
-# Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen. Copyright © 2026. Alle rettar reserverte.
+# Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Nettlesargrensesnittet til Snowman Geoscan: http://localhost:8088
 
 Fanene Status, Resultat, Send inn og Innstillingar (pc/web/index.html). Alt blir køyrt lokalt på PC-en.
