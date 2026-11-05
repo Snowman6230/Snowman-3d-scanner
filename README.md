@@ -30,3 +30,8 @@ Eige prosjekt, skilt frå SNOWMAN Snødjupne (Snowman6230/Snowman-Snowdeept).
 - `helling.py`, `nmea.py`, `koordinat.py`, `geoide.py`: delane bak. Opphav frå Snødjupne er notert i kvar fil.
 
 Testar: `python -m pytest tests`
+
+## Lisens
+
+© 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte – sjå [LICENSE](LICENSE). Repoet kan vere
+ope i ein testperiode. Det gir ingen rett til å kopiere eller bruke programvara.

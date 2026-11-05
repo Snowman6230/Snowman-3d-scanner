@@ -80,6 +80,9 @@ svg{display:block;margin:6px auto 0}
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
     <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
     <pre id="ologg" style="margin-top:6px"></pre></div>
+  <div id="nokkel" class="banner oppd" style="display:none">Snowman Geoscan får ikkje sjekke om det finst nye versjonar:
+    programmet ligg no i eit privat repo. Legg inn GitHub-nøkkelen du har fått av Hans Petter under
+    <a href="#" onclick="visFane('innst');return false" style="color:var(--var)">Innstillingar → Oppdatering</a>.</div>
   <div id="meldingar"></div>
   <nav>
     <button data-f="status" class="aktiv">Status</button>
@@ -318,7 +321,8 @@ svg{display:block;margin:6px auto 0}
   <div class="k"><h2>Oppdatering</h2>
     <div class="felt"><label><span>GitHub-nøkkel (berre lesetilgang) <span id="itok" style="display:inline"></span></span>
       <input name="token" type="password" autocomplete="off" placeholder="(uendra)"></label></div>
-    <p class="hj" style="margin-top:8px">Trengst for å hente nye versjonar, sidan programmet ligg i eit privat repo. Du får nøkkelen av Hans Petter.
+    <p class="hj" style="margin-top:8px">Trengst for å hente nye versjonar når programmet ligg i eit privat repo. I testperioden er
+      repoet ope, og nøkkel trengst ikkje – men legg han gjerne inn alt no, så held oppdateringane fram når repoet blir lukka. Du får nøkkelen av Hans Petter.
       Han blir lagra berre på denne PC-en.</p></div>
   <div class="k"><button class="b" type="submit">Lagre og start på nytt</button> <span class="melding" id="imeld"></span>
     <p class="hj" id="ifil"></p></div>
@@ -365,7 +369,9 @@ async function tikk(){let s;try{s=await (await fetch("status")).json()}catch(e){
   set("nmeld",n.tilstand=="tilkopla"?(n.protokoll+" · "+F(n.byte/1024,0)+" kB · alder "+(n.alder==null?"–":F(n.alder,0)+" s")):n.melding);
   $("portar").textContent=Object.entries(s.inn).map(([p,v])=>"inn "+p+": "+v)
     .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n")}
-function visOppd(o){const vis=o.nyare||o.koyrer||o.logg.length||o.omstart;$("oppd").style.display=vis?"block":"none";
+function visOppd(o){const nk=o.feil=="nokkel"&&!o.nyare&&!o.koyrer;
+  $("nokkel").style.display=nk?"block":"none";
+  const vis=o.nyare||o.koyrer||o.logg.length||o.omstart;$("oppd").style.display=vis?"block":"none";
   $("otekst").textContent=o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?"Ny versjon v"+o.github+" finst"+(o.melding?": «"+o.melding+"»":".")+" ":"";
   $("obtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none";$("ologg").textContent=o.logg.join("\n");
   if(o.omstart)ventOmstart()}

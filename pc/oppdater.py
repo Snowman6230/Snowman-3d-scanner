@@ -9,7 +9,7 @@ siste versjon lasta ned som zip og berre endra filer skrivne inn i pc-mappa. I t
     innsendt/, pakkar/, resultat/ (data frå operatøren)
   - nye innstillingar kjem automatisk (geoscan.py fyller inn standardverdiar for nøklar som manglar)
 
-Repoet er privat. Nedlasting krev då ein GitHub-nøkkel med berre lesetilgang i pc/oppdatering_lokal.json:
+Er repoet privat, krev nedlasting ein GitHub-nøkkel med berre lesetilgang i pc/oppdatering_lokal.json:
     {"token": "github_pat_..."}      (fine-grained token, berre «Contents: Read-only» på Snowman-3d-scanner)
 Er repoet offentleg, trengst ingen nøkkel.
 
@@ -87,12 +87,22 @@ def remote_melding():
         return None
 
 
+SISTE_FEIL = [None]   # «nokkel» (privat repo utan gyldig nøkkel), «nett» (ingen kontakt) eller None
+
+
 def check():
-    """(lokal, på GitHub, nyare?) – eller (lokal, None, False) utan nett/tilgang."""
+    """(lokal, på GitHub, nyare?) – eller (lokal, None, False) utan nett/tilgang. Årsaka står i SISTE_FEIL[0]."""
+    import urllib.error
     lok = local_version()
+    SISTE_FEIL[0] = None
     try:
         rem = remote_version()
+    except urllib.error.HTTPError as e:
+        # GitHub svarar 404 på private repo utan (gyldig) nøkkel, 401/403 på ugyldig nøkkel
+        SISTE_FEIL[0] = "nokkel" if e.code in (401, 403, 404) else "nett"
+        return lok, None, False
     except Exception:
+        SISTE_FEIL[0] = "nett"
         return lok, None, False
     if rem == "?":                      # fann ikkje versjonsnummeret (t.d. eldre versjon på GitHub)
         return lok, None, False

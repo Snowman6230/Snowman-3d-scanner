@@ -154,8 +154,9 @@ Når det finst ein ny versjon, kjem det ein gul linje øvst med knappen **Oppdat
 programmet ned den nye versjonen og startar på nytt av seg sjølv. Innstillingane dine blir verande som dei er.
 Går noko gale, dobbeltklikk `pc\TILBAKE-TIL-FORRIGE.bat`.
 
-For å hente oppdateringar treng PC-en ein GitHub-nøkkel. Du får han av Hans Petter, og legg han inn under
-**Innstillingar → Oppdatering**.
+I testperioden ligg programmet ope på GitHub, og oppdateringane kjem utan vidare. Seinare blir det lukka. Då
+treng PC-en ein GitHub-nøkkel, som du får av Hans Petter og legg inn under **Innstillingar → Oppdatering**. Legg
+han gjerne inn med ein gong. Manglar nøkkelen når repoet er lukka, seier programmet ifrå øvst på sida.
 
 ## Når noko ikkje verkar
 

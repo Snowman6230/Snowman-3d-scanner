@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.7.0"
+VERSJON = "0.7.1"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -269,14 +269,14 @@ class App:
             self.rec = open(d / time.strftime("raa_%Y%m%d_%H%M%S.nmea"), "a", encoding="ascii", errors="replace")
             self.rec.write(f"# {NAMN} {VERSJON} - Alpindata HP Brunstad Sorensen - {SIGNATUR}\n")
         self.ntrip = NT.NtripTeneste(NT.load(cfg, HER), self, VERSJON)
-        self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "melding": None, "koyrer": False, "logg": [], "omstart": False}
+        self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "melding": None, "feil": None, "koyrer": False, "logg": [], "omstart": False}
 
     def start(self):
         for spec in self.cfg["inn"]:
             threading.Thread(target=self.reader, args=(spec,), daemon=True).start()
         self.ntrip.start()
         if self.cfg.get("sjekk_oppdatering", True):
-            threading.Thread(target=self.check_update, daemon=True).start()
+            threading.Thread(target=self.update_loop, daemon=True).start()
         if self.cfg.get("status_port"):
             import webtenar
             webtenar.start(self, int(self.cfg["status_port"]), bool(self.cfg.get("status_lan")))
@@ -325,7 +325,18 @@ class App:
     def check_update(self):
         import oppdater
         lok, rem, nyare = oppdater.check()
-        self.oppd.update(github=rem, nyare=nyare, melding=oppdater.remote_melding() if nyare else None)
+        self.oppd.update(github=rem, nyare=nyare, melding=oppdater.remote_melding() if nyare else None,
+                         feil=oppdater.SISTE_FEIL[0])
+
+    def update_loop(self, timar=3):
+        """Sjå etter ny versjon ved oppstart og så kvar 3. time, så ein ny versjon (med melding) synest
+        sjølv om programmet står på heile dagen."""
+        while True:
+            try:
+                self.check_update()
+            except Exception:
+                pass
+            time.sleep(timar * 3600)
 
     def run_update(self):
         """Køyrt frå statussida. Ved ny versjon: avslutt med kode 3, så START-GEOSCAN.bat startar på nytt."""

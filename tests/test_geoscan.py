@@ -474,3 +474,22 @@ def test_meldingar_json_i_repoet_er_gyldig():
     m = _json.loads((Path(__file__).resolve().parent.parent / "pc" / "meldingar.json").read_text(encoding="utf-8"))
     ids = [x["id"] for x in m["meldingar"]]
     assert ids and len(ids) == len(set(ids)) and all(x.get("tittel") for x in m["meldingar"])
+
+
+def test_oppdatering_seier_ifra_om_privat_repo_utan_nokkel(monkeypatch):
+    import io as _io
+    import urllib.error
+    import oppdater as O
+
+    def privat(*a, **k):
+        raise urllib.error.HTTPError("u", 404, "Not Found", {}, _io.BytesIO(b""))
+    monkeypatch.setattr(O, "_get", privat)
+    assert O.check()[1:] == (None, False) and O.SISTE_FEIL[0] == "nokkel"
+
+    def utan_nett(*a, **k):
+        raise OSError("ingen nett")
+    monkeypatch.setattr(O, "_get", utan_nett)
+    O.check()
+    assert O.SISTE_FEIL[0] == "nett"
+    monkeypatch.setattr(O, "_get", lambda *a, **k: b'VERSJON = "99.0.0"\n')
+    assert O.check()[2] is True and O.SISTE_FEIL[0] is None

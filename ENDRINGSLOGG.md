@@ -2,6 +2,13 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.7.1 – 5. november 2026
+- Repoet blir **offentleg i testperioden** og lukka seinare. Oppdateringa fungerer utan nøkkel medan det er
+  ope. Er repoet privat og nøkkel manglar, viser programmet ei tydeleg åtvaring med lenke til Innstillingar.
+- Programmet ser etter ny versjon ved oppstart og så kvar 3. time.
+- LICENSE: alle rettar reserverte. At koden er synleg, gir ingen rett til bruk. Lista over tredjepartslisensar
+  (Leaflet, Kartverket) er med.
+
 ## 0.7.0 – 5. november 2026
 - **Testsjekkliste** under «Send inn» med dei fire stega frå testplanen (16 punkt). Kvart punkt har status og
   kommentar. Ho blir lagra med ein gong (innsendt/sjekkliste.json), og pakka får SJEKKLISTE.txt og
