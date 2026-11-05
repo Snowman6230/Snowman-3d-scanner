@@ -52,8 +52,29 @@ Fana **Resultat**:
   2. Trykk **Vel eksportfil …**.
   3. Kartet viser objekta **før** (grå stipla) og **etter** retting (blå). Tabellen viser kor mykje kvart objekt
      er flytta.
-- **Last ned** dei retta objekta som **GeoJSON, CSV eller DXF** (for AutoCAD, Gemini og GIS). Filene ligg òg i
-  mappa `pc\resultat`.
+- **Djupna:** tabellen viser djupna før og etter retting for kvart objekt, med snitt og spenn (grunnaste–djupaste).
+  Djupn er alltid loddrett avstand frå bakken ned til objektet. På kartet er objekta farga etter djupn: lys blå
+  er grunt, lilla og rosa er over 2 m. Hald musa over eit punkt for å sjå djupna der. Trykk **Vis djupn på
+  kartet** for å få djupna skriven ved punkta.
+- **Djupneprofil:** trykk på eit objekt i tabellen eller på kartet. Då ser du korleis røyret eller kabelen går
+  nedover i bakken langs heile lengda.
+- **Tverrsnitt på valfri stad:**
+  1. Trykk **✚ Tverrsnitt**, og klikk to punkt på kartet, A og B, til dømes på tvers av ei grøft.
+  2. Under kartet kjem eit snitt ned i bakken langs lina A–B. Det viser kvar røyr og kablar kryssar, og kor djupt
+     dei ligg.
+  3. Den stipla ringen viser kvar GRED HD/OneVision la objektet, og pila viser kor mykje hellinga flytta det.
+  4. Står diameteren i eksporten (`diameter_mm`), blir røyret teikna i rett storleik.
+  5. Tabellen viser avstanden frå A, djupna før og etter, og flyttinga.
+- **Grav nedover:** dra glidebrytaren over kartet for å grave centimeter for centimeter, eller trykk **▶ Spel
+  av**. Objekt som ligg på den djupna (±5 cm), lyser opp med ein ring der dei kryssar djupna. Det som ligg
+  grunnare, blir blekt, og det som ligg djupare, er enno skjult. Profilen viser same djupn som ei stipla line.
+  **Vis alt** tek deg tilbake.
+- **Last ned** dei retta objekta som **GeoJSON, CSV eller DXF** (for AutoCAD, Gemini og GIS). DXF-fila har djupna som
+  tekst ved kvart punkt (laget `<lag>_DJUPN`), og CSV-fila har djupna før og etter for kvart punkt. Filene ligg
+  òg i mappa `pc\resultat`.
+
+**Sjølve radarbiletet** cm for cm, som djupnesnitt eller radargram, ser du i OneVision og GRED HD som før. Snowman
+Geoscan har berre objekta du eksporterer, ikkje radardataa.
 
 Djupna kan berre rettast når hellinga er målt som tal, og det krev ein ekstra hellingsmålar (IMU) på ramma. Med
 berre R12i blir masta retta under skanninga, men ikkje djupna. Då seier Resultat-fana frå om det.

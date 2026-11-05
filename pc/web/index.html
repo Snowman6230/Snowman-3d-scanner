@@ -57,6 +57,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .verktoy select{width:auto}
 svg{display:block;margin:6px auto 0}
 .leaflet-container{font:inherit}
+.djl{background:#0f1418;color:#e8eef2;border:1px solid #4ea8ff;font-size:11px;font-weight:700;padding:1px 5px;box-shadow:none}
+.djl:before{display:none}
 </style>
 </head>
 <body>
@@ -118,7 +120,20 @@ svg{display:block;margin:6px auto 0}
   </div>
   <div class="k">
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
-      <span><button class="b gra" id="kbtn" onclick="bytKart()">Gråtonekart</button></span></div>
+      <span><button class="b gra" id="tbtn" onclick="startTverr()" style="display:none">✚ Tverrsnitt</button>
+      <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
+      <button class="b gra" id="kbtn" onclick="bytKart()">Gråtonekart</button></span></div>
+    <div id="grav" class="k" style="display:none;background:var(--kort2);margin:0 0 10px;padding:10px 12px">
+      <div class="verktoy" style="gap:12px">
+        <b>Grav nedover:</b>
+        <input type="range" id="gdjupn" min="0" max="300" step="1" value="0" style="flex:1;min-width:180px">
+        <span style="font-variant-numeric:tabular-nums;min-width:74px;font-weight:700;font-size:18px" id="gtekst">0 cm</span>
+        <button class="b gra" id="gspel" onclick="spelGrav()">▶ Spel av</button>
+        <button class="b gra" onclick="slaGravAv()">Vis alt</button>
+      </div>
+      <div class="hj" style="margin-top:4px" id="ginfo">Dra for å grave nedover centimeter for centimeter. Objekt som ligg på denne djupna (±5 cm)
+        lyser opp, det som ligg grunnare blir blekt, og det som ligg djupare er enno skjult.</div>
+    </div>
     <div id="kart"></div>
     <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet frå Kartverket kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel.</div>
     <div class="forkl">
@@ -126,15 +141,39 @@ svg{display:block;margin:6px auto 0}
       <span><i style="background:#f2b33d"></i>3–6°</span><span><i style="background:#ef5b5b"></i>over 6°</span>
       <span><i style="background:#6b7780"></i>utan hellingsdata</span>
       <span><i style="background:repeating-linear-gradient(90deg,#9aa7b1 0 5px,transparent 5px 8px)"></i>objekt før retting</span>
-      <span><i style="background:#4ea8ff;height:5px"></i>objekt etter retting</span>
+      <span><i style="background:#4ea8ff;height:5px"></i>objekt etter retting, farga etter djupn:</span>
+      <span><i style="background:#9be7ff"></i>0–0,5 m</span><span><i style="background:#4ea8ff"></i>0,5–1 m</span>
+      <span><i style="background:#6a6cff"></i>1–1,5 m</span><span><i style="background:#a855f7"></i>1,5–2 m</span>
+      <span><i style="background:#e04fd0"></i>over 2 m</span>
     </div>
+  </div>
+  <div class="k" id="tverr" style="display:none">
+    <div class="verktoy" style="justify-content:space-between"><h2 style="margin:0" id="ttittel">Tverrsnitt</h2>
+      <span><button class="b gra" onclick="startTverr()">Nytt tverrsnitt</button> <button class="b gra" onclick="lukkTverr()">Lukk</button></span></div>
+    <div class="hj" id="tinfo" style="margin-top:4px"></div>
+    <svg id="tsvg" width="100%" height="280" style="margin-top:8px;background:var(--bg);border-radius:8px"></svg>
+    <div class="forkl"><span><i style="background:#8a6a4a"></i>bakken</span>
+      <span><i style="background:#4ea8ff;border-radius:50%;width:10px;height:10px"></i>objekt etter retting (storleik = diameter når han er kjend)</span>
+      <span><i style="border:1.5px dashed #e8eef2;background:none;border-radius:50%;width:10px;height:10px"></i>der GRED HD/OneVision la det (før retting)</span></div>
+    <div class="tabell" style="margin-top:8px"><table id="ttab"><thead><tr><th>Objekt</th><th class="n">Frå A (m)</th><th class="n">Djupn etter (m)</th>
+      <th class="n">Djupn før (m)</th><th class="n">Flytta langs snittet</th><th class="n">Diameter</th></tr></thead><tbody></tbody></table></div>
   </div>
   <div class="k" id="rboks" style="display:none">
     <h2>Resultat</h2>
     <div id="rsamandrag" class="hj"></div>
     <div class="verktoy" id="rnedlast" style="margin:8px 0 12px"></div>
+    <p class="hj">Djupn er loddrett avstand frå bakken ned til objektet, i meter. «Før» er det GRED HD/OneVision rekna
+    (som om vogna stod vatrett), «etter» er retta for hellinga. Trykk på eit objekt for å sjå djupneprofilen.</p>
     <div class="tabell"><table id="rtab"><thead><tr><th>#</th><th>Id</th><th>Lag</th><th>Type</th><th>Skildring</th>
-      <th class="n">z (snitt)</th><th class="n">Maks flytta</th><th class="n">Punkt retta</th></tr></thead><tbody></tbody></table></div>
+      <th class="n">Djupn før (m)</th><th class="n">Djupn etter (m)</th><th class="n">Maks flytta</th><th class="n">Punkt retta</th></tr></thead><tbody></tbody></table></div>
+    <div id="profil" style="display:none;margin-top:14px">
+      <h2 id="ptittel" style="margin-bottom:4px"></h2>
+      <div class="hj" id="pinfo"></div>
+      <svg id="psvg" width="100%" height="240" style="margin-top:6px;background:var(--bg);border-radius:8px"></svg>
+      <div class="forkl"><span><i style="background:#8a6a4a"></i>bakken</span>
+        <span><i style="background:repeating-linear-gradient(90deg,#e8eef2 0 4px,transparent 4px 8px);height:2px"></i>djupn før retting</span>
+        <span><i style="background:#4ea8ff;height:5px"></i>djupn etter retting</span></div>
+    </div>
   </div>
   <div class="k"><h2>Tidlegare resultatfiler</h2><div id="rfiler" class="hj">–</div></div>
 </section>
@@ -289,7 +328,7 @@ let kart=null,grunn=null,grunnGra=false,lagSpor=null,lagObj=null;
 const KV="https://cache.kartverket.no/v1/wmts/1.0.0/";
 function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView([62.39,6.58],12);
   setGrunn();lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
-  L.control.scale({imperial:false}).addTo(kart)}
+  L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk)}
 function setGrunn(){if(grunn)kart.removeLayer(grunn);
   grunn=L.tileLayer(KV+(grunnGra?"topograatone":"topo")+"/default/webmercator/{z}/{y}/{x}.png",
    {maxZoom:22,maxNativeZoom:18,attribution:"© Kartverket"}).addTo(kart);
@@ -322,18 +361,151 @@ $("eksport").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!
     const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde]});
     visResultat(r,f.name);m.textContent="";lastResFiler()}
   catch(err){m.className="melding feil";m.textContent="Kunne ikkje rette: "+err.message}};
-function visResultat(r,namn){initKart();lagObj.clearLayers();$("rboks").style.display="block";
-  if(r.for)geoTilKart(r.for,()=>({color:"#9aa7b1",weight:2,dashArray:"5 4",opacity:.9,fillOpacity:.6})).addTo(lagObj);
-  let etter=null;if(r.etter){etter=geoTilKart(r.etter,()=>({color:"#4ea8ff",weight:4,opacity:1,fillOpacity:.9})).addTo(lagObj)}
-  if(etter&&etter.getBounds().isValid())kart.fitBounds(etter.getBounds().pad(.4));
+// djupn → farge (grunt = lys, djupt = mørk lilla)
+const djFarge=d=>d==null?"#4ea8ff":d<0.5?"#9be7ff":d<1?"#4ea8ff":d<1.5?"#6a6cff":d<2?"#a855f7":"#e04fd0";
+const fm=(x,d=2)=>x==null?"–":F(+x,d);
+let lagFor=null,siste=null,djupnTekst=false,lagDjupn=null,uthev=null,segs=[],gravPa=false,gravTimer=null;
+function linjer(g){const c=g.coordinates;if(g.type=="Point")return[[c]];if(g.type=="LineString"||g.type=="MultiPoint")return[c];
+  if(g.type=="MultiLineString"||g.type=="Polygon")return c;if(g.type=="MultiPolygon")return c.flat();return[]}
+function visResultat(r,namn){initKart();lagObj.clearLayers();siste=r;segs=[];slaGravAv(true);$("rboks").style.display="block";$("profil").style.display="none";
+  lagFor=r.for?geoTilKart(r.for,()=>({color:"#9aa7b1",weight:2,dashArray:"5 4",opacity:.9,fillOpacity:.6})).addTo(lagObj):null;
+  const alle=[];
+  if(r.etter)r.etter.features.forEach((f,fi)=>{const pr=f.properties||{},d1=pr.djupn_retta_m||[],d0=pr.djupn_for_m||[],fl=pr.flytta_cm||[];
+    const namn=[pr.id,pr.layer,pr.description].filter(Boolean).join(" · ")||"objekt "+(fi+1);let k=0;
+    linjer(f.geometry).forEach(ln=>{const ll=ln.map(p=>[p[1],p[0]]);
+      for(let j=0;j<ll.length;j++){const idx=k+j;alle.push(ll[j]);
+        if(j<ll.length-1){const dm=(d1[idx]!=null&&d1[idx+1]!=null)?(d1[idx]+d1[idx+1])/2:d1[idx];
+          const seg=L.polyline([ll[j],ll[j+1]],{color:djFarge(dm),weight:5,opacity:1}).on("click",()=>visProfil(fi)).addTo(lagObj);
+          segs.push({lag:seg,a:d1[idx],b:d1[idx+1],ll:[ll[j],ll[j+1]],namn,farge:djFarge(dm)})}
+        const pkt=L.circleMarker(ll[j],{radius:4,color:"#0f1418",weight:1,fillColor:djFarge(d1[idx]),fillOpacity:1});
+        segs.push({lag:pkt,a:d1[idx],b:d1[idx],ll:[ll[j]],namn,farge:djFarge(d1[idx]),punkt:true});pkt
+          .bindTooltip(`<b>${esc(namn)}</b><br>Djupn <b>${fm(d1[idx])} m</b>`+(d0[idx]!=null&&fl[idx]!=null?` (før ${fm(d0[idx])} m)<br>flytta ${fm(fl[idx],1)} cm`:fl[idx]==null?"<br>ikkje retta (ingen logg i nærleiken)":""))
+          .on("click",()=>visProfil(fi)).addTo(lagObj)}
+      k+=ll.length})});
+  if(alle.length)kart.fitBounds(L.latLngBounds(alle).pad(.4));
+  $("dbtn").style.display=r.etter?"inline-block":"none";$("tbtn").style.display=r.etter?"inline-block":"none";lukkTverr();
+  const dmx=Math.max(0,...segs.map(x=>Math.max(x.a??0,x.b??0)));$("grav").style.display=segs.length&&dmx>0?"block":"none";
+  $("gdjupn").max=Math.ceil(dmx*100)+10;djupnTekst=false;$("dbtn").textContent="Vis djupn på kartet";if(lagDjupn)lagDjupn.clearLayers();
   const maks=Math.max(0,...r.tabell.map(t=>+t.maks_endring_cm||0));
-  $("rsamandrag").innerHTML=`<b>${esc(namn)}</b>: ${r.retta_punkt} punkt retta, ${r.utan_logg} utan logg innan 1 m (står urørte).
-    z er tolka som <b>${r.z=="djupn"?"djupn":"høgd (NN2000)"}</b>, UTM-sone ${r.sone}. Største flytting: <b>${F(maks,1)} cm</b>.
+  const djupast=Math.max(0,...r.tabell.map(t=>t.djupn_etter?t.djupn_etter.maks:0));
+  $("rsamandrag").innerHTML=`<b>${esc(namn)}</b>: ${r.tabell.length} objekt, ${r.retta_punkt} punkt retta, ${r.utan_logg} utan logg innan 1 m (står urørte).
+    z i fila er tolka som <b>${r.z=="djupn"?"djupn":"høgd (NN2000)"}</b>, UTM-sone ${r.sone}. Djupaste objekt: <b>${fm(djupast)} m</b>. Største flytting: <b>${F(maks,1)} cm</b>.
     ${r.utan_logg&&!r.retta_punkt?"<br><span class=var>Ingen punkt låg nær ein logg med helling. Er skanninga gjort med Snowman Geoscan, og var hellinga tilgjengeleg (ekstra IMU)?</span>":""}`;
   $("rnedlast").innerHTML=["geojson","csv","dxf"].map(k=>`<a class="b gra" href="last-ned/resultat/${encodeURIComponent(r.filer[k])}">Last ned ${k.toUpperCase()}</a>`).join(" ");
-  const tb=$("rtab").tBodies[0];tb.innerHTML="";r.tabell.forEach(t=>{const tr=document.createElement("tr");
+  const ds=d=>!d?"–":d.min==d.maks?fm(d.snitt):`${fm(d.snitt)} <span class=hj>(${fm(d.min)}–${fm(d.maks)})</span>`;
+  const tb=$("rtab").tBodies[0];tb.innerHTML="";r.tabell.forEach((t,fi)=>{const tr=document.createElement("tr");tr.style.cursor="pointer";
     tr.innerHTML=`<td>${t.nr}</td><td>${esc(t.id)}</td><td>${esc(t.lag)}</td><td>${esc(t.type)}</td><td>${esc(t.skildring)}</td>
-    <td class=n>${t.z==null?"–":F(t.z,2)}</td><td class=n>${F(+t.maks_endring_cm||0,1)} cm</td><td class=n>${esc(t.retta)}</td>`;tb.appendChild(tr)})}
+    <td class=n>${ds(t.djupn_for)}</td><td class=n><b>${ds(t.djupn_etter)}</b></td><td class=n>${F(+t.maks_endring_cm||0,1)} cm</td><td class=n>${esc(t.retta)}</td>`;
+    tr.onclick=()=>visProfil(fi);tb.appendChild(tr)})}
+function bytDjupnTekst(){if(!siste||!siste.etter)return;djupnTekst=!djupnTekst;$("dbtn").textContent=djupnTekst?"Skjul djupn på kartet":"Vis djupn på kartet";
+  if(!lagDjupn)lagDjupn=L.layerGroup().addTo(kart);lagDjupn.clearLayers();if(!djupnTekst)return;
+  siste.etter.features.forEach(f=>{const d1=(f.properties||{}).djupn_retta_m||[];let k=0;
+    linjer(f.geometry).forEach(ln=>{const steg=Math.max(1,Math.ceil(ln.length/8));
+      ln.forEach((p,j)=>{if((j%steg==0||j==ln.length-1)&&d1[k+j]!=null)
+        L.tooltip({permanent:true,direction:"top",className:"djl",offset:[0,-4]}).setLatLng([p[1],p[0]]).setContent(fm(d1[k+j])+" m").addTo(lagDjupn)});k+=ln.length})})}
+// ---------- grav nedover (djupnesnitt av objekta) ----------
+const SNITT=0.05;   // ±5 cm
+let lagSnitt=null;
+function grav(cm){const d=cm/100;$("gtekst").textContent=cm+" cm";gravPa=true;if(lagFor)lagFor.setStyle({opacity:0,fillOpacity:0});
+  if(!lagSnitt)lagSnitt=L.layerGroup().addTo(kart);lagSnitt.clearLayers();const treff=new Set();
+  segs.forEach(x=>{const lo=Math.min(x.a??1e9,x.b??1e9),hi=Math.max(x.a??-1,x.b??-1);
+    if(x.a==null&&x.b==null){x.lag.setStyle({opacity:.15,fillOpacity:.15});return}
+    if(lo>d+SNITT){x.lag.setStyle({opacity:0,fillOpacity:0});return}              // djupare: enno ikkje grave fram
+    if(hi<d-SNITT){x.lag.setStyle({opacity:.18,fillOpacity:.18});return}           // grunnare: allereie passert
+    x.lag.setStyle({opacity:1,fillOpacity:1});treff.add(x.namn);                     // på denne djupna
+    if(!x.punkt){const t=(x.b==x.a)?0.5:Math.min(1,Math.max(0,(d-x.a)/(x.b-x.a)));
+      const p=[x.ll[0][0]+(x.ll[1][0]-x.ll[0][0])*t,x.ll[0][1]+(x.ll[1][1]-x.ll[0][1])*t];
+      L.circleMarker(p,{radius:9,color:"#ffffff",weight:2,fill:false}).addTo(lagSnitt)}});
+  $("ginfo").innerHTML=treff.size?`På <b>${cm} cm</b> djupn (±5 cm): `+[...treff].map(esc).join(", "):`Ingen objekt på ${cm} cm djupn (±5 cm).`;
+  if($("profil").style.display!="none")teiknSnittIProfil(d)}
+function slaGravAv(stille){gravPa=false;if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}
+  if(lagSnitt)lagSnitt.clearLayers();segs.forEach(x=>x.lag.setStyle({opacity:1,fillOpacity:1}));
+  if(lagFor)lagFor.setStyle({opacity:.9,fillOpacity:.6});
+  if(!stille){$("gdjupn").value=0;$("gtekst").textContent="0 cm";$("ginfo").textContent="Dra for å grave nedover centimeter for centimeter."}
+  const l=document.getElementById("psnitt");if(l)l.remove()}
+function spelGrav(){if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av";return}
+  const g=$("gdjupn");if(+g.value>=+g.max)g.value=0;$("gspel").textContent="⏸ Pause";
+  gravTimer=setInterval(()=>{g.value=+g.value+1;grav(+g.value);if(+g.value>=+g.max){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}},60)}
+$("gdjupn").addEventListener("input",e=>grav(+e.target.value));
+let profilY=null;
+function teiknSnittIProfil(d){const svg=$("psvg");if(!profilY)return;let l=document.getElementById("psnitt");
+  if(!l){l=document.createElementNS("http://www.w3.org/2000/svg","g");l.id="psnitt";svg.appendChild(l)}
+  const y=profilY(d);l.innerHTML=`<rect x=52 y=${profilY(Math.max(0,d-SNITT))} width=${svg.clientWidth-66} height=${Math.max(1,profilY(d+SNITT)-profilY(Math.max(0,d-SNITT)))} fill="#ffffff" opacity=".08"/>
+    <line x1=52 x2=${svg.clientWidth-14} y1=${y} y2=${y} stroke="#ffffff" stroke-width=1.5 stroke-dasharray="3 3"/>
+    <text x=${svg.clientWidth-18} y=${y-4} fill="#ffffff" font-size=11 text-anchor=end>${Math.round(d*100)} cm</text>`}
+// ---------- tverrsnitt på valfri stad ----------
+let tverrModus=false,tverrA=null,lagTverr=null,tverrLinje=null;
+function startTverr(){if(!siste||!siste.etter)return;initKart();if(!lagTverr)lagTverr=L.layerGroup().addTo(kart);
+  lagTverr.clearLayers();tverrModus=true;tverrA=null;kart.getContainer().style.cursor="crosshair";
+  $("tbtn").textContent="Klikk punkt A på kartet …";$("kart").scrollIntoView({behavior:"smooth",block:"center"})}
+function lukkTverr(){$("tverr").style.display="none";if(lagTverr)lagTverr.clearLayers();tverrModus=false;
+  if(kart)kart.getContainer().style.cursor="";$("tbtn").textContent="✚ Tverrsnitt"}
+function tverrKlikk(e){if(!tverrModus)return;const ll=[e.latlng.lat,e.latlng.lng];
+  const merke=(p,t)=>L.marker(p,{icon:L.divIcon({className:"",html:`<div style="background:#fff;color:#0f1418;font-weight:800;border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;box-shadow:0 0 0 2px #0f1418">${t}</div>`,iconSize:[22,22],iconAnchor:[11,11]})}).addTo(lagTverr);
+  if(!tverrA){tverrA=ll;merke(ll,"A");$("tbtn").textContent="Klikk punkt B …";return}
+  tverrModus=false;kart.getContainer().style.cursor="";$("tbtn").textContent="✚ Tverrsnitt";
+  merke(ll,"B");L.polyline([tverrA,ll],{color:"#ffffff",weight:2,dashArray:"6 4"}).addTo(lagTverr);teiknTverr(tverrA,ll)}
+// lokale meter rundt A (aust, nord)
+function lokal(a){const t=Math.PI/180,k=Math.cos(a[0]*t);return p=>[(p[1]-a[1])*t*6371000*k,(p[0]-a[0])*t*6371000]}
+function kryss(p,q,r,s2){const d=(q[0]-p[0])*(s2[1]-r[1])-(q[1]-p[1])*(s2[0]-r[0]);if(Math.abs(d)<1e-12)return null;
+  const u=((r[0]-p[0])*(s2[1]-r[1])-(r[1]-p[1])*(s2[0]-r[0]))/d,v=((r[0]-p[0])*(q[1]-p[1])-(r[1]-p[1])*(q[0]-p[0]))/d;
+  return(u>=0&&u<=1&&v>=0&&v<=1)?[u,v]:null}
+function snittMot(gj,djupn,A,B,til){/* alle kryssingar mellom objekta og lina A–B: [{fi,s,d,namn}] */
+  const out=[],L2=Math.hypot(B[0]-A[0],B[1]-A[1]);if(!gj)return out;
+  gj.features.forEach((f,fi)=>{const pr=siste.etter.features[fi].properties||{},dd=djupn(pr);let k=0;
+    linjer(f.geometry).forEach(ln=>{const P=ln.map(c=>til([c[1],c[0]]));
+      if(P.length==1){const ax=(B[0]-A[0])/L2,ay=(B[1]-A[1])/L2,s=(P[0][0]-A[0])*ax+(P[0][1]-A[1])*ay,
+        dist=Math.abs((P[0][0]-A[0])*ay-(P[0][1]-A[1])*ax);if(s>=0&&s<=L2&&dist<=0.5&&dd[k]!=null)out.push({fi,s,d:dd[k]})}
+      for(let j=0;j<P.length-1;j++){const x=kryss(A,B,P[j],P[j+1]);if(!x)continue;const a=dd[k+j],b=dd[k+j+1];
+        if(a==null&&b==null)continue;out.push({fi,s:x[0]*L2,d:a==null?b:b==null?a:a+(b-a)*x[1]})}
+      k+=P.length})});return out}
+function teiknTverr(Ag,Bg){const til=lokal(Ag),A=[0,0],B=til(Bg),Lg=Math.hypot(B[0],B[1]);
+  const etter=snittMot(siste.etter,pr=>pr.djupn_retta_m||[],A,B,til),for_=snittMot(siste.for,pr=>pr.djupn_for_m||[],A,B,til);
+  $("tverr").style.display="block";$("ttittel").textContent=`Tverrsnitt A–B (${F(Lg,1)} m)`;
+  const namn=fi=>{const pr=siste.etter.features[fi].properties||{};return[pr.id,pr.layer,pr.description].filter(Boolean).join(" · ")||"objekt "+(fi+1)};
+  const diam=fi=>{const v=+((siste.etter.features[fi].properties||{}).diameter_mm);return v>0?v/1000:null};
+  $("tinfo").textContent=etter.length?`${etter.length} kryssing${etter.length==1?"":"ar"} langs lina. Sett frå A mot B, ned i bakken.`:
+    "Ingen objekt kryssar denne lina. Teikn ei line som går på tvers av røyra eller kablane.";
+  const W=$("tsvg").clientWidth||900,H=280,ml=52,mr=16,mt=20,mb=30,ds=[...etter,...for_].map(x=>x.d);
+  const dmax=Math.max(0.6,...ds)*1.2,X=v=>ml+(W-ml-mr)*v/Math.max(Lg,0.5),Y=v=>mt+(H-mt-mb)*v/dmax;let g="";
+  const st=dmax>2.4?0.5:0.25;for(let d=0;d<=dmax+1e-9;d+=st)g+=`<line x1=${ml} x2=${W-mr} y1=${Y(d)} y2=${Y(d)} stroke="#2c3a44"/><text x=${ml-6} y=${Y(d)+4} fill="#8a9aa6" font-size=11 text-anchor=end>${F(d,2)}</text>`;
+  const xs=Lg>40?10:Lg>15?5:Lg>6?2:Lg>2?0.5:0.25;for(let v=0;v<=Lg+1e-9;v+=xs)g+=`<text x=${X(v)} y=${H-10} fill="#8a9aa6" font-size=11 text-anchor=middle>${F(v,xs<1?2:0)} m</text>`;
+  g+=`<rect x=${ml} y=${mt-6} width=${W-ml-mr} height=6 fill="#8a6a4a"/><text x=${ml} y=${mt-9} fill="#fff" font-size=12 font-weight=700>A</text><text x=${W-mr} y=${mt-9} fill="#fff" font-size=12 font-weight=700 text-anchor=end>B</text>`;
+  g+=`<text x=12 y=${mt+(H-mt-mb)/2} fill="#8a9aa6" font-size=11 transform="rotate(-90 12 ${mt+(H-mt-mb)/2})" text-anchor=middle>djupn (m)</text>`;
+  const px=(Y(1)-Y(0));   // pikslar per meter loddrett
+  for_.forEach(x=>{const dm=diam(x.fi),rr=Math.max(5,dm?dm/2*px:5);g+=`<circle cx=${X(x.s)} cy=${Y(x.d)} r=${rr} fill=none stroke="#e8eef2" stroke-width=1.5 stroke-dasharray="3 3"/>`});
+  g+=`<defs><marker id="pil" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8eef2"/></marker></defs>`;
+  etter.forEach(x=>{const f0=for_.filter(y=>y.fi==x.fi).sort((a,b)=>Math.abs(a.s-x.s)-Math.abs(b.s-x.s))[0];
+    if(f0&&Math.hypot(X(f0.s)-X(x.s),Y(f0.d)-Y(x.d))>10)g+=`<line x1=${X(f0.s)} y1=${Y(f0.d)} x2=${X(x.s)} y2=${Y(x.d)} stroke="#e8eef2" stroke-width=1.2 marker-end="url(#pil)" opacity=".8"/>`});
+  etter.forEach(x=>{const dm=diam(x.fi),rr=Math.max(6,dm?dm/2*px:6);
+    g+=`<circle cx=${X(x.s)} cy=${Y(x.d)} r=${rr} fill="${djFarge(x.d)}" stroke="#0f1418" stroke-width=1.5><title>${esc(namn(x.fi))}: ${fm(x.d)} m</title></circle>
+      <text x=${X(x.s)} y=${Y(x.d)-rr-6} fill="#e8eef2" font-size=12 font-weight=700 text-anchor=middle>${fm(x.d)} m</text>`});
+  $("tsvg").innerHTML=g;
+  const tb=$("ttab").tBodies[0];tb.innerHTML="";etter.sort((a,b)=>a.s-b.s).forEach(x=>{
+    const f0=for_.filter(y=>y.fi==x.fi).sort((a,b)=>Math.abs(a.s-x.s)-Math.abs(b.s-x.s))[0];const dm=diam(x.fi);
+    const tr=document.createElement("tr");tr.innerHTML=`<td>${esc(namn(x.fi))}</td><td class=n>${F(x.s,2)}</td><td class=n><b>${fm(x.d)}</b></td>
+      <td class=n>${f0?fm(f0.d):"–"}</td><td class=n>${f0?F(Math.abs(f0.s-x.s)*100,1)+" cm":"–"}</td><td class=n>${dm?F(dm*1000,0)+" mm":"–"}</td>`;tb.appendChild(tr)});
+  $("tverr").scrollIntoView({behavior:"smooth",block:"nearest"})}
+function avstand(a,b){const R=6371000,t=Math.PI/180,dl=(b[1]-a[1])*t,df=(b[0]-a[0])*t;
+  const x=Math.sin(df/2)**2+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function visProfil(fi){if(!siste||!siste.etter)return;const f=siste.etter.features[fi],pr=f.properties||{},t=siste.tabell[fi];
+  [...$("rtab").tBodies[0].rows].forEach((x,i)=>x.style.background=i==fi?"var(--kort2)":"");
+  if(uthev)kart.removeLayer(uthev);const pts=[];let k=0;linjer(f.geometry).forEach(ln=>{ln.forEach((p,j)=>pts.push({ll:[p[1],p[0]],i:k+j}));k+=ln.length});
+  uthev=L.polyline(pts.map(p=>p.ll),{color:"#ffffff",weight:10,opacity:.25}).addTo(kart);
+  const d0=pr.djupn_for_m||[],d1=pr.djupn_retta_m||[];let s=0;pts.forEach((p,j)=>{if(j)s+=avstand(pts[j-1].ll,p.ll);p.s=s});
+  $("profil").style.display="block";$("ptittel").textContent="Djupneprofil – "+([t.id,t.lag,t.skildring].filter(Boolean).join(" · ")||"objekt "+(fi+1));
+  $("pinfo").textContent=`Lengd ${F(s,1)} m · djupn etter retting ${t.djupn_etter?fm(t.djupn_etter.min)+"–"+fm(t.djupn_etter.maks)+" m":"–"} · flytta inntil ${F(+t.maks_endring_cm||0,1)} cm sidelengs`;
+  const W=$("psvg").clientWidth||800,H=240,ml=52,mr=14,mt=18,mb=30;
+  const dmax=Math.max(0.5,...d0.filter(x=>x!=null),...d1.filter(x=>x!=null))*1.15,smax=Math.max(s,1);
+  const X=v=>ml+(W-ml-mr)*v/smax,Y=v=>mt+(H-mt-mb)*v/dmax;let g="";
+  const steg=dmax>2?0.5:0.25;for(let d=0;d<=dmax+1e-9;d+=steg)g+=`<line x1=${ml} x2=${W-mr} y1=${Y(d)} y2=${Y(d)} stroke="#2c3a44"/><text x=${ml-6} y=${Y(d)+4} fill="#8a9aa6" font-size=11 text-anchor=end>${F(d,2)}</text>`;
+  const xs=smax>40?10:smax>15?5:smax>6?2:1;for(let v=0;v<=smax+1e-9;v+=xs)g+=`<text x=${X(v)} y=${H-10} fill="#8a9aa6" font-size=11 text-anchor=middle>${F(v,0)} m</text>`;
+  g+=`<text x=12 y=${mt+(H-mt-mb)/2} fill="#8a9aa6" font-size=11 transform="rotate(-90 12 ${mt+(H-mt-mb)/2})" text-anchor=middle>djupn (m)</text>`;
+  g+=`<rect x=${ml} y=${mt-6} width=${W-ml-mr} height=6 fill="#8a6a4a"/>`;
+  const sti=arr=>{let o="",ny=true;pts.forEach(p=>{const d=arr[p.i];if(d==null){ny=true;return}o+=(ny?"M":"L")+X(p.s).toFixed(1)+","+Y(d).toFixed(1);ny=false});return o};
+  g+=`<path d="${sti(d1)}" fill=none stroke="#4ea8ff" stroke-width="4"/><path d="${sti(d0)}" fill=none stroke="#e8eef2" stroke-width=1.5 stroke-dasharray="4 4"/>`;
+  pts.forEach(p=>{if(d1[p.i]!=null)g+=`<circle cx=${X(p.s)} cy=${Y(d1[p.i])} r=3.5 fill="${djFarge(d1[p.i])}"><title>${F(p.s,1)} m: ${fm(d1[p.i])} m djupt</title></circle>`});
+  $("psvg").innerHTML=g;profilY=Y;if(gravPa)teiknSnittIProfil(+$("gdjupn").value/100);$("profil").scrollIntoView({behavior:"smooth",block:"nearest"})}
 async function lastResFiler(){let l;try{l=await api("api/resultatfiler")}catch(e){return}
   $("rfiler").innerHTML=l.length?l.map(f=>`<a style="color:var(--blaa)" href="last-ned/resultat/${encodeURIComponent(f.fil)}">${esc(f.fil)}</a> (${f.kb} kB)`).join("<br>"):"Ingen enno."}
 

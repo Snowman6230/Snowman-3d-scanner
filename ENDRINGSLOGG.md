@@ -2,6 +2,24 @@
 
 *Alpindata v/Hans Petter B. Sørensen*
 
+## 0.4.0 – 5. november 2026
+- **Djupna synest på Resultat:**
+  - Tabellen viser djupna før og etter retting, med snitt og spenn.
+  - Objekta på kartet er farga etter djupn. Kvart punkt viser djupna når ein held musa over, og «Vis djupn på
+    kartet» skriv djupna ved punkta.
+  - Djupneprofil for kvart objekt: lengd langs objektet mot djupn, før og etter.
+- **Tverrsnitt på valfri stad:** klikk A og B på kartet, så viser programmet eit snitt ned i bakken med alle
+  kryssingane. Det viser djupna etter retting, kvar objektet låg før (stipla) med ei pil for flyttinga, og
+  røyrdiameter når han er kjend. Under er ein tabell.
+- **Grav nedover:** ein glidebrytar som grev centimeter for centimeter (±5 cm), med avspeling. Han viser kva
+  objekt som ligg på kvar djupn, både på kartet og i profilen.
+- Djupn per punkt i GeoJSON (djupn_for_m, djupn_retta_m, flytta_cm) og i CSV. CSV-fila har desimalkomma
+  overalt. DXF-fila har djupna som tekst på laget <lag>_DJUPN.
+- Feilretting: ein logg med berre overskrift, eller ein tom logg, stoppa heile rettinga («Could not determine
+  delimiter»). Slike loggar blir no hoppa over.
+- Feilretting i grensesnittet: attributtverdiar utan hermeteikn før «/>» gøymde punkta i djupneprofilen.
+- Nytt ope spørsmål (8): djupnesnitt av radarbiletet frå GRED HD/OneVision.
+
 ## 0.3.1 – 5. november 2026
 - Data frå operatøren (innsendt/, pakkar/, resultat/, logg_demo/) blir aldri lagt i git og aldri rørt av oppdateringa.
 

@@ -363,6 +363,13 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         assert 2.0 * math.sin(math.radians(5.5)) * 100 < r["tabell"][0]["maks_endring_cm"] < 2.0 * math.sin(math.radians(7)) * 100
         dxf = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["dxf"]), timeout=5).read().decode()
         assert "POLYLINE" in dxf and "Vatn" in dxf and dxf.rstrip().endswith("EOF")
+        assert "Vatn_DJUPN" in dxf and "1,99 m" in dxf                      # djupna som tekst på teikninga
+        t0 = r["tabell"][0]
+        assert t0["djupn_for"]["snitt"] == 2.0 and 1.985 < t0["djupn_etter"]["snitt"] < 1.996   # 2,0 · cos 6°
+        pr = r["etter"]["features"][0]["properties"]
+        assert len(pr["djupn_retta_m"]) == len(r["etter"]["features"][0]["geometry"]["coordinates"])
+        csvtxt = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read().decode()
+        assert "djupn_retta_m" in csvtxt.splitlines()[0] and ";1,989;" in csvtxt and "." not in csvtxt.splitlines()[1]
         assert r["filer"]["geojson"] == "røyr_retta.geojson"
         # svar og pakke
         post("api/svar", {"namn": "Norman", "svar": {"mast": "1,45", "ukjend": "x"}})
@@ -394,3 +401,16 @@ def test_oppdatering_rorer_aldri_data_fra_operatoren():
     files = O._files_from_zip(_zip({"pc/geoscan.py": 'VERSJON = "9.9.9"\n', "pc/innsendt/svar.json": "{}",
                                     "pc/pakkar/a.zip": "x", "pc/resultat/r.dxf": "x", "pc/ntrip_lokal.json": "{}"}))
     assert list(files) == [("geoscan.py",)]
+
+
+def test_tom_logg_stoppar_ikkje_rettinga(tmp_path):
+    """Ein logg som nettopp er oppretta (berre overskrift) eller er tom, skal hoppast over."""
+    import korriger_objekt as KO
+    import resultat as RES
+    g, logfile = _logg_med_helling(tmp_path)
+    (tmp_path / "logg" / "geoscan_20990101_000000.csv").write_text(G.LOGG_HOVUD + "\n", encoding="utf-8")
+    (tmp_path / "logg" / "geoscan_20990101_000001.csv").write_text("", encoding="utf-8")
+    logs = sorted((tmp_path / "logg").glob("geoscan_*.csv"))
+    assert len(KO.Logg(logs).rows) == 1
+    ok = RES.okter(tmp_path / "logg")
+    assert len(ok) == 3 and sum(o["med_helling"] for o in ok) == 1

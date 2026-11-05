@@ -35,6 +35,8 @@ SPORSMAL = [
      "hjelp": "Sjå om posisjonen hoppar etter fortauskantar."},
     {"id": "rtk", "tekst": "Fekk du RTK FIX ute? Gjekk RTCM over USB, eller måtte du bruke Bluetooth port 2?", "type": "tekst",
      "hjelp": "Statussida viser fix og NTRIP."},
+    {"id": "djupnesnitt", "tekst": "Kan GRED HD / OneVision eksportere djupnesnitt (time/depth slices) som bilete (GeoTIFF/KMZ) eller rådata?",
+     "type": "tekst", "hjelp": "Då kan Snowman Geoscan vise radarbiletet cm for cm og rette det. Legg gjerne ved ei eksempelfil."},
     {"id": "anna", "tekst": "Anna du vil fortelje (feil, ønske, observasjonar)", "type": "langtekst", "hjelp": ""},
 ]
 

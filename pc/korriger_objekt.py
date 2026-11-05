@@ -38,9 +38,15 @@ NAMN = {"E": ("e", "aust", "austing", "easting", "east", "x"),
 
 def read_csv(path):
     text = Path(path).read_text(encoding="utf-8-sig", errors="replace")
-    dialect = csv.Sniffer().sniff(text[:4096], delimiters=";,\t")
-    rows = list(csv.reader(io.StringIO(text), dialect))
-    return rows[0], rows[1:], dialect.delimiter
+    first = text.split("\n", 1)[0]
+    try:
+        delim = csv.Sniffer().sniff(text[:4096], delimiters=";,\t").delimiter
+    except csv.Error:          # t.d. ein logg med berre overskrifta – vel det teiknet som finst i overskrifta
+        delim = max(";,\t", key=first.count)
+    rows = list(csv.reader(io.StringIO(text), delimiter=delim))
+    if not rows:
+        return [], [], delim
+    return rows[0], rows[1:], delim
 
 
 def num(v):
@@ -63,8 +69,13 @@ class Logg:
         """zone: UTM-sona til objekta. Loggposisjonane blir rekna om dit frå lat/lon (loggen kan vere i ei anna sone)."""
         self.rows, self.grid = [], {}
         for p in paths:
-            head, rows, _ = read_csv(p)
+            try:
+                head, rows, _ = read_csv(p)
+            except Exception:
+                continue           # ein øydelagd eller tom logg skal ikkje stoppe rettinga
             ix = {h: i for i, h in enumerate(head)}
+            if "korrigert" not in ix:
+                continue
             for r in rows:
                 if len(r) < len(head) or r[ix["korrigert"]] != "1":
                     continue
@@ -125,30 +136,38 @@ def _points(c):
 
 def correct_geojson(gj, logg, zmode="auto", maxdist=1.0):
     """Rett alle punkt i ein FeatureCollection på staden. zmode: «djupn» (z positiv nedover), «hoegd» (NN2000),
-    eller «auto» (høgd om alle z > 20 m). Returnerer (retta, utan loggpunkt, zmode)."""
+    eller «auto» (høgd om alle z > 20 m). Returnerer (retta, utan loggpunkt, zmode).
+    Kvart objekt får eigenskapane djupn_for_m, djupn_retta_m (loddrett djupn under bakken, eitt tal per punkt)
+    og flytta_cm, så djupna kan visast og eksporterast utan å vite om z var djupn eller høgd."""
     pts = [p for f in gj.get("features", []) for p in _points((f.get("geometry") or {}).get("coordinates"))]
     if zmode == "auto":
         zmode = "hoegd" if pts and all(len(p) > 2 and p[2] > 20 for p in pts) else "djupn"
     ok = miss = 0
     for f in gj.get("features", []):
         maxch, n_ok, n = 0.0, 0, 0
+        d_for, d_etter, flytta = [], [], []      # per punkt: djupn før/etter (m, loddrett under bakken) og flytting
         for p in _points((f.get("geometry") or {}).get("coordinates")):
             n += 1
             if len(p) < 3:
+                d_for.append(None), d_etter.append(None), flytta.append(None)
                 continue
             rec, _ = logg.nearest(p[0], p[1], None, maxdist)
             if rec is None or (zmode == "hoegd" and rec.get("h_bakke") is None):
                 miss += 1
+                d0 = round(p[2], 3) if zmode == "djupn" else None
+                d_for.append(d0), d_etter.append(d0), flytta.append(None)   # urørt: same djupn som før
                 continue
             d = p[2] if zmode == "djupn" else rec["h_bakke"] - p[2]
             E2, N2, dv, ch = correct_object(p[0], p[1], abs(d), rec)
             p[0], p[1] = round(E2, 3), round(N2, 3)
             p[2] = round(dv if zmode == "djupn" else rec["h_bakke"] - dv, 3)
+            d_for.append(round(abs(d), 3)), d_etter.append(round(dv, 3)), flytta.append(round(ch * 100, 1))
             maxch, n_ok = max(maxch, ch), n_ok + 1
             ok += 1
         pr = f.setdefault("properties", {})
         pr["helling_retta"] = f"{n_ok}/{n}"
         pr["helling_maks_endring_cm"] = round(maxch * 100, 1)
+        pr["djupn_for_m"], pr["djupn_retta_m"], pr["flytta_cm"] = d_for, d_etter, flytta
     return ok, miss, zmode
 
 

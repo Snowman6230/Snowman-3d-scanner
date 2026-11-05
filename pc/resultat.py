@@ -22,7 +22,12 @@ HER = Path(__file__).resolve().parent
 
 
 def _rows(path):
-    head, rows, _ = KO.read_csv(path)
+    try:
+        head, rows, _ = KO.read_csv(path)
+    except Exception:
+        return
+    if "korrigert" not in head:
+        return
     ix = {h: i for i, h in enumerate(head)}
     for r in rows:
         if len(r) >= len(head):
@@ -100,16 +105,19 @@ def _to_latlon(gj, zone):
 
 # ---------- utfiler ----------
 def skriv_csv(gj, path):
-    """Alle punkt, eitt per line: objekt-id, lag, E, N, z og endring."""
+    """Alle punkt, eitt per line: objekt-id, lag, E, N, z, djupn før/etter og flytting.
+    Semikolon og desimalkomma, så fila opnar rett i norsk Excel."""
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, delimiter=";")
-        w.writerow(["objekt", "lag", "type", "punkt", "E", "N", "z", "helling_retta", "maks_endring_cm"])
-        for i, ft in enumerate(gj.get("features", []), 1):
+        w.writerow(["objekt", "lag", "type", "punkt", "E", "N", "z", "djupn_for_m", "djupn_retta_m", "flytta_cm"])
+        for i, ft in enumerate(gj.get("features", [])):
             pr = ft.get("properties") or {}
-            for j, p in enumerate(KO._points((ft.get("geometry") or {}).get("coordinates")), 1):
-                w.writerow([pr.get("id", i), pr.get("layer", ""), pr.get("type", ""), j,
-                            f"{p[0]:.3f}", f"{p[1]:.3f}", "" if len(p) < 3 else f"{p[2]:.3f}",
-                            pr.get("helling_retta", ""), pr.get("helling_maks_endring_cm", "")])
+            d0, d1, fl = (pr.get(k) or [] for k in ("djupn_for_m", "djupn_retta_m", "flytta_cm"))
+            g = lambda a, j: "" if j >= len(a) or a[j] is None else str(a[j]).replace(".", ",")
+            for j, p in enumerate(KO._points((ft.get("geometry") or {}).get("coordinates"))):
+                w.writerow([pr.get("id", i + 1), pr.get("layer", ""), pr.get("type", ""), j + 1,
+                            f"{p[0]:.3f}".replace(".", ","), f"{p[1]:.3f}".replace(".", ","),
+                            "" if len(p) < 3 else f"{p[2]:.3f}".replace(".", ","), g(d0, j), g(d1, j), g(fl, j)])
 
 
 def _lines(c, depth=0):
@@ -126,7 +134,8 @@ def _lines(c, depth=0):
 
 def skriv_dxf(gj, path):
     """Enkel DXF (R12, ASCII) som AutoCAD, Civil 3D, Gemini og GIS-program les: 3D-polylinjer og punkt,
-    eitt lag per «layer» i eksporten. z er det same som i fila (djupn eller høgd)."""
+    eitt lag per «layer» i eksporten. z er det same som i fila (djupn eller høgd). Djupna etter retting står
+    som tekst ved kvart punkt på laget <lag>_DJUPN."""
     def layer(pr):
         s = str(pr.get("layer") or "GEOSCAN")
         return "".join(ch if ch.isalnum() or ch in "_-" else "_" for ch in s)[:31] or "GEOSCAN"
@@ -144,6 +153,13 @@ def skriv_dxf(gj, path):
                 o += ["0", "VERTEX", "8", lay, "10", f"{p[0]:.3f}", "20", f"{p[1]:.3f}",
                       "30", f"{(p[2] if len(p) > 2 else 0):.3f}", "70", "32"]
             o += ["0", "SEQEND", "8", lay]
+        # djupna som tekst ved punkta (eige lag <lag>_DJUPN), så ho kan lesast rett på teikninga
+        d1 = (ft.get("properties") or {}).get("djupn_retta_m") or []
+        pts = [p for ln in _lines((ft.get("geometry") or {}).get("coordinates")) for p in ln]
+        for j, p in enumerate(pts):
+            if j < len(d1) and d1[j] is not None:
+                o += ["0", "TEXT", "8", (lay + "_DJUPN")[:31], "10", f"{p[0] + 0.15:.3f}", "20", f"{p[1] + 0.15:.3f}",
+                      "30", "0.0", "40", "0.20", "1", f"{d1[j]:.2f} m".replace(".", ",")]
     o += ["0", "ENDSEC", "0", "EOF"]
     Path(path).write_text("\n".join(o) + "\n", encoding="ascii", errors="replace")
 
@@ -174,12 +190,14 @@ def rett_eksport(objektfil, loggfiler, utdir, zmode="auto", sone=None, maks_avst
     skriv_csv(gj, utdir / filer["csv"])
     skriv_dxf(gj, utdir / filer["dxf"])
     tabell = []
-    for i, (fo, fr) in enumerate(zip(orig.get("features", []), gj.get("features", [])), 1):
+    for i, fr in enumerate(gj.get("features", []), 1):
         pr = fr.get("properties") or {}
-        zs = [p[2] for p in KO._points((fo.get("geometry") or {}).get("coordinates")) if len(p) > 2]
+        f0 = [x for x in pr.get("djupn_for_m") or [] if x is not None]
+        f1 = [x for x in pr.get("djupn_retta_m") or [] if x is not None]
+        st = lambda v: None if not v else {"min": round(min(v), 2), "maks": round(max(v), 2), "snitt": round(sum(v) / len(v), 2)}
         tabell.append({"nr": i, "id": pr.get("id", i), "lag": pr.get("layer", ""), "type": pr.get("type", ""),
                        "skildring": pr.get("description", ""), "retta": pr.get("helling_retta", ""),
                        "maks_endring_cm": pr.get("helling_maks_endring_cm", 0),
-                       "z": None if not zs else round(sum(zs) / len(zs), 2)})
+                       "djupn_for": st(f0), "djupn_etter": st(f1)})
     return {"retta_punkt": ok, "utan_logg": miss, "z": zmode, "sone": zone, "filer": filer, "tabell": tabell,
             "for": _to_latlon(orig, zone), "etter": _to_latlon(gj, zone)}

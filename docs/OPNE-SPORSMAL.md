@@ -17,6 +17,7 @@ Oppretta 5. november 2026.
 | 4 | **Ekte eksportfil frå GRED HD / OneVision med objekt** (røyr, kablar). *Førebels: GeoJSON med [E, N, djupn eller høgd] og crs (t.d. EPSG:5973). Det er no støtta, men eksempelet var oppdikta (koordinatane ligg i Jämtland). Ei ekte fil trengst for å stadfeste formatet.* | `korriger_objekt.py` må kunne lese eksporten. | GeoJSON og CSV |
 | 5 | **Brukar OneVision kurs frå NMEA (HDT)** til å leggje skannebeltet, eller berre sporet? | Om Geoscan bør sende ut ein retta kurs. | Kurs blir ikkje sendt |
 | 6 | **Held R12i-IMU-en justeringa** på ei vogn som blir trekt (støyt, snuing)? | Om R12i kan rette masta åleine i felt. | Ikkje testa |
+| 8 | **Kan GRED HD/OneVision eksportere djupnesnitt** (time/depth slices) som georefererte bilete (GeoTIFF/KMZ) eller rådata? | Då kan Snowman Geoscan vise sjølve radarbiletet cm for cm og rette kvart snitt for hellinga (d·sin helling). I dag blir berre eksporterte objekt viste og retta. | Berre objekt |
 | 7 | **RTK FIX (4) ute** med R12i og eigen caster (mountpoint TH). | Alt over føreset cm-nøyaktigheit. Er berre testa som DGPS innandørs. | Ikkje stadfest |
 
 ## Avklart
