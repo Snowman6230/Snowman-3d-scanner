@@ -10,6 +10,7 @@ Eige prosjekt, skilt frå SNOWMAN Snødjupne (Snowman6230/Snowman-Snowdeept).
 - [Samanlikning med SNOWMAN Snødjupne](docs/Samanlikning_GNSS-rover_mot_SNOWMAN-Snodjupne.md)
 - [SNOWMAN Geoscan – hellingskorreksjon for IDS Stream C](docs/GEOSCAN.md)
 - [Opne spørsmål](docs/OPNE-SPORSMAL.md) – det som manglar før drift
+- [Testplan](docs/TESTPLAN.md) – start med `pc\START-DEMO.bat`
 - [Endringslogg](ENDRINGSLOGG.md)
 
 ## Program (pc/)

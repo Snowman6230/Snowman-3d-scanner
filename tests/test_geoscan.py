@@ -295,3 +295,14 @@ def test_ende_til_ende_simulator_ntrip_tcp_status(tmp_path):
     assert m.rtcm_bytes > 0 and c.gga > 0                      # RTCM kom fram til «mottakaren», GGA til casteren
     assert "SNOWMAN GEOSCAN" in side
     assert list((tmp_path / "logg").glob("raa_*.nmea")) and list((tmp_path / "logg").glob("geoscan_*.csv"))
+
+
+def test_demo_brukar_aldri_ekte_ntrip_innlogging(tmp_path):
+    import json as _json
+    import ntrip_teneste as NT
+    (tmp_path / "ntrip_lokal.json").write_text(_json.dumps({"caster": "ekte.caster.no", "passord": "hemmeleg"}))
+    demo = _json.loads((Path(__file__).resolve().parent.parent / "pc" / "geoscan_config_demo.json").read_text())
+    assert demo["demo"] is True
+    n = NT.load(demo, tmp_path)
+    assert n["caster"] == "127.0.0.1" and n.get("passord", "") == ""
+    assert NT.load({"ntrip": {"pa": True}}, tmp_path)["caster"] == "ekte.caster.no"

@@ -1,0 +1,40 @@
+{
+  "_DEMO": "SIMULERT – berre for testing utan utstyr. Ikkje bruk resultata som målingar.",
+  "inn": [
+    {
+      "port": "socket://127.0.0.1:7777"
+    }
+  ],
+  "ut_seriell": [],
+  "tcp_port": 5000,
+  "spakarm": {
+    "fram": 0.0,
+    "hogre": 0.0,
+    "opp": 1.4
+  },
+  "utgang": "rett_antenne",
+  "mottakar_kompenserer": false,
+  "djupn_sanntid": 0.0,
+  "sone": "32",
+  "hoegd": "nn2000",
+  "kurs_kjelde": "auto",
+  "stamp_null": 0.0,
+  "krenging_null": 0.0,
+  "snu_stamp": false,
+  "snu_krenging": false,
+  "utan_helling": "send_ukorrigert",
+  "logg": "logg_demo",
+  "opptak": true,
+  "status_port": 8088,
+  "status_lan": false,
+  "ntrip": {
+    "pa": true,
+    "caster": "127.0.0.1",
+    "port": 2101,
+    "mountpoint": "SIM",
+    "versjon": "1",
+    "gga_intervall": 10
+  },
+  "sjekk_oppdatering": false,
+  "demo": true
+}

@@ -1,5 +1,10 @@
 # Endringslogg – SNOWMAN Geoscan
 
+## 0.2.1 – 5. november 2026
+- START-DEMO.bat og geoscan_config_demo.json: demo med eitt klikk, med simulert mottakar og NTRIP-caster. Han er
+  tydeleg merkt DEMO på skjermen og statussida, og brukar aldri ekte NTRIP-innlogging.
+- docs/TESTPLAN.md: testplan i fire steg, frå demo til felt.
+
 ## 0.2.0 – 5. november 2026
 - NTRIP i Geoscan: hentar korreksjonar og sender RTCM til R12i (USB eller eigen port, t.d. Bluetooth port 2).
   Målet er å erstatte Trimble Access. Klienten er kopiert frå Snødjupne.

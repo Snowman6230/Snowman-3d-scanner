@@ -4,3 +4,4 @@ __pycache__/
 pc/ntrip_lokal.json
 pc/oppdatering_lokal.json
 pc/reserve/
+logg_demo/

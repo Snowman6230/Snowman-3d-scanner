@@ -22,6 +22,7 @@ svg{display:block;margin:6px auto 0}
 pre{white-space:pre-wrap;color:var(--svak);font-size:13px;margin:0}
 </style></head><body>
 <h1>SNOWMAN GEOSCAN <span id="ver" style="font-weight:400"></span></h1>
+<div class="k" id="demo" style="display:none;margin-bottom:12px;background:#5a1f1f;color:#fff;font-weight:700">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
 <div class="k" id="oppd" style="display:none;margin-bottom:12px;border:1px solid var(--var)">
  <span id="otekst"></span> <button id="obtn" onclick="oppdater()" style="margin-left:8px;padding:6px 14px;border-radius:6px;border:0;background:var(--var);color:#111;font-weight:700;cursor:pointer">Oppdater no</button>
  <pre id="ologg" style="margin-top:8px"></pre></div>
@@ -47,7 +48,7 @@ async function tikk(){try{const s=await (await fetch("status")).json(),k=s.korr;
  set("djup",s.djupnfeil_25==null?"":"objekt på 2,5 m: "+s.djupnfeil_25.toFixed(0)+" cm (blir retta etterpå)");
  const n=s.ntrip;set("ntrip",n.tilstand,n.tilstand=="tilkopla"?"ok":n.tilstand=="av"?"":"feil");
  set("nmeld",n.tilstand=="tilkopla"?(n.protokoll+" · "+(n.byte/1024).toFixed(0)+" kB · alder "+(n.alder==null?"–":n.alder.toFixed(0)+" s")):n.melding);
- visOppd(s.oppdatering);document.getElementById("portar").textContent=Object.entries(s.inn).map(([p,v])=>"inn "+p+": "+v).concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\\n")
+ visOppd(s.oppdatering);document.getElementById("demo").style.display=s.demo?"block":"none";document.getElementById("portar").textContent=Object.entries(s.inn).map(([p,v])=>"inn "+p+": "+v).concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\\n")
 }catch(e){set("fix","ikkje kontakt","feil")}}
 async function oppdater(){if(!confirm("Hente og leggje inn ny versjon? Geoscan startar på nytt."))return;
  document.getElementById("obtn").disabled=true;try{await fetch("oppdater",{method:"POST"})}catch(e){}}

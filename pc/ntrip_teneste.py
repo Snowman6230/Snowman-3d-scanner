@@ -26,7 +26,7 @@ def load(cfg, here):
     n = dict(STANDARD)
     n.update(cfg.get("ntrip") or {})
     lokal = Path(here) / "ntrip_lokal.json"
-    if lokal.exists():
+    if lokal.exists() and not cfg.get("demo"):     # demoen skal aldri bruke ekte innlogging
         n.update(json.loads(lokal.read_text(encoding="utf-8")))
     return n
 

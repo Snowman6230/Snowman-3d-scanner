@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.2.0"
+VERSJON = "0.2.1"
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
     "ut_seriell": [{"port": "COM34", "baud": 115200}],
@@ -347,7 +347,7 @@ class App:
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"]} for o in self.ut.ports],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25,
-                "oppdatering": {k2: v for k2, v in self.oppd.items()}}
+                "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}
 
 
 def status_line(app):
@@ -385,6 +385,8 @@ def main(argv=None):
     app = App(cfg)
     app.start()
     k = app.k
+    if cfg.get("demo"):
+        print("*** DEMO: simulert mottakar og NTRIP-caster. Dette er IKKJE ekte målingar. ***")
     print(f"SNOWMAN Geoscan {VERSJON} – spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
           f"utgang «{cfg['utgang']}», TCP {cfg.get('tcp_port')}"
           + (f", status http://localhost:{cfg['status_port']}" if cfg.get("status_port") else "") + ". Ctrl+C stoppar.")
