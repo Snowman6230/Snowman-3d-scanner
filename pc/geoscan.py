@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.7.4"
+VERSJON = "0.7.5"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -445,7 +445,7 @@ def main(argv=None):
         print(f"ÅTVARING: geoiden kan ikkje lesast ({GEOID.err}). Høgda frå mottakaren blir brukt.", file=sys.stderr)
     app = App(cfg, a.config)
     app.start()
-    print(f"\n  *  {NAMN.upper()}  *\n     {PRODUSENT}\n")
+    print(f"\n  *  {NAMN.upper()}  {VERSJON}  *\n     {PRODUSENT}\n")
     if cfg.get("vis_oppstartlogo", True) and not a.omstart:
         oppstartlogo()
     k = app.k
@@ -454,7 +454,6 @@ def main(argv=None):
         threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{cfg['status_port']}")).start()
     if cfg.get("demo"):
         print("*** DEMO: simulert mottakar og NTRIP-caster. Dette er IKKJE ekte målingar. ***")
-    print(f"{NAMN} {VERSJON}\n{PRODUSENT}\n")
     print(f"Spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
           f"utgang «{cfg['utgang']}», TCP {cfg.get('tcp_port')}"
           + (f", status http://localhost:{cfg['status_port']}" if cfg.get("status_port") else "") + ". Ctrl+C stoppar.")

@@ -2,6 +2,9 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.7.5 – 5. november 2026
+- Namnet blir skrive éin gong øvst i vindauget (med versjon), ikkje to.
+
 ## 0.7.4 – 5. november 2026
 - Det svarte vindauget er roleg: ei line berre når fix, helling, NTRIP, portar eller feil endrar seg, og elles
   éi line i minuttet (statuslinje_sek). Før kom det ei line annakvart sekund.
