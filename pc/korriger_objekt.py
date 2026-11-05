@@ -10,12 +10,19 @@ og loggen frå geoscan.py (helling og kurs for kvar posisjon), og skriv ut retta
 Objektfila: CSV (; , eller tab) med overskrift. Kolonnar blir funne på namn:
     austing: E, Aust, Austing, Easting, X     nording: N, Nord, Nording, Northing, Y
     djupn:   Djupn, Djupne, Dybde, Depth, D   (positiv nedover, meter)   valfri tid: Tid, Time
-Alle andre kolonnar blir med uendra. Koordinatane må vere i same UTM-sone som loggen (sjå «sone» i oppsettet).
+Alle andre kolonnar blir med uendra. UTM-sona kan setjast med --sone (elles same som loggen).
+
+GeoJSON (eksport frå GRED HD/OneVision, Point/LineString o.l.) blir òg lese: [austing, nording, z], der z er djupn
+(positiv nedover) eller høgd (NN2000). Sona blir lesen frå «crs» (EPSG 25832/25833/5972/5973 …). Resultatet er same
+GeoJSON med retta koordinatar og eigenskapane «helling_retta» og «helling_maks_endring_cm».
+    python korriger_objekt.py --objekt eksport.geojson --logg logg/geoscan_*.csv --ut eksport_retta.geojson
 """
 import argparse
 import csv
 import io
+import json
 import math
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -52,7 +59,8 @@ def parse_time(v):
 class Logg:
     """Posisjonane frå geoscan.py med helling, i eit rutenett på 1 m for rask oppslag."""
 
-    def __init__(self, paths):
+    def __init__(self, paths, zone=None):
+        """zone: UTM-sona til objekta. Loggposisjonane blir rekna om dit frå lat/lon (loggen kan vere i ei anna sone)."""
         self.rows, self.grid = [], {}
         for p in paths:
             head, rows, _ = read_csv(p)
@@ -60,10 +68,13 @@ class Logg:
             for r in rows:
                 if len(r) < len(head) or r[ix["korrigert"]] != "1":
                     continue
-                d = {"E": num(r[ix["E_ut"]]), "N": num(r[ix["N_ut"]]), "lat": num(r[ix["lat_ut"]]),
-                     "lon": num(r[ix["lon_ut"]]), "stamp": num(r[ix["stamp"]]), "krenging": num(r[ix["krenging"]]),
-                     "kurs": num(r[ix["kurs"]]), "d0": num(r[ix["djupn_sanntid"]]) or 0.0,
-                     "t": parse_time(r[ix["tid"]]), "sone": int(r[ix["sone"]])}
+                lat, lon = num(r[ix["lat_ut"]]), num(r[ix["lon_ut"]])
+                z = zone or int(r[ix["sone"]])
+                E, Nn = K.utm_forward(lat, lon, z)
+                d = {"E": E, "N": Nn, "lat": lat, "lon": lon, "stamp": num(r[ix["stamp"]]),
+                     "krenging": num(r[ix["krenging"]]), "kurs": num(r[ix["kurs"]]),
+                     "d0": num(r[ix["djupn_sanntid"]]) or 0.0, "t": parse_time(r[ix["tid"]]), "sone": z,
+                     "h_bakke": num(r[ix["h_bakke"]]) if "h_bakke" in ix else None}
                 self.rows.append(d)
                 self.grid.setdefault((int(d["E"] // 1), int(d["N"] // 1)), []).append(d)
 
@@ -92,6 +103,55 @@ def correct_object(E, N, depth, rec):
     return E + gE, N + gN, dv, math.hypot(gE, gN)
 
 
+# ---------- GeoJSON (eksport frå GRED HD / OneVision) ----------
+EPSG_SONE = {25832: 32, 25833: 33, 25835: 35, 5972: 32, 5973: 33, 5975: 35, 32632: 32, 32633: 33, 32635: 35}
+
+
+def geojson_zone(gj):
+    """UTM-sone frå «crs» (t.d. urn:ogc:def:crs:EPSG::5973 = EUREF89 UTM33 + NN2000), eller None."""
+    name = str(((gj.get("crs") or {}).get("properties") or {}).get("name", ""))
+    m = re.search(r"(\d{4,5})\s*$", name)
+    return EPSG_SONE.get(int(m.group(1))) if m else None
+
+
+def _points(c):
+    """Alle koordinatpunkt [E, N, z] i ein geometri (uansett nesting)."""
+    if c and isinstance(c[0], (int, float)):
+        yield c
+    else:
+        for x in c or []:
+            yield from _points(x)
+
+
+def correct_geojson(gj, logg, zmode="auto", maxdist=1.0):
+    """Rett alle punkt i ein FeatureCollection på staden. zmode: «djupn» (z positiv nedover), «hoegd» (NN2000),
+    eller «auto» (høgd om alle z > 20 m). Returnerer (retta, utan loggpunkt, zmode)."""
+    pts = [p for f in gj.get("features", []) for p in _points((f.get("geometry") or {}).get("coordinates"))]
+    if zmode == "auto":
+        zmode = "hoegd" if pts and all(len(p) > 2 and p[2] > 20 for p in pts) else "djupn"
+    ok = miss = 0
+    for f in gj.get("features", []):
+        maxch, n_ok, n = 0.0, 0, 0
+        for p in _points((f.get("geometry") or {}).get("coordinates")):
+            n += 1
+            if len(p) < 3:
+                continue
+            rec, _ = logg.nearest(p[0], p[1], None, maxdist)
+            if rec is None or (zmode == "hoegd" and rec.get("h_bakke") is None):
+                miss += 1
+                continue
+            d = p[2] if zmode == "djupn" else rec["h_bakke"] - p[2]
+            E2, N2, dv, ch = correct_object(p[0], p[1], abs(d), rec)
+            p[0], p[1] = round(E2, 3), round(N2, 3)
+            p[2] = round(dv if zmode == "djupn" else rec["h_bakke"] - dv, 3)
+            maxch, n_ok = max(maxch, ch), n_ok + 1
+            ok += 1
+        pr = f.setdefault("properties", {})
+        pr["helling_retta"] = f"{n_ok}/{n}"
+        pr["helling_maks_endring_cm"] = round(maxch * 100, 1)
+    return ok, miss, zmode
+
+
 def find_col(head, key):
     low = [h.strip().lower() for h in head]
     for name in NAMN[key]:
@@ -106,12 +166,26 @@ def main(argv=None):
     ap.add_argument("--logg", required=True, nargs="+")
     ap.add_argument("--ut", required=True)
     ap.add_argument("--maks-avstand", type=float, default=1.0, help="meter frå objekt til næraste loggpunkt")
+    ap.add_argument("--z", choices=("auto", "djupn", "hoegd"), default="auto",
+                    help="GeoJSON: er z djupn (positiv nedover) eller høgd (NN2000)? auto: høgd om alle z > 20")
+    ap.add_argument("--sone", type=int, help="UTM-sona til objekta (elles frå crs i GeoJSON, eller loggen)")
     a = ap.parse_args(argv)
+    if Path(a.objekt).suffix.lower() in (".geojson", ".json"):
+        gj = json.loads(Path(a.objekt).read_text(encoding="utf-8-sig"))
+        zone = a.sone or geojson_zone(gj)
+        logg = Logg(a.logg, zone)
+        if not logg.rows:
+            sys.exit("Loggen har ingen posisjonar med helling (korrigert = 1). Var hellinga tilgjengeleg under skanninga?")
+        ok, miss, zmode = correct_geojson(gj, logg, a.z, a.maks_avstand)
+        Path(a.ut).write_text(json.dumps(gj, ensure_ascii=False, indent=1), encoding="utf-8")
+        print(f"Retta {ok} punkt (z = {zmode}, UTM-sone {zone or 'frå loggen'}). {miss} utan loggpunkt innan "
+              f"{a.maks_avstand} m (står urørte). → {a.ut}")
+        return
     head, rows, delim = read_csv(a.objekt)
     ce, cn, cd, ct = (find_col(head, k) for k in "ENDT")
     if None in (ce, cn, cd):
         sys.exit(f"Fann ikkje kolonnane austing/nording/djupn i {a.objekt}. Overskrift: {head}")
-    logg = Logg(a.logg)
+    logg = Logg(a.logg, a.sone)
     if not logg.rows:
         sys.exit("Loggen har ingen posisjonar med helling (korrigert = 1). Var hellinga tilgjengeleg under skanninga?")
     out = [head + ["E_retta", "N_retta", "djupn_loddrett", "endring_cm", "stamp", "krenging", "kurs", "avstand_logg_m"]]

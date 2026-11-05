@@ -31,3 +31,11 @@ mellombelse verdiar. Flytt svar til «Avklart» med dato.
 - `pc/`: Geoscan-programmet (Python, pyserial). Spesifikasjon i `docs/GEOSCAN.md`.
 - `tests/`: `python -m pytest tests`. Køyr før push.
 - Forteikn som i Snødjupne: stamp + = fronten opp, krenging + = høgre side ned. Kurs i grader frå sann nord.
+
+## Versjon og oppdatering
+
+- Auk `VERSJON` i `pc/geoscan.py` ved kvar endring som skal ut til PC-ane. Oppdateringa (`pc/oppdater.py`)
+  samanliknar versjonsnummeret, og utan ny versjon ser ikkje PC-ane endringa.
+- Skriv i `ENDRINGSLOGG.md` (nyaste øvst, med dato, kva og kvifor).
+- Filer som berre ligg på PC-en (`geoscan_config.json`, `ntrip_lokal.json`, `oppdatering_lokal.json`, `logg/`,
+  `reserve/`) blir aldri overskrivne. Nye innstillingar skal ha standardverdi i `STANDARD` i `geoscan.py`.

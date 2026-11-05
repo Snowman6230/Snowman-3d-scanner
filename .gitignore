@@ -1,3 +1,6 @@
 logg/
 __pycache__/
 .pytest_cache/
+pc/ntrip_lokal.json
+pc/oppdatering_lokal.json
+pc/reserve/

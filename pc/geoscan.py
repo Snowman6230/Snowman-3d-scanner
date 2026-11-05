@@ -5,7 +5,8 @@
     eigen IMU (valfri, PASHR o.l.) ──┼─► geoscan.py ─► korrigert NMEA ─┬─► seriell (com0com) → OneVision
                                      ┘                                 └─► TCP (port 5000) → andre program
 
-Programmet sender aldri noko til mottakaren. Alle setningar utan posisjon går vidare uendra.
+Med NTRIP på hentar programmet korreksjonar og sender RTCM til mottakaren (ntrip_teneste.py), så Trimble Access
+ikkje trengst. Elles blir ingenting sendt til mottakaren. Alle setningar utan posisjon går vidare uendra.
 Posisjonen i GGA, RMC, GLL og PTNL,GGK blir retta for hellinga til vogna (sjå helling.py).
 
 Køyr:  python geoscan.py                      (brukar geoscan_config.json ved sida av)
@@ -13,6 +14,7 @@ Køyr:  python geoscan.py                      (brukar geoscan_config.json ved s
 """
 import argparse
 import json
+import math
 import socket
 import sys
 import threading
@@ -25,11 +27,12 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
+VERSJON = "0.2.0"
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
     "ut_seriell": [{"port": "COM34", "baud": 115200}],
     "tcp_port": 5000,
-    "spakarm": {"fram": 0.0, "hogre": 0.0, "opp": 1.20},
+    "spakarm": {"fram": 0.0, "hogre": 0.0, "opp": 1.40},
     "utgang": "rett_antenne",
     "mottakar_kompenserer": False,
     "djupn_sanntid": 0.0,
@@ -39,10 +42,15 @@ STANDARD = {
     "stamp_null": 0.0, "krenging_null": 0.0, "snu_stamp": False, "snu_krenging": False,
     "utan_helling": "send_ukorrigert",
     "logg": "logg",
+    "opptak": True,
+    "status_port": 8088,
+    "status_lan": False,
+    "sjekk_oppdatering": True,
+    "ntrip": {"pa": False, "rtcm_til": None, "gga_intervall": 10},
 }
 
 
-LOGG_HOVUD = ("tid;fix;lat_inn;lon_inn;lat_ut;lon_ut;sone;E_ut;N_ut;h_nn2000_ut;korrigert;stamp;krenging;kurs;"
+LOGG_HOVUD = ("tid;fix;lat_inn;lon_inn;lat_ut;lon_ut;sone;E_ut;N_ut;h_nn2000_ut;h_bakke;korrigert;stamp;krenging;kurs;"
               "kurskjelde;djupn_sanntid;forskyving_cm")
 
 
@@ -173,9 +181,12 @@ class Korrigerar:
         t = time.time() if now is None else now
         st = self.status
         h_nn = "" if (h2 is None or n_geo is None) else f"{h2 - n_geo:.3f}"
+        # Høgda på bakken under radaren (referansepunktet): «rett antenne» står spakarmen over bakken
+        mast = self.lever[2] if self.cfg.get("utgang") == "rett_antenne" else 0.0
+        h_bakke = "" if h_nn == "" else f"{float(h_nn) - mast:.3f}"
         self.logfile.write(
             f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))}.{int(t * 1000) % 1000:03d};{gga['q']};"
-            f"{lat:.9f};{lon:.9f};{la:.9f};{lo:.9f};{z};{E:.3f};{Nn:.3f};{h_nn};"
+            f"{lat:.9f};{lon:.9f};{la:.9f};{lo:.9f};{z};{E:.3f};{Nn:.3f};{h_nn};{h_bakke};"
             f"{1 if st['korrigert'] else 0};{pitch:.2f};{roll:.2f};{hdg:.1f};{st['kurskjelde']};{d0:g};"
             f"{st['forskyving_cm'] if st['forskyving_cm'] is not None else ''}\n")
         self.logfile.flush()
@@ -229,45 +240,135 @@ class Utgangar:
                     self.clients.remove(c)
 
 
-def reader(spec, k, ut, state):
-    """Les éin inngang. Koplar til att av seg sjølv når porten forsvinn (laus USB, Bluetooth som fell ut)."""
-    name = spec["port"]
-    while True:
+class App:
+    """Heile Geoscan-tenesta: inngangar, korreksjon, utgangar, NTRIP, opptak og statusside."""
+
+    open_port = staticmethod(lambda spec: open_port(spec))
+
+    def __init__(self, cfg):
+        import ntrip_teneste as NT
+        self.cfg = cfg
+        self.k = Korrigerar(cfg)
+        self.ut = Utgangar(cfg)
+        self.state, self.handles = {}, {}
+        self.write_lock = threading.Lock()
+        self.raw_gga, self.last_gga_t = None, None
+        self.started = time.time()
+        self.rec = None
+        if cfg.get("opptak") and cfg.get("logg"):
+            d = HER / cfg["logg"]
+            d.mkdir(exist_ok=True)
+            self.rec = open(d / time.strftime("raa_%Y%m%d_%H%M%S.nmea"), "a", encoding="ascii", errors="replace")
+        self.ntrip = NT.NtripTeneste(NT.load(cfg, HER), self, VERSJON)
+        self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "koyrer": False, "logg": [], "omstart": False}
+
+    def start(self):
+        for spec in self.cfg["inn"]:
+            threading.Thread(target=self.reader, args=(spec,), daemon=True).start()
+        self.ntrip.start()
+        if self.cfg.get("sjekk_oppdatering", True):
+            threading.Thread(target=self.check_update, daemon=True).start()
+        if self.cfg.get("status_port"):
+            import statusside
+            statusside.start(self, int(self.cfg["status_port"]), bool(self.cfg.get("status_lan")))
+
+    def line_in(self, line, now=None):
+        """Éi NMEA-linje frå ein inngang: opptak, GGA til casteren, korreksjon og ut."""
+        line = line.strip()
+        if not line:
+            return
+        if self.rec:
+            self.rec.write(line + "\n")
+        if line.startswith("$") and line[3:6] == "GGA" and N.valid(line):
+            self.raw_gga, self.last_gga_t = line, time.time()   # uendra GGA (antenna) til NTRIP-casteren
+        for out in self.k.handle(line, now):
+            if out:
+                self.ut.send(out)
+
+    def reader(self, spec):
+        """Les éin inngang. Koplar til att av seg sjølv når porten forsvinn (laus USB, Bluetooth som fell ut).
+        RTCM (binært) kan kome på same port – berre linjer som byrjar med $ blir tolka."""
+        name = spec["port"]
+        while True:
+            try:
+                p = open_port(spec)
+                self.handles[name] = p
+                self.state[name] = "open"
+                buf = b""
+                while True:
+                    b = p.read(4096)
+                    if not b:
+                        continue
+                    buf += b
+                    while b"\n" in buf:
+                        raw, buf = buf.split(b"\n", 1)
+                        j = raw.rfind(b"$")
+                        if j >= 0:
+                            self.line_in(raw[j:].decode("ascii", "replace"))
+                    if len(buf) > 65536:
+                        buf = buf[-4096:]
+            except Exception as e:
+                self.handles.pop(name, None)
+                self.state[name] = f"feil: {e}"
+                time.sleep(2)
+
+    # ---------- oppdatering (oppdater.py) ----------
+    def check_update(self):
+        import oppdater
+        lok, rem, nyare = oppdater.check()
+        self.oppd.update(github=rem, nyare=nyare)
+
+    def run_update(self):
+        """Køyrt frå statussida. Ved ny versjon: avslutt med kode 3, så START-GEOSCAN.bat startar på nytt."""
+        import oppdater
+        if self.oppd["koyrer"]:
+            return
+        self.oppd.update(koyrer=True, logg=[])
+        log = self.oppd["logg"].append
         try:
-            p = open_port(spec)
-            state[name] = "open"
-            buf = b""
-            while True:
-                b = p.read(4096)
-                if not b:
-                    continue
-                buf += b
-                while b"\n" in buf:
-                    raw, buf = buf.split(b"\n", 1)
-                    for out in k.handle(raw.decode("ascii", "replace")):
-                        if out:
-                            ut.send(out)
+            if oppdater.update(log=log):
+                log("Startar Geoscan på nytt …")
+                self.oppd["omstart"] = True
         except Exception as e:
-            state[name] = f"feil: {e}"
-            time.sleep(2)
+            log(f"Oppdateringa feila: {e}")
+        finally:
+            self.oppd["koyrer"] = False
+
+    def snapshot(self):
+        k = dict(self.k.status)
+        n = dict(self.ntrip.status)
+        n["alder"] = None if not n.get("sist_data") else round(time.time() - n["sist_data"], 1)
+        n.pop("sist_data", None)
+        d25 = None
+        if k.get("korrigert") and k.get("stamp") is not None:
+            t = math.radians(math.hypot(k["stamp"], k["krenging"]))
+            d25 = round(2.5 * math.sin(t) * 100, 1)
+        return {"korr": k, "ntrip": n, "inn": dict(self.state),
+                "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
+                "ut": [{"port": o["spec"]["port"], "feil": o["feil"]} for o in self.ut.ports],
+                "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25,
+                "oppdatering": {k2: v for k2, v in self.oppd.items()}}
 
 
-def status_line(k, state, ut):
-    s = k.status
+def status_line(app):
+    s = app.k.status
     fixnamn = {0: "INGEN", 1: "GPS", 2: "DGPS", 4: "RTK FIX", 5: "RTK FLOAT", 6: "INS", 9: "SBAS"}
     hell = (f"stamp {s['stamp']:+.1f}° krenging {s['krenging']:+.1f}° ({s['hellingskjelde']}), "
             f"forskyving {s['forskyving_cm']} cm") if s["korrigert"] else s["melding"]
-    porter = ", ".join(f"{n}: {v}" for n, v in state.items())
-    utfeil = ", ".join(f"{o['spec']['port']}: {o['feil']}" for o in ut.ports if o["feil"])
+    porter = ", ".join(f"{n}: {v}" for n, v in app.state.items())
+    utfeil = ", ".join(f"{o['spec']['port']}: {o['feil']}" for o in app.ut.ports if o["feil"])
+    n = app.ntrip.status
+    ntrip = "" if n["tilstand"] == "av" else f" | NTRIP {n['tilstand']}" + (f" ({n['melding']})" if n["melding"] else "")
     return (f"{time.strftime('%H:%M:%S')}  {fixnamn.get(s['fix'], s['fix'])}  sat {s['sats']}  "
-            f"kurs {s['kurs']} ({s['kurskjelde']})  {hell}  | inn: {porter}" + (f" | ut-feil: {utfeil}" if utfeil else ""))
+            f"kurs {s['kurs']} ({s['kurskjelde']})  {hell}{ntrip}  | inn: {porter}"
+            + (f" | ut-feil: {utfeil}" if utfeil else ""))
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(description="Hellingskorrigert GNSS til IDS Stream C")
     ap.add_argument("--config", default=str(HER / "geoscan_config.json"))
     ap.add_argument("--fil", help="spel av ei NMEA-fil og skriv korrigert NMEA til skjermen")
-    a = ap.parse_args()
+    a = ap.parse_args(argv)
     cfg = load_cfg(Path(a.config))
     if a.fil:
         cfg["logg"] = None
@@ -281,17 +382,20 @@ def main():
         return
     if cfg.get("hoegd") == "nn2000" and GEOID.n(62.4, 6.6) is None:
         print(f"ÅTVARING: geoiden kan ikkje lesast ({GEOID.err}). Høgda frå mottakaren blir brukt.", file=sys.stderr)
-    k = Korrigerar(cfg)
-    ut = Utgangar(cfg)
-    state = {}
-    for spec in cfg["inn"]:
-        threading.Thread(target=reader, args=(spec, k, ut, state), daemon=True).start()
-    print(f"SNOWMAN Geoscan – spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
-          f"utgang «{cfg['utgang']}», TCP {cfg.get('tcp_port')}. Ctrl+C stoppar.")
+    app = App(cfg)
+    app.start()
+    k = app.k
+    print(f"SNOWMAN Geoscan {VERSJON} – spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
+          f"utgang «{cfg['utgang']}», TCP {cfg.get('tcp_port')}"
+          + (f", status http://localhost:{cfg['status_port']}" if cfg.get("status_port") else "") + ". Ctrl+C stoppar.")
     try:
         while True:
             time.sleep(2)
-            print(status_line(k, state, ut), flush=True)
+            if app.oppd["omstart"]:
+                print("Ny versjon lagd inn – startar på nytt.", flush=True)
+                time.sleep(1)
+                sys.exit(3)          # START-GEOSCAN.bat startar på nytt ved kode 3
+            print(status_line(app), flush=True)
     except KeyboardInterrupt:
         pass
 

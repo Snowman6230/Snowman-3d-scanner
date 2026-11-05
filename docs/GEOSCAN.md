@@ -25,11 +25,12 @@ Skannebreidda til Stream C er 96 cm. Alt over nokre få grader flyttar altså r�
 ## Løysinga i to delar
 
 ```
-R12i (tilt på) ─► geoscan.py ─► NMEA ─► com0com ─► OneVision   (sanntid: masta retta)
-                      │
-                      └─► logg/geoscan_*.csv (posisjon, helling, kurs)
+NTRIP-caster ◄─GGA── geoscan.py ──RTCM──► R12i            (erstattar Trimble Access for korreksjonane)
+R12i (tilt på) ─NMEA─► geoscan.py ─► NMEA ─► com0com ─► OneVision   (sanntid: masta retta)
+                           ├─► TCP 5000 (andre program)   ├─► statusside http://localhost:8088
+                           └─► logg/geoscan_*.csv (posisjon, helling, kurs) + logg/raa_*.nmea (opptak)
                                      │
-GRED HD/OneVision: objekt (CSV) ─────┴─► korriger_objekt.py ─► objekt retta for djupn
+GRED HD/OneVision: objekt (GeoJSON/CSV) ─┴─► korriger_objekt.py ─► objekt retta for djupn
 ```
 
 **Del 1, sanntid (masta):** retta posisjon går til OneVision, éin posisjon per skann.
@@ -67,9 +68,54 @@ justeringa ved støyt eller rask snuing.
 | `mottakar_kompenserer` | `true` når R12i har tilt på og stanghøgd = mast. Programmet rettar då ikkje masta ein gong til. |
 | `djupn_sanntid` | Djupn (m) å rette for i sanntid. 0 = berre masta. |
 | `hoegd` | `nn2000`: ellipsoidisk høgd − Kartverket-geoiden (HREF2018B). `mottakar`: høgda frå mottakaren. |
-| `sone` | UTM-sone for loggen (32 for Sunnmøre). Objektfila må vere i same sone. |
+| `sone` | UTM-sone for loggen (32 for Sunnmøre). Objekt i ei anna sone (t.d. UTM33 / EPSG:5973) blir rekna om automatisk. |
 | `stamp_null`, `krenging_null`, `snu_stamp`, `snu_krenging` | Kalibrering av ein ekstra IMU, sjå nedanfor. |
 | `utan_helling` | `send_ukorrigert` (standard) eller `stopp` når hellinga manglar. |
+| `opptak` | `true`: all rå NMEA blir lagra i `logg/raa_*.nmea`, så ein felttur kan spelast av att med `--fil`. |
+| `status_port`, `status_lan` | Statussida (8088). `status_lan: true` opnar ho for nettbrett/mobil på same nett. |
+| `ntrip` | `{"pa": true, "rtcm_til": "COM20", "gga_intervall": 10}`. Innlogginga ligg i `pc/ntrip_lokal.json` (ikkje i git, sjå `ntrip_lokal.eksempel.json`). `rtcm_til`: porten RTCM skal til, til dømes Bluetooth port 2 på R12i. Utan han går RTCM på første inngang (USB). |
+| `sjekk_oppdatering` | Sjå etter ny versjon på GitHub ved oppstart (vist på statussida). |
+
+## NTRIP (erstattar Trimble Access)
+
+R12i har ikkje eige internett. Geoscan hentar korreksjonane frå casteren og sender dei til mottakaren. GGA blir
+sendt til casteren kvart `gga_intervall` sekund. Det koplar til att av seg sjølv, og har ein vakthund som slår
+inn når det ikkje har kome data på 15 s. Ved feil passord eller ukjent mountpoint ventar det 60 s, så casteren
+ikkje blir hamra på. NTRIP-klienten er kopiert frå Snødjupne.
+
+Ikkje avklart (frå overleveringa): om R12i tek imot RTCM over USB, eller berre på Bluetooth port 2. Begge delar er
+støtta. Prøv først utan `rtcm_til` (USB). Viser statussida at NTRIP er tilkopla, men fixen ikkje blir RTK, set
+`rtcm_til` til Bluetooth-porten.
+
+## Statusside
+
+http://localhost:8088 viser fix, helling (med ei teikning av vogna), kor mykje som blir retta no, kor stor
+djupnfeilen ville vore på 2,5 m, NTRIP og portar. Ho oppdaterer seg kvart sekund og fungerer på mobil.
+
+## Oppdatering utan ny installasjon
+
+- **Statussida:** når det finst ein nyare versjon på GitHub, kjem det opp ein knapp, «Oppdater no». Geoscan lastar
+  ned, kontrollerer, legg inn og startar på nytt av seg sjølv (START-GEOSCAN.bat startar på nytt ved kode 3).
+- **OPPDATER.bat:** gjer det same frå Utforskaren.
+- **TILBAKE-TIL-FORRIGE.bat:** rullar tilbake til versjonen før siste oppdatering.
+
+Tryggleik:
+- Den nye versjonen blir kompilert og sjekka før noko blir skrive.
+- Filene som blir bytte ut, blir lagra i `pc/reserve/`.
+- `geoscan_config.json`, `ntrip_lokal.json` og `logg/` blir aldri rørte.
+- Nye innstillingar får standardverdiar automatisk.
+- Oppdateringa kan berre startast frå PC-en sjølv, ikkje frå mobil eller nett.
+
+Repoet er privat. PC-en treng difor ein GitHub-nøkkel med berre lesetilgang i `pc/oppdatering_lokal.json`:
+`{"token": "github_pat_..."}`. Lag han på GitHub under Settings → Developer settings → Fine-grained tokens, berre
+for Snowman-3d-scanner, med «Contents: Read-only». Er git installert og mappa ein git-klon, blir `git pull` brukt i
+staden.
+
+## Simulator
+
+`python simuler.py --caster 2101` startar ein SIMULERT mottakar på `socket://127.0.0.1:7777`. Han køyrer vogna fram
+og tilbake i ein sidebakke med ±6° krenging. Simulatoren startar òg ein falsk NTRIP-caster med mountpoint SIM, så
+heile kjeda kan prøvast utan utstyr. Simulerte data må aldri brukast som målingar.
 
 ## Kalibrering av ein ekstra IMU
 
@@ -91,6 +137,8 @@ justeringa ved støyt eller rask snuing.
 pc\INSTALL.bat          (første gong)
 pc\START-GEOSCAN.bat
 python korriger_objekt.py --objekt ror.csv --logg logg\geoscan_*.csv --ut ror_retta.csv
+python korriger_objekt.py --objekt eksport.geojson --logg logg\geoscan_*.csv --ut eksport_retta.geojson
+python oppdater.py --sjekk               (finst det ein nyare versjon?)
 python geoscan.py --fil opptak.nmea     (spel av eit opptak, skriv retta NMEA til skjermen)
 ```
 
@@ -98,6 +146,6 @@ python geoscan.py --fil opptak.nmea     (spel av eit opptak, skriv retta NMEA ti
 
 Sjå [OPNE-SPORSMAL.md](OPNE-SPORSMAL.md) for den fullstendige lista.
 
-- Eksportformatet frå GRED HD/OneVision for objekt (kolonnar, tid, koordinatsystem). Treng ei eksempelfil.
+- Ei ekte eksportfil frå GRED HD/OneVision (GeoJSON er støtta, men berre testa mot eit oppdikta eksempel).
 - Om OneVision brukar heading frå NMEA (HDT) til å leggje skannebeltet, eller berre sporet.
-- Mastehøgda og kvar referansepunktet på Stream C er definert (midt i antennerekkja?).
+- Mastehøgda (1,40 eller 1,50 m) og kor langt fram referansepunktet ligg frå masta.

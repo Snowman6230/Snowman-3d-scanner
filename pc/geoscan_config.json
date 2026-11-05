@@ -15,7 +15,7 @@
   "spakarm": {
     "fram": 0.0,
     "hogre": 0.0,
-    "opp": 1.2
+    "opp": 1.4
   },
   "utgang": "rett_antenne",
   "mottakar_kompenserer": true,
@@ -28,5 +28,15 @@
   "snu_stamp": false,
   "snu_krenging": false,
   "utan_helling": "send_ukorrigert",
-  "logg": "logg"
+  "logg": "logg",
+  "opptak": true,
+  "status_port": 8088,
+  "status_lan": false,
+  "ntrip": {
+    "pa": false,
+    "rtcm_til": null,
+    "gga_intervall": 10
+  },
+  "_ntrip_innlogging": "Caster, mountpoint, brukar og passord i pc/ntrip_lokal.json (ikkje i git). Sjå ntrip_lokal.eksempel.json",
+  "sjekk_oppdatering": true
 }

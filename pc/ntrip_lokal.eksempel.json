@@ -1,0 +1,10 @@
+{
+  "pa": true,
+  "caster": "caster.eksempel.no",
+  "port": 2101,
+  "mountpoint": "MOUNTPOINT",
+  "brukar": "",
+  "passord": "",
+  "versjon": "auto",
+  "rtcm_til": "COM20"
+}

@@ -167,3 +167,131 @@ def test_korriger_objekt_ende_til_ende(tmp_path):
     dE, dN = float(r["E_retta"]) - E, float(r["N_retta"]) - Nn
     gam = KK.convergence(g["lat"], g["lon"], 32)
     assert abs(math.degrees(math.atan2(dE, dN)) + gam) < 0.5   # mm-avrunding i fila
+
+
+def _zip(files, top="Snowman-3d-scanner-main"):
+    import io as _io
+    import zipfile as _zf
+    b = _io.BytesIO()
+    with _zf.ZipFile(b, "w") as z:
+        for name, data in files.items():
+            z.writestr(f"{top}/{name}", data)
+    return b.getvalue()
+
+
+def test_oppdatering_reserve_og_tilbake(tmp_path):
+    import oppdater as O
+    pc = tmp_path / "pc"
+    pc.mkdir()
+    (pc / "geoscan.py").write_text('VERSJON = "0.2.0"\n', encoding="utf-8")
+    (pc / "helling.py").write_text("x = 1\n", encoding="utf-8")
+    (pc / "geoscan_config.json").write_text('{"mitt": true}', encoding="utf-8")
+    data = _zip({"pc/geoscan.py": 'VERSJON = "0.3.0"\n', "pc/helling.py": "x = 2\n", "pc/ny.py": "y = 1\n",
+                 "pc/geoscan_config.json": '{"overskrive": true}', "pc/logg/a.csv": "skal ikkje med",
+                 "README.md": "utanfor pc"})
+    files = O._files_from_zip(data)
+    assert ("geoscan_config.json",) not in files and ("logg", "a.csv") not in files
+    n, res = O.install(files, pcdir=pc, log=lambda *_: None)
+    assert n == 3 and O.version_of((pc / "geoscan.py").read_text()) == "0.3.0"
+    assert (pc / "geoscan_config.json").read_text() == '{"mitt": true}'          # oppsettet er urørt
+    assert O.install(files, pcdir=pc, log=lambda *_: None) == (0, None)         # ingenting nytt
+    assert O.rollback(pcdir=pc, log=lambda *_: None)
+    assert O.version_of((pc / "geoscan.py").read_text()) == "0.2.0"
+    assert (pc / "helling.py").read_text() == "x = 1\n" and not (pc / "ny.py").exists()
+
+
+def test_oydelagd_versjon_blir_ikkje_lagd_inn(tmp_path):
+    import oppdater as O
+    pc = tmp_path / "pc"
+    pc.mkdir()
+    (pc / "geoscan.py").write_text('VERSJON = "0.2.0"\n', encoding="utf-8")
+    files = O._files_from_zip(_zip({"pc/geoscan.py": 'VERSJON = "0.3.0"\ndef (:\n'}))
+    try:
+        O.install(files, pcdir=pc, log=lambda *_: None)
+        assert False, "skulle ha feila"
+    except RuntimeError:
+        pass
+    assert O.version_of((pc / "geoscan.py").read_text()) == "0.2.0" and not (pc / "reserve").exists()
+
+
+def _logg_med_helling(tmp_path, roll=5.0):
+    cfg = dict(G.STANDARD, hoegd="nn2000", utgang="rett_antenne", logg=str(tmp_path / "logg"),
+               spakarm={"fram": 0, "hogre": 0, "opp": 1.4}, sone="32")
+    k = G.Korrigerar(cfg)
+    pashr = N.build(["PASHR", "120000.00", "90.0", "T", f"{roll:.2f}", "0.00", "", "", "", "", "2", "1"])
+    k.handle(pashr, now=1000.0)
+    out = k.handle(_gga(), now=1000.05)[0]
+    k.logfile.close()
+    return N.parse_gga(N.split(out)), next((tmp_path / "logg").glob("*.csv"))
+
+
+def test_geojson_utm33_djupn_og_hoegd(tmp_path):
+    import json as _json
+    import korriger_objekt as KO
+    import koordinat as KK
+    g, logfile = _logg_med_helling(tmp_path)
+    # rett antenne → bakken under radaren: same horisontale punkt, 1,4 m lågare
+    la, lo = g["lat"], g["lon"]
+    E, Nn = KK.utm_forward(la, lo, 33)                     # objekta i UTM33 (EPSG 5973), loggen i UTM32
+    h_bakke = g["alt"] - 1.4
+    for z, mode in ((2.5, "djupn"), (round(h_bakke - 2.5, 3), "hoegd")):
+        gj = {"type": "FeatureCollection", "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::5973"}},
+              "features": [{"type": "Feature", "properties": {"id": 1},
+                            "geometry": {"type": "LineString", "coordinates": [[E, Nn, z], [E + 0.2, Nn, z]]}}]}
+        src = tmp_path / f"inn_{mode}.geojson"
+        src.write_text(_json.dumps(gj))
+        KO.main(["--objekt", str(src), "--logg", str(logfile), "--ut", str(tmp_path / "ut.geojson")])
+        res = _json.loads((tmp_path / "ut.geojson").read_text())
+        f = res["features"][0]
+        p = f["geometry"]["coordinates"][0]
+        assert f["properties"]["helling_retta"] == "2/2"
+        assert abs(math.hypot(p[0] - E, p[1] - Nn) - 2.5 * math.sin(math.radians(5))) < 0.002
+        dv = 2.5 * math.cos(math.radians(5))
+        assert abs(p[2] - (dv if mode == "djupn" else h_bakke - dv)) < 0.002
+
+
+def _free_port():
+    import socket as _s
+    with _s.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
+def test_ende_til_ende_simulator_ntrip_tcp_status(tmp_path):
+    """Simulert mottakar + falsk caster → App → TCP-klient og statusside. Køyrer ca. 4 s."""
+    import json as _json
+    import socket as _s
+    import threading as _t
+    import time as _time
+    import urllib.request as _u
+    import simuler as S
+    stop = _t.Event()
+    pm, pc, pt, ps = (_free_port() for _ in range(4))
+    m, c = S.Mottakar(hz=10), S.FalskCaster()
+    _t.Thread(target=m.serve, args=(pm, stop), daemon=True).start()
+    _t.Thread(target=c.serve, args=(pc, stop), daemon=True).start()
+    _time.sleep(0.3)
+    cfg = dict(G.STANDARD, inn=[{"port": f"socket://127.0.0.1:{pm}"}], ut_seriell=[], tcp_port=pt, status_port=ps,
+               logg=str(tmp_path / "logg"), opptak=True, sjekk_oppdatering=False, hoegd="nn2000",
+               ntrip={"pa": True, "caster": "127.0.0.1", "port": pc, "mountpoint": "SIM", "versjon": "1",
+                      "gga_intervall": 1})
+    app = G.App(cfg)
+    app.start()
+    try:
+        _time.sleep(0.5)
+        cl = _s.create_connection(("127.0.0.1", pt), timeout=3)
+        _time.sleep(3.0)
+        data = cl.recv(65536).decode()
+        cl.close()
+        st = _json.loads(_u.urlopen(f"http://127.0.0.1:{ps}/status", timeout=3).read())
+        side = _u.urlopen(f"http://127.0.0.1:{ps}/", timeout=3).read().decode()
+    finally:
+        app.ntrip.stop.set()
+        stop.set()
+    ggas = [l for l in data.splitlines() if l.startswith("$INGGA")]
+    assert ggas and all(N.valid(l) for l in ggas)
+    assert st["korr"]["korrigert"] and st["korr"]["hellingskjelde"] == "PASHR"
+    assert st["ntrip"]["tilstand"] == "tilkopla" and st["ntrip"]["byte"] > 0
+    assert m.rtcm_bytes > 0 and c.gga > 0                      # RTCM kom fram til «mottakaren», GGA til casteren
+    assert "SNOWMAN GEOSCAN" in side
+    assert list((tmp_path / "logg").glob("raa_*.nmea")) and list((tmp_path / "logg").glob("geoscan_*.csv"))
