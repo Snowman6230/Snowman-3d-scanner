@@ -1,0 +1,32 @@
+{
+  "inn": [
+    {
+      "port": "COM23",
+      "baud": 115200
+    }
+  ],
+  "ut_seriell": [
+    {
+      "port": "COM34",
+      "baud": 115200
+    }
+  ],
+  "tcp_port": 5000,
+  "spakarm": {
+    "fram": 0.0,
+    "hogre": 0.0,
+    "opp": 1.2
+  },
+  "utgang": "rett_antenne",
+  "mottakar_kompenserer": true,
+  "djupn_sanntid": 0.0,
+  "sone": "32",
+  "hoegd": "nn2000",
+  "kurs_kjelde": "auto",
+  "stamp_null": 0.0,
+  "krenging_null": 0.0,
+  "snu_stamp": false,
+  "snu_krenging": false,
+  "utan_helling": "send_ukorrigert",
+  "logg": "logg"
+}

@@ -18,3 +18,9 @@ Skriv alltid på nynorsk: kode-kommentarar, dokumentasjon og commit-meldingar.
 - Passord, brukarnamn og NTRIP-tenesteopplysingar skal aldri inn i repoet.
 - Høgd: rekn ut ellipsoidehøgd (GGA-felt 9 + 11), og gjer om til NN2000 med Kartverket-geoiden. Stol ikkje på den ortometriske høgda frå mottakaren.
 - Godta alle talker-ID-ar for NMEA ($GNGGA, $GPGGA, $INGGA osb.).
+
+## Struktur
+
+- `pc/`: Geoscan-programmet (Python, pyserial). Spesifikasjon i `docs/GEOSCAN.md`.
+- `tests/`: `python -m pytest tests`. Køyr før push.
+- Forteikn som i Snødjupne: stamp + = fronten opp, krenging + = høgre side ned. Kurs i grader frå sann nord.

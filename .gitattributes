@@ -1,0 +1,5 @@
+# Windows-filer må ha CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sh text eol=lf
+*.tif binary
