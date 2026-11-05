@@ -136,7 +136,7 @@ Fana **Send inn**:
    GPS-oppsettet i OneVision.
 3. Trykk **Lag pakke**. Trykk så **✉ Skriv e-post til hansps@alpindata.no**: e-postprogrammet opnar seg med
    mottakar og tekst. Trykk **Opne mappa med pakka**, dra zip-fila inn i e-posten og send. Er fila over 20 MB,
-   del henne via OneDrive og send lenkja. Du kan òg trykke **Last ned** og sende fila på anna vis. Send zip-fila til Hans Petter på e-post eller via OneDrive. Pakka har
+   del henne via OneDrive og send lenkja. Du kan òg trykke **Last ned** og sende fila på anna vis. Pakka har
    aldri passord eller brukarnamn med seg.
 
 ### Svar frå Hans Petter
