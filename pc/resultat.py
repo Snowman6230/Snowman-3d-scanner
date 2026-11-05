@@ -17,6 +17,7 @@ from pathlib import Path
 
 import koordinat as K
 import korriger_objekt as KO
+import opphav
 
 HER = Path(__file__).resolve().parent
 
@@ -112,6 +113,7 @@ def skriv_csv(gj, path):
     Semikolon og desimalkomma, så fila opnar rett i norsk Excel."""
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, delimiter=";")
+        w.writerow([f"{opphav.NAMN} – {opphav.PRODUSENT}", time.strftime("%d.%m.%Y %H:%M"), opphav.SIGNATUR])
         w.writerow(["objekt", "lag", "type", "punkt", "E", "N", "z", "djupn_for_m", "djupn_retta_m", "flytta_cm",
                     "hoegd_nn2000_m", "bakke_nn2000_m"])
         for i, ft in enumerate(gj.get("features", [])):
@@ -139,14 +141,23 @@ def _lines(c, depth=0):
 
 
 def skriv_dxf(gj, path):
-    """Enkel DXF (R12, ASCII) som AutoCAD, Civil 3D, Gemini og GIS-program les: 3D-polylinjer og punkt,
+    """Enkel DXF (R12, Windows-1252) som AutoCAD, Civil 3D, Gemini og GIS-program les: 3D-polylinjer og punkt,
     eitt lag per «layer» i eksporten. z er det same som i fila (djupn eller høgd). Djupna etter retting står
     som tekst ved kvart punkt på laget <lag>_DJUPN."""
     def layer(pr):
         s = str(pr.get("layer") or "GEOSCAN")
         return "".join(ch if ch.isalnum() or ch in "_-" else "_" for ch in s)[:31] or "GEOSCAN"
 
-    o = ["0", "SECTION", "2", "ENTITIES"]
+    o = ["999", opphav.generator(), "999", opphav.COPYRIGHT, "0", "SECTION", "2", "ENTITIES"]
+    # tittelfelt (laget SNOWMAN_GEOSCAN) nede til venstre for teikninga
+    xs = [p[0] for ft in gj.get("features", []) for ln in _lines((ft.get("geometry") or {}).get("coordinates")) for p in ln]
+    ys = [p[1] for ft in gj.get("features", []) for ln in _lines((ft.get("geometry") or {}).get("coordinates")) for p in ln]
+    if xs:
+        x0, y0 = min(xs), min(ys) - 1.5
+        for k, (t, h) in enumerate(((opphav.NAMN, 0.5), (opphav.PRODUSENT, 0.3),
+                                    (f"Retta for helling {time.strftime('%d.%m.%Y')} · {opphav.SIGNATUR}", 0.2))):
+            o += ["0", "TEXT", "8", "SNOWMAN_GEOSCAN", "10", f"{x0:.3f}", "20", f"{y0 - k * 0.7:.3f}", "30", "0.0",
+                  "40", f"{h:.2f}", "1", t]
     for ft in gj.get("features", []):
         lay = layer(ft.get("properties") or {})
         for ln in _lines((ft.get("geometry") or {}).get("coordinates")):
@@ -167,7 +178,7 @@ def skriv_dxf(gj, path):
                 o += ["0", "TEXT", "8", (lay + "_DJUPN")[:31], "10", f"{p[0] + 0.15:.3f}", "20", f"{p[1] + 0.15:.3f}",
                       "30", "0.0", "40", "0.20", "1", f"{d1[j]:.2f} m".replace(".", ",")]
     o += ["0", "ENDSEC", "0", "EOF"]
-    Path(path).write_text("\n".join(o) + "\n", encoding="ascii", errors="replace")
+    Path(path).write_text("\n".join(o) + "\n", encoding="cp1252", errors="replace")   # DXF R12: ANSI_1252 (æøå)
 
 
 # ---------- retting ----------
@@ -183,7 +194,8 @@ def rett_eksport(objektfil, loggfiler, utdir, zmode="auto", sone=None, maks_avst
     orig = copy.deepcopy(gj)
     ok, miss, zmode = KO.correct_geojson(gj, logg, zmode, maks_avstand)
     gj.setdefault("properties", {})
-    gj["snowman_geoscan"] = {"retta": time.strftime("%Y-%m-%d %H:%M:%S"), "z": zmode, "utm_sone": zone,
+    gj["snowman_geoscan"] = {"generator": opphav.generator(), "produsent": opphav.PRODUSENT,
+                             "retta": time.strftime("%Y-%m-%d %H:%M:%S"), "z": zmode, "utm_sone": zone,
                              "loggar": [Path(p).name for p in loggfiler]}
     utdir = Path(utdir)
     utdir.mkdir(parents=True, exist_ok=True)

@@ -127,8 +127,11 @@ def lag_pakke(cfg_path, loggdir, versjon, med_raa=True, dagar=None, status=None)
     grense = time.time() - dagar * 86400 if dagar else 0
     with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED) as z:
         sv = svar_les()
+        import opphav
+        z.comment = opphav.generator(versjon).encode("utf-8")[:60000]
         z.writestr("svar.json", json.dumps(sv, ensure_ascii=False, indent=1))
-        tekst = [f"Snowman Geoscan {versjon} – pakke til utviklar", f"Laga {time.strftime('%Y-%m-%d %H:%M')}"
+        tekst = [f"{opphav.NAMN} {versjon} – pakke til utviklar", opphav.PRODUSENT, opphav.SIGNATUR,
+                 f"Laga {time.strftime('%Y-%m-%d %H:%M')}"
                  + (f" av {sv.get('namn')}" if sv.get("namn") else ""), ""]
         for s in SPORSMAL:
             tekst += [s["tekst"], "  " + (sv["svar"].get(s["id"]) or "(ikkje svara)"), ""]

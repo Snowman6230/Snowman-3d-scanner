@@ -2,6 +2,31 @@
 
 *Alpindata v/Hans Petter B. Sørensen*
 
+## 0.6.0 – 5. november 2026
+- **Logo:** same uttrykk som SNOWMAN Snødjupne (natthimmel, fjelltoppar, snø), men med georadarvogna, GNSS-mast,
+  radarbølgjer og eit nedgrave røyr. Kjelda er pc/ikon/lag-ikon.py. Ho lagar SVG, PNG, ICO og oppstartbiletet.
+- **Oppstartbilete** når programmet startar (kan slåast av med vis_oppstartlogo). Ikonet blir brukt på snarvegane
+  på skrivebordet. Namnet står i kommandovindauget.
+- Logo og namn øvst i nettlesaren, med eige ikon i fana.
+- **Rapport** (skriv ut / PDF / HTML) med:
+  - logo og namn
+  - oversikt og oversiktsteikning
+  - objekttabell
+  - profil og koordinatar per objekt
+  - merknader
+
+  Namn og signatur står nedst på kvar side.
+- **Namnet er gøymt i alt programmet lagar** (pc/opphav.py, docs/LOGO.md):
+  - DXF: kommentar og tittelfelt
+  - GeoJSON: generator
+  - CSV: tittelline
+  - zip: kommentar
+  - rå NMEA-logg: første line
+  - HTTP-hovud og HTML-meta
+
+  opphav.sjekk_signatur() finn signaturen att i ei fil.
+- DXF blir skriven i Windows-1252 (R12-standard), så æøå blir rette i CAD.
+
 ## 0.5.0 – 5. november 2026
 - **Koordinatar til objekt under bakken.** Klikk på eller ved eit objekt (innan 2 m) for å sjå:
   - austing og nording (EUREF89 UTM) og breidd/lengd

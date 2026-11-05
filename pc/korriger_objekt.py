@@ -44,6 +44,8 @@ def read_csv(path):
     except csv.Error:          # t.d. ein logg med berre overskrifta – vel det teiknet som finst i overskrifta
         delim = max(";,\t", key=first.count)
     rows = list(csv.reader(io.StringIO(text), delimiter=delim))
+    if rows and rows[0] and str(rows[0][0]).startswith("Snowman Geoscan"):   # tittellina i filer frå Snowman Geoscan
+        rows = rows[1:]
     if not rows:
         return [], [], delim
     return rows[0], rows[1:], delim

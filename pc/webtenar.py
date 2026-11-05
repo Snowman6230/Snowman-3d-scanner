@@ -28,8 +28,12 @@ def start(app, port=8088, lan=False):
     nedlasting = {"resultat": lambda: HER / "resultat", "pakke": lambda: HER / "pakkar",
                   "innsendt": lambda: HER / "innsendt" / "filer", "logg": loggdir}
 
+    import opphav
+
     class H(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
+        server_version = "SnowmanGeoscan/" + opphav.versjon() + " (Alpindata)"
+        sys_version = ""
 
         def log_message(self, *a):
             pass

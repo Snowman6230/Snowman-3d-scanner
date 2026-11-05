@@ -27,9 +27,8 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.5.0"
-NAMN = "Snowman Geoscan"
-PRODUSENT = "Alpindata v/Hans Petter B. Sørensen"
+VERSJON = "0.6.0"
+from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
     "ut_seriell": [{"port": "COM34", "baud": 115200}],
@@ -50,6 +49,7 @@ STANDARD = {
     "status_lan": False,
     "sjekk_oppdatering": True,
     "opne_nettlesar": True,
+    "vis_oppstartlogo": True,
     "ntrip": {"pa": False, "rtcm_til": None, "gga_intervall": 10},
 }
 
@@ -267,6 +267,7 @@ class App:
             d = HER / cfg["logg"]
             d.mkdir(exist_ok=True)
             self.rec = open(d / time.strftime("raa_%Y%m%d_%H%M%S.nmea"), "a", encoding="ascii", errors="replace")
+            self.rec.write(f"# {NAMN} {VERSJON} - Alpindata v/Hans Petter B. Sorensen - {SIGNATUR}\n")
         self.ntrip = NT.NtripTeneste(NT.load(cfg, HER), self, VERSJON)
         self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "koyrer": False, "logg": [], "omstart": False}
 
@@ -356,7 +357,7 @@ class App:
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"]} for o in self.ut.ports],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25, "radar_djupn": rd,
-                "namn": NAMN, "produsent": PRODUSENT,
+                "namn": NAMN, "produsent": PRODUSENT, "signatur": SIGNATUR,
                 "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}
 
 
@@ -372,6 +373,36 @@ def status_line(app):
     return (f"{time.strftime('%H:%M:%S')}  {fixnamn.get(s['fix'], s['fix'])}  sat {s['sats']}  "
             f"kurs {s['kurs']} ({s['kurskjelde']})  {hell}{ntrip}  | inn: {porter}"
             + (f" | ut-feil: {utfeil}" if utfeil else ""))
+
+
+def oppstartlogo(sek=2.5):
+    """Viser oppstartbiletet (ikon/oppstart.png: Snowman-logoen med georadaren) midt på skjermen i nokre sekund.
+    Tenesta køyrer alt i bakgrunnen. Utan skjerm eller tkinter blir det berre hoppa over."""
+    try:
+        import tkinter as tk
+        bilete = HER / "ikon" / "oppstart.png"
+        if not bilete.exists():
+            return
+        rot = tk.Tk()
+        rot.overrideredirect(True)
+        rot.attributes("-topmost", True)
+        img = tk.PhotoImage(file=str(bilete))
+        w, h = img.width(), img.height()
+        rot.geometry(f"{w}x{h}+{(rot.winfo_screenwidth() - w) // 2}+{(rot.winfo_screenheight() - h) // 2}")
+        try:
+            rot.wm_attributes("-transparentcolor", "#010203")      # runde hjørne på Windows
+            rot.configure(bg="#010203")
+        except tk.TclError:
+            pass
+        tk.Label(rot, image=img, bd=0, bg=rot["bg"]).pack()
+        try:
+            rot.iconbitmap(str(HER / "ikon" / "geoscan.ico"))
+        except tk.TclError:
+            pass
+        rot.after(int(sek * 1000), rot.destroy)
+        rot.mainloop()
+    except Exception:
+        pass
 
 
 def main(argv=None):
@@ -395,6 +426,9 @@ def main(argv=None):
         print(f"ÅTVARING: geoiden kan ikkje lesast ({GEOID.err}). Høgda frå mottakaren blir brukt.", file=sys.stderr)
     app = App(cfg, a.config)
     app.start()
+    print(f"\n  *  {NAMN.upper()}  *\n     {PRODUSENT}\n")
+    if cfg.get("vis_oppstartlogo", True) and not a.omstart:
+        oppstartlogo()
     k = app.k
     if cfg.get("status_port") and cfg.get("opne_nettlesar", True) and not a.omstart:
         import webbrowser

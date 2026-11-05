@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Snowman Geoscan</title>
+<meta name="generator" content="Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen">
+<meta name="author" content="Alpindata v/Hans Petter B. Sørensen">
+<meta name="copyright" content="© 2026 Hans Petter Brunstad Sørensen (Alpindata)">
+<link rel="icon" type="image/png" href="vendor/geoscan-ikon.png">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <style>
 :root{--bg:#0f1418;--kort:#1a2228;--kort2:#222c33;--linje:#2c3a44;--tekst:#e8eef2;--svak:#8a9aa6;--ok:#3ecf74;--var:#f2b33d;--feil:#ef5b5b;--blaa:#4ea8ff;--for:#9aa7b1}
@@ -63,8 +67,10 @@ svg{display:block;margin:6px auto 0}
 </head>
 <body>
 <header>
-  <h1>Snowman Geoscan <span id="ver"></span></h1>
-  <div class="prod">Alpindata v/Hans Petter B. Sørensen</div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+    <img src="vendor/geoscan-ikon.svg" alt="" width="48" height="48" style="border-radius:11px">
+    <div><h1>Snowman Geoscan <span id="ver"></span></h1>
+    <div class="prod" style="margin:0">Alpindata v/Hans Petter B. Sørensen</div></div></div>
   <div id="demo" class="banner demo" style="display:none">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
     <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
@@ -184,13 +190,15 @@ svg{display:block;margin:6px auto 0}
         <option value="geojson">GeoJSON – GIS (EUREF89 UTM + NN2000)</option>
         <option value="dxf">DXF – CAD, med djupnetekst</option></select>
       <button class="b" id="eksbtn" onclick="eksporterValde()" disabled>Eksporter valde</button>
-      <div class="hj" style="flex-basis:100%">Klikk på eit objekt på kartet eller kryss av i tabellen for å velje det (klikk igjen for å fjerne). Valde objekt får ein kvit kant på kartet.</div>
+      <button class="b gra" onclick="lagRapport()">📄 Lag rapport</button>
+      <div class="hj" style="flex-basis:100%">«Lag rapport» tek med dei valde objekta, eller alle om ingen er valde. Klikk på eit objekt på kartet eller kryss av i tabellen for å velje det (klikk igjen for å fjerne). Valde objekt får ein kvit kant på kartet.</div>
     </div>
     <div class="tabell"><table id="rtab"><thead><tr><th></th><th>#</th><th>Id</th><th>Lag</th><th>Type</th><th>Skildring</th>
       <th class="n">Djupn før (m)</th><th class="n">Djupn etter (m)</th><th class="n">Maks flytta</th><th class="n">Punkt retta</th></tr></thead><tbody></tbody></table></div>
     <div id="profil" style="display:none;margin-top:14px">
       <div class="verktoy" style="justify-content:space-between"><h2 id="ptittel" style="margin:0"></h2>
-        <button class="b gra" onclick="eksporterObjekt(profilFi)">Eksporter dette objektet</button></div>
+        <span><button class="b gra" onclick="lagRapport([profilFi])">📄 Rapport</button>
+        <button class="b gra" onclick="eksporterObjekt(profilFi)">Eksporter dette objektet</button></span></div>
       <div class="hj" id="pinfo"></div>
       <svg id="psvg" width="100%" height="240" style="margin-top:6px;background:var(--bg);border-radius:8px"></svg>
       <div class="forkl"><span><i style="background:#8a6a4a"></i>bakken</span>
@@ -327,7 +335,8 @@ function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.
 let radarDjupn=2.5;
 const FIX={0:["INGEN","feil"],1:["GPS","feil"],2:["DGPS","var"],4:["RTK FIX","ok"],5:["RTK FLOAT","var"],6:["INS","var"],9:["SBAS","var"]};
 async function tikk(){let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
-  const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;$("demo").style.display=s.demo?"block":"none";visOppd(s.oppdatering);
+  const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;
+  OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";visOppd(s.oppdatering);
   if(fane!="status")return;
   const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
   set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
@@ -482,10 +491,15 @@ function punktAv(fi){const f=siste.etter.features[fi],pr=f.properties||{},ll=[];
     hb:g("bakke_nn2000_m",i),fl:g("flytta_cm",i),lat:p[0],lon:p[1]}))}
 const objNamn=fi=>{const pr=siste.etter.features[fi].properties||{};return{id:pr.id??(fi+1),lag:pr.layer||"",type:pr.type||"",skildring:pr.description||"",pr}};
 const EPSG={32:5972,33:5973,35:5975};
+let OPPHAV={namn:"Snowman Geoscan",produsent:"Alpindata v/Hans Petter B. Sørensen",signatur:"",versjon:""};
+const generatorTekst=()=>`${OPPHAV.namn} ${OPPHAV.versjon} – ${OPPHAV.produsent} – ${OPPHAV.signatur}`;
+function cp1252(s){/* DXF R12 skal vere Windows-1252: æøå og latin-1 er like, nokre teikn har eigne kodar */
+  const sp={"€":0x80,"…":0x85,"–":0x96,"—":0x97,"‘":0x91,"’":0x92,"“":0x93,"”":0x94,"•":0x95},b=new Uint8Array(s.length);
+  for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);b[i]=c<128||(c>=160&&c<256)?c:(sp[s[i]]??63)}return b}
 const kn=(x,d)=>x==null?"":x.toFixed(d).replace(".",",");
 function lagFil(utval,fmt){/* utval: [{fi, punkt:[...], linje:true/false}] → [innhald, filending, mime] */
   const z=siste.sone,djupnModus=siste.z=="djupn";
-  if(fmt=="csv"){const o=["objekt;lag;type;skildring;punkt;austing_E;nording_N;djupn_m;djupn_for_retting_m;hoegd_nn2000_m;bakke_nn2000_m;flytta_cm;breidd;lengd;utm_sone"];
+  if(fmt=="csv"){const o=[`${OPPHAV.namn} – ${OPPHAV.produsent};${new Date().toLocaleString("nb-NO")};${OPPHAV.signatur}`,"objekt;lag;type;skildring;punkt;austing_E;nording_N;djupn_m;djupn_for_retting_m;hoegd_nn2000_m;bakke_nn2000_m;flytta_cm;breidd;lengd;utm_sone"];
     utval.forEach(u=>{const n=objNamn(u.fi);u.punkt.forEach(p=>o.push([n.id,n.lag,n.type,n.skildring,p.nr,kn(p.E,3),kn(p.N,3),kn(p.d1,3),kn(p.d0,3),kn(p.h,3),kn(p.hb,3),kn(p.fl,1),kn(p.lat,8),kn(p.lon,8),z].map(v=>String(v).replace(/;/g,",")).join(";")))});
     return["\ufeff"+o.join("\r\n")+"\r\n","csv","text/csv"]}
   if(fmt=="utsetting"){/* Trimble Access: Punktnamn,Nord,Aust,Høgd,Kode – punktum som desimalteikn */
@@ -498,16 +512,19 @@ function lagFil(utval,fmt){/* utval: [{fi, punkt:[...], linje:true/false}] → [
       const pr=Object.assign({},n.pr);delete pr.utm_e;delete pr.utm_n;
       if(u.punkt.length<siste.etter.features[u.fi].properties.utm_e.length)pr.punkt_nr=u.punkt.map(p=>p.nr);
       return{type:"Feature",properties:pr,geometry:c.length==1?{type:"Point",coordinates:c[0]}:{type:"LineString",coordinates:c}}});
-    return[JSON.stringify({type:"FeatureCollection",name:"Snowman Geoscan – utval",crs:{type:"name",properties:{name:"urn:ogc:def:crs:EPSG::"+(EPSG[z]||("258"+z))}},
+    return[JSON.stringify({type:"FeatureCollection",name:"Snowman Geoscan – utval",generator:generatorTekst(),produsent:OPPHAV.produsent,crs:{type:"name",properties:{name:"urn:ogc:def:crs:EPSG::"+(EPSG[z]||("258"+z))}},
       snowman_geoscan:{z:djupnModus?"djupn (m, positiv nedover)":"høgd NN2000 (m)",retta_for_helling:true},features:feats},null,1),"geojson","application/geo+json"]}
-  if(fmt=="dxf"){const o=["0","SECTION","2","ENTITIES"],lagn=s=>(String(s||"GEOSCAN").replace(/[^A-Za-z0-9_\-]/g,"_").slice(0,31))||"GEOSCAN";
+  if(fmt=="dxf"){const o=["999",generatorTekst(),"999","Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata)","0","SECTION","2","ENTITIES"],lagn=s=>(String(s||"GEOSCAN").replace(/[^A-Za-z0-9_\-]/g,"_").slice(0,31))||"GEOSCAN";
     utval.forEach(u=>{const n=objNamn(u.fi),la=lagn(n.lag),P=u.punkt.filter(p=>p.E!=null),zz=p=>((djupnModus?p.d1:p.h)??0).toFixed(3);
       if(P.length==1)o.push("0","POINT","8",la,"10",P[0].E.toFixed(3),"20",P[0].N.toFixed(3),"30",zz(P[0]));
       else if(P.length>1){o.push("0","POLYLINE","8",la,"66","1","70","8","10","0.0","20","0.0","30","0.0");
         P.forEach(p=>o.push("0","VERTEX","8",la,"10",p.E.toFixed(3),"20",p.N.toFixed(3),"30",zz(p),"70","32"));o.push("0","SEQEND","8",la)}
       P.forEach(p=>{if(p.d1!=null)o.push("0","TEXT","8",(la+"_DJUPN").slice(0,31),"10",(p.E+0.15).toFixed(3),"20",(p.N+0.15).toFixed(3),"30","0.0","40","0.20","1",p.d1.toFixed(2).replace(".",",")+" m")})});
-    o.push("0","ENDSEC","0","EOF");return[o.join("\n")+"\n","dxf","application/dxf"]}}
-function lastNed(innhald,namn,mime){const b=new Blob([innhald],{type:mime+";charset=utf-8"}),a=document.createElement("a");
+    const alle=utval.flatMap(u=>u.punkt.filter(p=>p.E!=null));if(alle.length){const x0=Math.min(...alle.map(p=>p.E)),y0=Math.min(...alle.map(p=>p.N))-1.5;
+      [[OPPHAV.namn,0.5],[OPPHAV.produsent,0.3],["Retta for helling "+new Date().toLocaleDateString("nb-NO")+" · "+OPPHAV.signatur,0.2]].forEach(([t,h],k)=>
+        o.push("0","TEXT","8","SNOWMAN_GEOSCAN","10",x0.toFixed(3),"20",(y0-k*0.7).toFixed(3),"30","0.0","40",h.toFixed(2),"1",t))}
+    o.push("0","ENDSEC","0","EOF");return[cp1252(o.join("\n")+"\n"),"dxf","application/dxf"]}}
+function lastNed(innhald,namn,mime){const b=new Blob([innhald],{type:mime+(innhald instanceof Uint8Array?"":";charset=utf-8")}),a=document.createElement("a");
   a.href=URL.createObjectURL(b);a.download=namn;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 function filStamme(){return(siste.filer.geojson||"eksport_retta.geojson").replace(/_retta\.geojson$/,"")}
 function eksporter(utval,del){const fmt=$("eksfmt").value,[innh,ext,mime]=lagFil(utval,fmt);
@@ -517,6 +534,93 @@ function eksporterValde(){if(!valt.size)return;const fis=[...valt].sort((a,b)=>a
 function eksporterObjekt(fi){eksporter([{fi,punkt:punktAv(fi)}],"objekt_"+String(objNamn(fi).id).replace(/[^A-Za-z0-9_\-]/g,"_"))}
 let posPunkt=null;
 function eksporterPunkt(){if(!posPunkt)return;eksporter([posPunkt],"punkt_"+String(objNamn(posPunkt.fi).id).replace(/[^A-Za-z0-9_\-]/g,"_")+"_"+posPunkt.punkt[0].nr)}
+// ---------- rapport (skriv ut / PDF) ----------
+let LOGO={ikon:"",logo:""};
+async function hentLogo(){if(LOGO.logo)return;try{LOGO.ikon=await (await fetch("vendor/geoscan-ikon.svg")).text();LOGO.logo=await (await fetch("vendor/geoscan-logo.svg")).text()}catch(e){}}
+function svgStorleik(svg,w,h){return svg.replace(/<svg([^>]*?)width="[^"]*"([^>]*?)height="[^"]*"/,`<svg$1width="${w}"$2height="${h}"`)}
+function planSvg(fis){const W=700,H=420,m=40,P=[];fis.forEach(fi=>punktAv(fi).forEach(p=>{if(p.E!=null)P.push(p)}));if(!P.length)return"";
+  let x0=Math.min(...P.map(p=>p.E)),x1=Math.max(...P.map(p=>p.E)),y0=Math.min(...P.map(p=>p.N)),y1=Math.max(...P.map(p=>p.N));
+  const sp=Math.max(x1-x0,y1-y0,2)*1.1,cx=(x0+x1)/2,cy=(y0+y1)/2,sk=Math.min((W-2*m)/sp,(H-2*m)/sp);
+  const X=e=>W/2+(e-cx)*sk,Y=n=>H/2-(n-cy)*sk;let g=`<rect width="${W}" height="${H}" fill="#f6f8fa" stroke="#c9d2d9"/>`;
+  fis.forEach(fi=>{const pp=punktAv(fi).filter(p=>p.E!=null),n=objNamn(fi);
+    for(let j=0;j<pp.length-1;j++){const d=(pp[j].d1!=null&&pp[j+1].d1!=null)?(pp[j].d1+pp[j+1].d1)/2:pp[j].d1;
+      g+=`<line x1="${X(pp[j].E)}" y1="${Y(pp[j].N)}" x2="${X(pp[j+1].E)}" y2="${Y(pp[j+1].N)}" stroke="${djFarge(d)}" stroke-width="4" stroke-linecap="round"/>`}
+    pp.forEach(p=>g+=`<circle cx="${X(p.E)}" cy="${Y(p.N)}" r="3" fill="${djFarge(p.d1)}" stroke="#0f1418" stroke-width=".8"/>`);
+    if(pp.length)g+=`<text x="${X(pp[0].E)+6}" y="${Y(pp[0].N)-6}" font-size="12" font-weight="700" fill="#0b2a44">${esc(n.id)}</text>`});
+  const bar=[0.5,1,2,5,10,20,50].find(v=>v*sk>80)||1;g+=`<line x1="${m}" y1="${H-20}" x2="${m+bar*sk}" y2="${H-20}" stroke="#0b2a44" stroke-width="3"/><text x="${m}" y="${H-26}" font-size="11" fill="#0b2a44">${F(bar,bar<1?1:0)} m</text>`;
+  g+=`<path d="M${W-30} ${m} l8 22 h-16z" fill="#0b2a44"/><text x="${W-30}" y="${m+36}" font-size="12" font-weight="700" text-anchor="middle" fill="#0b2a44">N</text>`;
+  g+=`<text x="6" y="14" font-size="10" fill="#5b6770">E ${F(cx-(W/2)/sk,1)} · N ${F(cy+(H/2)/sk,1)}</text><text x="${W-6}" y="${H-6}" font-size="10" text-anchor="end" fill="#5b6770">E ${F(cx+(W/2)/sk,1)} · N ${F(cy-(H/2)/sk,1)}</text>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`}
+function profilSvgLys(fi){const pp=punktAv(fi);let s=0;pp.forEach((p,j)=>{if(j)s+=avstand([pp[j-1].lat,pp[j-1].lon],[p.lat,p.lon]);p.s=s});
+  const W=700,H=200,ml=48,mr=10,mt=14,mb=26,dmax=Math.max(0.5,...pp.map(p=>Math.max(p.d1??0,p.d0??0)))*1.15,X=v=>ml+(W-ml-mr)*v/Math.max(s,1),Y=v=>mt+(H-mt-mb)*v/dmax;
+  let g=`<rect x="${ml}" y="${mt-5}" width="${W-ml-mr}" height="5" fill="#8a6a4a"/>`;const st=dmax>2.4?0.5:0.25;
+  for(let d=0;d<=dmax+1e-9;d+=st)g+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(d)}" y2="${Y(d)}" stroke="#dde3e8"/><text x="${ml-5}" y="${Y(d)+4}" font-size="10" text-anchor="end" fill="#5b6770">${F(d,2)}</text>`;
+  const xs=s>40?10:s>15?5:s>6?2:1;for(let v=0;v<=s+1e-9;v+=xs)g+=`<text x="${X(v)}" y="${H-8}" font-size="10" text-anchor="middle" fill="#5b6770">${F(v,0)} m</text>`;
+  const sti=k=>{let o="",ny=true;pp.forEach(p=>{if(p[k]==null){ny=true;return}o+=(ny?"M":"L")+X(p.s).toFixed(1)+","+Y(p[k]).toFixed(1);ny=false});return o};
+  g+=`<path d="${sti("d1")}" fill="none" stroke="#1f6fd1" stroke-width="3"/><path d="${sti("d0")}" fill="none" stroke="#5b6770" stroke-width="1.2" stroke-dasharray="4 4"/>`;
+  pp.forEach(p=>{if(p.d1!=null)g+=`<circle cx="${X(p.s)}" cy="${Y(p.d1)}" r="3" fill="${djFarge(p.d1)}" stroke="#0f1418" stroke-width=".8"/>`});
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`}
+async function lagRapport(fis){if(!siste||!siste.etter)return;await hentLogo();
+  fis=fis&&fis.length?fis:(valt.size?[...valt].sort((a,b)=>a-b):siste.etter.features.map((f,i)=>i));
+  const dato=new Date().toLocaleString("nb-NO"),z=siste.sone,nm=r=>r?`${fm(r.snitt)} (${fm(r.min)}–${fm(r.maks)})`:"–";
+  const fil=$("rsamandrag").querySelector("b")?.textContent||"";const maks=Math.max(0,...fis.map(i=>+siste.tabell[i].maks_endring_cm||0));
+  const djupast=Math.max(0,...fis.map(i=>siste.tabell[i].djupn_etter?siste.tabell[i].djupn_etter.maks:0));
+  let objekt="";fis.forEach(fi=>{const t=siste.tabell[fi],n=objNamn(fi),pp=punktAv(fi);
+    objekt+=`<section class="obj"><h3>${esc([n.id,n.lag,n.skildring].filter(Boolean).join(" · "))}</h3>
+      <p class="meta">Type ${esc(n.type||"–")} · djupn etter retting ${nm(t.djupn_etter)} m · før ${nm(t.djupn_for)} m · flytta inntil ${F(+t.maks_endring_cm||0,1)} cm${n.pr.diameter_mm?` · diameter ${esc(n.pr.diameter_mm)} mm`:""}</p>
+      ${profilSvgLys(fi)}
+      <table><thead><tr><th>Punkt</th><th>Austing (E)</th><th>Nording (N)</th><th>Djupn (m)</th><th>Høgd NN2000</th><th>Bakke NN2000</th><th>Flytta</th></tr></thead><tbody>
+      ${pp.map(p=>`<tr><td>${p.nr}</td><td>${p.E==null?"–":F(p.E,3)}</td><td>${p.N==null?"–":F(p.N,3)}</td><td><b>${fm(p.d1)}</b></td><td>${fm(p.h)}</td><td>${fm(p.hb)}</td><td>${p.fl==null?"–":F(p.fl,1)+" cm"}</td></tr>`).join("")}
+      </tbody></table></section>`});
+  const fot=`${esc(OPPHAV.namn)} ${esc(OPPHAV.versjon)} – ${esc(OPPHAV.produsent)} · ${esc(OPPHAV.signatur)}`;
+  const html=`<!doctype html><html lang="nn"><head><meta charset="utf-8"><title>Georadarrapport – ${esc(fil)} – Snowman Geoscan</title>
+<meta name="generator" content="${esc(generatorTekst())}"><meta name="author" content="${esc(OPPHAV.produsent)}">
+<style>
+*{box-sizing:border-box}body{font:12px/1.45 Arial,Helvetica,sans-serif;color:#14212b;margin:0;background:#fff}
+.side{max-width:780px;margin:0 auto;padding:18px 24px 50px}
+.topp{display:flex;align-items:center;gap:16px;background:linear-gradient(#0b2a44,#15507c);color:#fff;border-radius:12px;padding:12px 18px;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.topp .t{margin-left:auto;text-align:right}.topp .t b{font-size:18px;display:block}
+h2{font-size:15px;color:#0b2a44;border-bottom:2px solid #0b2a44;padding-bottom:3px;margin:20px 0 8px;break-after:avoid}
+h3{font-size:13px;margin:0 0 2px;color:#0b2a44}.meta{color:#5b6770;margin:0 0 6px}
+table{width:100%;border-collapse:collapse;margin:6px 0}th,td{border-bottom:1px solid #dde3e8;padding:3px 6px;text-align:right}
+th:first-child,td:first-child{text-align:left}th{background:#eef2f5;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.info td{text-align:left}.info td:first-child{color:#5b6770;width:38%}
+.obj{break-inside:avoid;margin-top:14px}svg{max-width:100%;height:auto}
+.fot{text-align:center;font-size:9px;color:#5b6770;border-top:1px solid #dde3e8;padding:6px;margin-top:20px}
+.knappar{position:sticky;top:0;background:#fff;padding:8px 0;display:flex;gap:8px;justify-content:flex-end}
+.knappar button{font:inherit;font-weight:700;border:0;border-radius:6px;padding:7px 12px;background:#1f6fd1;color:#fff;cursor:pointer}
+.merk{background:#fff8e6;border-left:4px solid #f2b33d;padding:8px 10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.forkl span{display:inline-block;margin-right:10px}.forkl i{display:inline-block;width:14px;height:6px;margin-right:4px;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{.knappar{display:none}.side{padding:0 0 30px}@page{margin:14mm 12mm 20mm}
+  .fot{position:fixed;bottom:0;left:0;right:0;margin:0;background:#fff}}
+</style></head><body><div class="side">
+<div class="knappar"><button onclick="print()">Skriv ut / lagre som PDF</button><button onclick="lastNed()">Last ned rapporten (HTML)</button></div>
+<div class="topp">${svgStorleik(LOGO.ikon,64,64)}${svgStorleik(LOGO.logo,180,82)}<div class="t"><b>Georadarrapport</b>IDS Stream C · retta for helling<br>${esc(dato)}</div></div>
+<h2>Oversikt</h2><table class="info"><tbody>
+<tr><td>Eksportfil</td><td>${esc(fil)}</td></tr><tr><td>Koordinatsystem</td><td>EUREF89 UTM sone ${z} + NN2000 (EPSG ${EPSG[z]||"–"})</td></tr>
+<tr><td>z i fila tolka som</td><td>${siste.z=="djupn"?"djupn under bakken":"høgd NN2000"}</td></tr>
+<tr><td>Objekt i rapporten</td><td>${fis.length} av ${siste.tabell.length}</td></tr>
+<tr><td>Punkt retta / utan logg</td><td>${siste.retta_punkt} / ${siste.utan_logg}</td></tr>
+<tr><td>Djupaste objekt</td><td>${fm(djupast)} m</td></tr><tr><td>Største flytting på grunn av helling</td><td>${F(maks,1)} cm</td></tr>
+</tbody></table>
+<h2>Oversiktsteikning</h2>${planSvg(fis)}
+<div class="forkl">Djupn: <span><i style="background:#9be7ff"></i>0–0,5 m</span><span><i style="background:#4ea8ff"></i>0,5–1</span><span><i style="background:#6a6cff"></i>1–1,5</span><span><i style="background:#a855f7"></i>1,5–2</span><span><i style="background:#e04fd0"></i>2–3</span><span><i style="background:#ff6b6b"></i>3–5</span><span><i style="background:#ffb347"></i>over 5 m</span></div>
+<h2>Objekt</h2><table><thead><tr><th>Id</th><th>Lag</th><th>Type</th><th>Djupn etter (m)</th><th>Djupn før (m)</th><th>Maks flytta</th></tr></thead><tbody>
+${fis.map(fi=>{const t=siste.tabell[fi];return`<tr><td>${esc(t.id)}</td><td>${esc(t.lag)}</td><td>${esc(t.type)}</td><td><b>${nm(t.djupn_etter)}</b></td><td>${nm(t.djupn_for)}</td><td>${F(+t.maks_endring_cm||0,1)} cm</td></tr>`}).join("")}
+</tbody></table>
+<h2>Profil og koordinatar per objekt</h2><p class="meta">Djupn er loddrett avstand frå bakken. Heiltrekt line: retta for helling. Stipla: slik GRED HD/OneVision rekna (vogna vatrett).</p>
+${objekt}
+<h2>Merknader</h2><div class="merk">Posisjonane er retta for hellinga til georadarvogna (mast og djupn). Nøyaktigheita i grunnriss følgjer
+RTK-fixen (typisk 2–3 cm). Djupna frå georadaren avheng av kalibreringa av bølgjefarten i GRED HD/OneVision.
+Kontrollgrav der det er avgjerande. Høgder NN2000 er rekna med Kartverket sin geoidemodell HREF2018B.</div>
+</div><div class="fot">${fot}</div>
+<script>function lastNed(){const k=document.documentElement.cloneNode(true);k.querySelector(".knappar")?.remove();
+const b=new Blob(["<!doctype html>"+k.outerHTML],{type:"text/html"}),a=document.createElement("a");a.href=URL.createObjectURL(b);
+a.download=${JSON.stringify((filStamme()+"_rapport.html"))};a.click()}<\/script>
+</body></html>`;
+  const w=window.open("","_blank");if(!w){alert("Nettlesaren stoppa rapportvindauget. Tillat sprettoppvindauge for localhost.");return}
+  w.document.open();w.document.write(html);w.document.close()}
 // ---------- tverrsnitt på valfri stad ----------
 let tverrModus=false,tverrA=null,lagTverr=null,tverrLinje=null;
 function startTverr(){if(!siste||!siste.etter)return;initKart();if(!lagTverr)lagTverr=L.layerGroup().addTo(kart);

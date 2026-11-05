@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 380" width="900" height="380">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b2a44"/><stop offset="1" stop-color="#15507c"/></linearGradient></defs>
+  <rect width="900" height="380" rx="24" fill="url(#bg)"/>
+  <g transform="translate(36 34) scale(0.6)">  <defs>
+    <linearGradient id="natt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b2a44"/><stop offset="1" stop-color="#15507c"/></linearGradient>
+    <linearGradient id="sno" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#dcecf7"/></linearGradient>
+    <linearGradient id="jord" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b5138"/><stop offset="1" stop-color="#2f2318"/></linearGradient>
+    <clipPath id="ramme"><rect x="16" y="16" width="480" height="480" rx="108"/></clipPath>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#natt)"/>
+  <g clip-path="url(#ramme)">
+    <g transform="translate(46 54) scale(3.5)"><path d="M14 30 L46 2 L66 20 L74 13 L104 30 Z" fill="#ffffff"/><path d="M33 14 L39 17 L46 11 L52 17 L57 14 M68 18 L74 16 L80 19" fill="none" stroke="#123c5c" stroke-width="2.2" stroke-linejoin="round"/></g>
+    <path d="M0 290 C120 272 392 272 512 290 V316 H0 Z" fill="url(#sno)"/>
+    <rect x="0" y="316" width="512" height="200" fill="url(#jord)"/>
+    <path d="M0 372 C140 362 372 384 512 370" fill="none" stroke="#7d6248" stroke-width="3" stroke-opacity=".6"/><path d="M0 430 C150 440 360 420 512 432" fill="none" stroke="#5a4430" stroke-width="3" stroke-opacity=".6"/><path d="M212 316 A44 44 0 0 0 300 316" fill="none" stroke="#7fe9ff" stroke-width="7" stroke-opacity="0.95" stroke-linecap="round"/><path d="M172 316 A84 84 0 0 0 340 316" fill="none" stroke="#7fe9ff" stroke-width="7" stroke-opacity="0.75" stroke-linecap="round"/><path d="M132 316 A124 124 0 0 0 380 316" fill="none" stroke="#7fe9ff" stroke-width="7" stroke-opacity="0.55" stroke-linecap="round"/><path d="M92 316 A164 164 0 0 0 420 316" fill="none" stroke="#7fe9ff" stroke-width="7" stroke-opacity="0.35" stroke-linecap="round"/><circle cx="338" cy="438" r="20" fill="#ff9d3c" stroke="#ffffff" stroke-width="4"/><circle cx="338" cy="438" r="8" fill="#2f2318"/>
+    <path d="M150 236 L196 270" stroke="#8d9ba5" stroke-width="9" stroke-linecap="round"/><rect x="138" y="228" width="22" height="9" rx="4" fill="#1a252d"/><rect x="196" y="258" width="124" height="40" rx="9" fill="#d42c2c" stroke="#7a1010" stroke-width="4"/><line x1="256" y1="258" x2="256" y2="150" stroke="#8d9ba5" stroke-width="8" stroke-linecap="round"/><ellipse cx="256" cy="146" rx="30" ry="11" fill="#1a252d" stroke="#ffffff" stroke-width="3"/><circle cx="256" cy="140" r="5" fill="#19e07a"/><circle cx="214" cy="299" r="11" fill="#1a252d" stroke="#5d6f7b" stroke-width="3"/><circle cx="306" cy="299" r="13" fill="#1a252d" stroke="#5d6f7b" stroke-width="3"/><rect x="210" y="266" width="96" height="12" rx="3" fill="#ec5048"/><g stroke="#8f1717" stroke-width="3"><line x1="214" y1="282" x2="214" y2="294"/><line x1="226" y1="282" x2="226" y2="294"/><line x1="238" y1="282" x2="238" y2="294"/><line x1="250" y1="282" x2="250" y2="294"/><line x1="262" y1="282" x2="262" y2="294"/><line x1="274" y1="282" x2="274" y2="294"/><line x1="286" y1="282" x2="286" y2="294"/><line x1="298" y1="282" x2="298" y2="294"/></g><circle cx="214" cy="299" r="4" fill="#5d6f7b"/><circle cx="306" cy="299" r="5" fill="#5d6f7b"/>
+  </g>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="none" stroke="#ffffff" stroke-opacity=".14" stroke-width="4"/>
+</g>
+  <g transform="translate(400 70) scale(1.12)">  <title>Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen</title>
+  <g transform="translate(138 2) scale(1.2)"><path d="M14 30 L46 2 L66 20 L74 13 L104 30 Z" fill="#ffffff"/><path d="M33 14 L39 17 L46 11 L52 17 L57 14 M68 18 L74 16 L80 19" fill="none" stroke="#02141d" stroke-width="2.2" stroke-linejoin="round"/></g>
+  <text x="210" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="64" letter-spacing="1" fill="#ffffff">SNOWMAN</text>
+  <text x="210" y="142" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="36" letter-spacing="9" fill="#7fe9ff">GEOSCAN</text>
+  <text x="210" y="176" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#8cc8f0">Alpindata v/Hans Petter B. Sørensen</text>
+</g>
+  <text x="620" y="350" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#8cc8f0">Startar …</text>
+</svg>

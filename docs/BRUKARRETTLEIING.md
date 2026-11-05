@@ -109,6 +109,19 @@ Geoscan har berre objekta du eksporterer, ikkje radardataa.
 Djupna kan berre rettast når hellinga er målt som tal, og det krev ein ekstra hellingsmålar (IMU) på ramma. Med
 berre R12i blir masta retta under skanninga, men ikkje djupna. Då seier Resultat-fana frå om det.
 
+### Rapport
+
+Trykk **📄 Lag rapport** i eksportlinja. Rapporten tek med dei valde objekta, eller alle om ingen er valde. Du kan
+òg trykke **📄 Rapport** i djupneprofilen for eitt objekt. Rapporten opnar seg i eit nytt vindauge og har:
+- logo og namn øvst
+- oversikt og ei oversiktsteikning (grunnriss farga etter djupn, med målestokk og nordpil)
+- objekttabell
+- profil og koordinatliste for kvart objekt
+- merknader om nøyaktigheit
+
+Trykk **Skriv ut / lagre som PDF**, eller last ned rapporten som HTML. Namnet og signaturen til Snowman Geoscan
+står nedst på kvar side.
+
 ## 6. Send inn det Hans Petter treng
 
 Fana **Send inn**:

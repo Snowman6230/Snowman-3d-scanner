@@ -361,7 +361,7 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         r = post("api/rett", {"fil": up["fil"], "z": "auto"})
         assert r["ok"] and r["z"] == "djupn" and r["sone"] == 33 and r["retta_punkt"] >= 2
         assert 2.0 * math.sin(math.radians(5.5)) * 100 < r["tabell"][0]["maks_endring_cm"] < 2.0 * math.sin(math.radians(7)) * 100
-        dxf = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["dxf"]), timeout=5).read().decode()
+        dxf = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["dxf"]), timeout=5).read().decode("cp1252")
         assert "POLYLINE" in dxf and "Vatn" in dxf and dxf.rstrip().endswith("EOF")
         assert "Vatn_DJUPN" in dxf and "1,99 m" in dxf                      # djupna som tekst på teikninga
         t0 = r["tabell"][0]
@@ -374,13 +374,20 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         assert hb is not None and abs(ho - (hb - d1)) < 0.002
         assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - 1.4)) < 0.05      # simulert antenne − mast
         csvtxt = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read().decode()
-        assert "djupn_retta_m" in csvtxt.splitlines()[0] and ";1,989;" in csvtxt and "." not in csvtxt.splitlines()[1]
+        assert csvtxt.startswith("Snowman Geoscan – Alpindata v/Hans Petter B. Sørensen")      # tittellina
+        assert "djupn_retta_m" in csvtxt.splitlines()[1] and ";1,989;" in csvtxt and "." not in csvtxt.splitlines()[2]
+        # namnet og signaturen er med i alle filtypane
+        import opphav as OP
+        gjtxt = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["geojson"]), timeout=5).read()
+        assert OP.sjekk_signatur(dxf) and OP.sjekk_signatur(csvtxt) and OP.sjekk_signatur(gjtxt)
+        assert "SNOWMAN_GEOSCAN" in dxf and "Alpindata v/Hans Petter B. Sørensen" in dxf
         assert r["filer"]["geojson"] == "røyr_retta.geojson"
         # svar og pakke
         post("api/svar", {"namn": "Norman", "svar": {"mast": "1,45", "ukjend": "x"}})
         pk = post("api/pakke", {"med_raa": True})
         with _zf.ZipFile(tmp_path / "pakkar" / pk["fil"]) as z:
             names = z.namelist()
+            assert OP.sjekk_signatur(z.comment) and OP.SIGNATUR in z.read("SVAR.txt").decode()
             alt = b"".join(z.read(n) for n in names)
         assert "SVAR.txt" in names and any(n.startswith("logg/") for n in names) and any(n.startswith("filer/") for n in names)
         assert b"hemmeleg" not in alt and b"norman" not in alt and "1,45".encode() in alt
@@ -421,3 +428,15 @@ def test_tom_logg_stoppar_ikkje_rettinga(tmp_path):
     assert len(KO.Logg(logs).rows) == 1
     ok = RES.okter(tmp_path / "logg")
     assert len(ok) == 3 and sum(o["med_helling"] for o in ok) == 1
+
+
+def test_signatur_og_retta_csv_kan_lesast_att(tmp_path):
+    """Tittellina med namnet skal ikkje øydeleggje innlesinga når ei retta CSV blir brukt på nytt."""
+    import korriger_objekt as KO
+    import opphav as OP
+    p = tmp_path / "x.csv"
+    p.write_text(f"{OP.NAMN} – {OP.PRODUSENT};01.01.2026;{OP.SIGNATUR}\nAust;Nord;Djupn\n1;2;3\n", encoding="utf-8")
+    head, rows, d = KO.read_csv(p)
+    assert head == ["Aust", "Nord", "Djupn"] and rows == [["1", "2", "3"]]
+    assert OP.SIGNATUR.startswith("SNWGEO-") and OP.sjekk_signatur(OP.generator("1.0"))
+    assert not OP.sjekk_signatur("anna program")
