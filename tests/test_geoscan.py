@@ -373,7 +373,9 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         hb, ho, d1 = pr["bakke_nn2000_m"][0], pr["hoegd_nn2000_m"][0], pr["djupn_retta_m"][0]
         assert hb is not None and abs(ho - (hb - d1)) < 0.002
         assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - 1.4)) < 0.05      # simulert antenne − mast
-        csvtxt = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read().decode()
+        csvraw = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read()
+        assert csvraw.startswith(b"\xef\xbb\xbf")            # BOM, så Excel les æøå og – rett
+        csvtxt = csvraw.decode("utf-8-sig")
         assert csvtxt.startswith("Snowman Geoscan – Alpindata HP Brunstad Sørensen")      # tittellina
         assert "djupn_retta_m" in csvtxt.splitlines()[1] and ";1,989;" in csvtxt and "." not in csvtxt.splitlines()[2]
         # namnet og signaturen er med i alle filtypane

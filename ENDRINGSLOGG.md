@@ -2,6 +2,11 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.7.3 – 5. november 2026
+- CSV-filene frå Resultat og korriger_objekt.py blir no skrivne som UTF-8 med BOM. Utan BOM las Excel «–» og
+  «ø» som «â€“» og «Ã¸» (melde av Hans Petter). CSV-eksporten frå nettlesaren hadde alt BOM.
+- Utsettingsfila for Trimble er berre ASCII: æøå blir til ae/o/aa i punktnamn og kode, så importen ikkje feilar.
+
 ## 0.7.2 – 5. november 2026
 - DEMO: «Prøv med eksempelfil» brukar ein ferdig demologg som dekkjer heile simulatorfeltet
   (web/vendor/demo-logg.csv). Før vart berre nokre få punkt retta rett etter at demoen var starta, fordi den

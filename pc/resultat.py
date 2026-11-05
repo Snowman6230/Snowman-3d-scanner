@@ -110,8 +110,8 @@ def _to_latlon(gj, zone):
 # ---------- utfiler ----------
 def skriv_csv(gj, path):
     """Alle punkt, eitt per line: objekt-id, lag, E, N, z, djupn før/etter og flytting.
-    Semikolon og desimalkomma, så fila opnar rett i norsk Excel."""
-    with open(path, "w", newline="", encoding="utf-8") as f:
+    Semikolon og desimalkomma, så fila opnar rett i norsk Excel. UTF-8 med BOM, elles les Excel æøå og – feil."""
+    with open(path, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f, delimiter=";")
         w.writerow([f"{opphav.NAMN} – {opphav.PRODUSENT}", time.strftime("%d.%m.%Y %H:%M"), opphav.SIGNATUR])
         w.writerow(["objekt", "lag", "type", "punkt", "E", "N", "z", "djupn_for_m", "djupn_retta_m", "flytta_cm",

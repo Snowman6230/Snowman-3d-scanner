@@ -232,7 +232,7 @@ def main(argv=None):
         out.append(r + [f"{E2:.3f}", f"{N2:.3f}", f"{dv:.3f}", f"{ch * 100:.1f}", f"{rec['stamp']:.2f}",
                         f"{rec['krenging']:.2f}", f"{rec['kurs']:.1f}", f"{dist:.2f}"])
         ok += 1
-    with open(a.ut, "w", newline="", encoding="utf-8") as f:
+    with open(a.ut, "w", newline="", encoding="utf-8-sig") as f:   # BOM: Excel les æøå rett
         csv.writer(f, delimiter=delim).writerows(out)
     print(f"Retta {ok} objekt. {mangel} utan loggpunkt innan {a.maks_avstand} m (står urørte). → {a.ut}")
 

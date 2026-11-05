@@ -536,10 +536,11 @@ function lagFil(utval,fmt){/* utval: [{fi, punkt:[...], linje:true/false}] → [
   if(fmt=="csv"){const o=[`${OPPHAV.namn} – ${OPPHAV.produsent};${new Date().toLocaleString("nb-NO")};${OPPHAV.signatur}`,"objekt;lag;type;skildring;punkt;austing_E;nording_N;djupn_m;djupn_for_retting_m;hoegd_nn2000_m;bakke_nn2000_m;flytta_cm;breidd;lengd;utm_sone"];
     utval.forEach(u=>{const n=objNamn(u.fi);u.punkt.forEach(p=>o.push([n.id,n.lag,n.type,n.skildring,p.nr,kn(p.E,3),kn(p.N,3),kn(p.d1,3),kn(p.d0,3),kn(p.h,3),kn(p.hb,3),kn(p.fl,1),kn(p.lat,8),kn(p.lon,8),z].map(v=>String(v).replace(/;/g,",")).join(";")))});
     return["\ufeff"+o.join("\r\n")+"\r\n","csv","text/csv"]}
-  if(fmt=="utsetting"){/* Trimble Access: Punktnamn,Nord,Aust,Høgd,Kode – punktum som desimalteikn */
+  if(fmt=="utsetting"){/* Trimble Access: Punktnamn,Nord,Aust,Høgd,Kode – punktum som desimalteikn, berre ASCII (æøå → ae/o/aa) */
+    const ascii=t=>String(t).replace(/æ/g,"ae").replace(/Æ/g,"AE").replace(/ø/g,"o").replace(/Ø/g,"O").replace(/å/g,"aa").replace(/Å/g,"AA").normalize("NFD").replace(/[^\x20-\x7e]/g,"");
     const o=[];utval.forEach(u=>{const n=objNamn(u.fi);u.punkt.forEach(p=>{if(p.E==null)return;
-      const namn=String(n.id+"-"+p.nr).replace(/[^A-Za-z0-9_\-]/g,"_").slice(0,20);
-      const kode=(n.lag||n.type||"OBJ").replace(/[ ,]/g,"_")+(p.d1!=null?"_d"+p.d1.toFixed(2):"");
+      const namn=ascii(n.id+"-"+p.nr).replace(/[^A-Za-z0-9_\-]/g,"_").slice(0,20);
+      const kode=ascii(n.lag||n.type||"OBJ").replace(/[ ,]/g,"_")+(p.d1!=null?"_d"+p.d1.toFixed(2):"");
       o.push([namn,p.N.toFixed(3),p.E.toFixed(3),p.h==null?"":p.h.toFixed(3),kode].join(","))})});
     return[o.join("\r\n")+"\r\n","csv","text/csv"]}
   if(fmt=="geojson"){const feats=utval.map(u=>{const n=objNamn(u.fi),c=u.punkt.map(p=>[p.E,p.N,djupnModus?p.d1:p.h]);
