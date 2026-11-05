@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.7.2 – 5. november 2026
+- DEMO: «Prøv med eksempelfil» brukar ein ferdig demologg som dekkjer heile simulatorfeltet
+  (web/vendor/demo-logg.csv). Før vart berre nokre få punkt retta rett etter at demoen var starta, fordi den
+  simulerte vogna brukar 5–6 minutt på ei full runde. Funne i ein test av heile vegen frå GitHub-zip, slik
+  Norman får programmet.
+
 ## 0.7.1 – 5. november 2026
 - Repoet blir **offentleg i testperioden** og lukka seinare. Oppdateringa fungerer utan nøkkel medan det er
   ope. Er repoet privat og nøkkel manglar, viser programmet ei tydeleg åtvaring med lenke til Innstillingar.

@@ -164,6 +164,8 @@ def start(app, port=8088, lan=False):
                     okter = [Path(x).name for x in d.get("okter") or []]
                     logs = [loggdir() / x for x in okter] if okter else sorted(loggdir().glob("geoscan_*.csv"))
                     logs = [p for p in logs if p.is_file()]
+                    if app.cfg.get("demo") and (WEB / "vendor" / "demo-logg.csv").is_file():
+                        logs.append(WEB / "vendor" / "demo-logg.csv")   # DEMO: ferdig logg over heile simulatorfeltet
                     if not logs:
                         return self._err("ingen loggar å rette mot. Skann først med Snowman Geoscan i gang.")
                     sone = d.get("sone")
