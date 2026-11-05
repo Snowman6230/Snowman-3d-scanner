@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.7.5"
+VERSJON = "0.8.0"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -250,8 +250,9 @@ class App:
 
     open_port = staticmethod(lambda spec: open_port(spec))
 
-    def __init__(self, cfg, cfg_path=None):
+    def __init__(self, cfg, cfg_path=None, omstart=False):
         import ntrip_teneste as NT
+        from okt import Okt
         self.cfg = cfg
         self.cfg_path = Path(cfg_path) if cfg_path else HER / "geoscan_config.json"
         self.versjon = VERSJON
@@ -270,7 +271,13 @@ class App:
             self.rec = open(d / time.strftime("raa_%Y%m%d_%H%M%S.nmea"), "a", encoding="ascii", errors="replace")
             self.rec.write(f"# {NAMN} {VERSJON} - Alpindata HP Brunstad Sorensen - {SIGNATUR}\n")
         self.ntrip = NT.NtripTeneste(NT.load(cfg, HER), self, VERSJON)
-        self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "melding": None, "feil": None, "koyrer": False, "logg": [], "omstart": False}
+        # økta: loggane frå denne oppstarten blir lagde til ho når operatøren har valt (sjå okt.py)
+        self.okt = Okt(self.loggdir)
+        for f in (getattr(self.k.logfile, "name", None), getattr(self.rec, "name", None)):
+            if f:
+                self.okt.legg_til_logg(Path(f).name)
+        self.okt.auto(omstart)
+        self.oppd = {"lokal": VERSJON, "github": None, "nyare": False, "melding": None, "feil": None, "sjekka": None, "avslutt": False, "koyrer": False, "logg": [], "omstart": False}
 
     def start(self):
         for spec in self.cfg["inn"]:
@@ -327,7 +334,7 @@ class App:
         import oppdater
         lok, rem, nyare = oppdater.check()
         self.oppd.update(github=rem, nyare=nyare, melding=oppdater.remote_melding() if nyare else None,
-                         feil=oppdater.SISTE_FEIL[0])
+                         feil=oppdater.SISTE_FEIL[0], sjekka=time.strftime("%Y-%m-%d %H:%M"))
 
     def update_loop(self, timar=3):
         """Sjå etter ny versjon ved oppstart og så kvar 3. time, så ein ny versjon (med melding) synest
@@ -338,6 +345,17 @@ class App:
             except Exception:
                 pass
             time.sleep(timar * 3600)
+
+    def avslutt(self):
+        """Lagre alt og stopp reint (knappen «Avslutt»). Hovudløkka avsluttar med kode 0, og vindauget lukkar seg."""
+        self.okt.lagre()
+        try:
+            self.k.logfile and self.k.logfile.flush()
+            self.rec and self.rec.flush()
+        except Exception:
+            pass
+        self.ntrip.stop.set()
+        self.oppd["avslutt"] = True
 
     def run_update(self):
         """Køyrt frå statussida. Ved ny versjon: avslutt med kode 3, så START-GEOSCAN.bat startar på nytt."""
@@ -443,7 +461,7 @@ def main(argv=None):
         return
     if cfg.get("hoegd") == "nn2000" and GEOID.n(62.4, 6.6) is None:
         print(f"ÅTVARING: geoiden kan ikkje lesast ({GEOID.err}). Høgda frå mottakaren blir brukt.", file=sys.stderr)
-    app = App(cfg, a.config)
+    app = App(cfg, a.config, omstart=a.omstart)
     app.start()
     print(f"\n  *  {NAMN.upper()}  {VERSJON}  *\n     {PRODUSENT}\n")
     if cfg.get("vis_oppstartlogo", True) and not a.omstart:
@@ -466,15 +484,20 @@ def main(argv=None):
         while True:
             time.sleep(2)
             if app.oppd["omstart"]:
-                print("Ny versjon lagd inn – startar på nytt.", flush=True)
+                app.okt.lagre()
+                print("Startar på nytt …", flush=True)
                 time.sleep(1)
                 sys.exit(3)          # START-GEOSCAN.bat startar på nytt ved kode 3
+            if app.oppd.get("avslutt"):
+                print("Snowman Geoscan er avslutta. Alt er lagra – neste gong kan du halde fram der du slapp.", flush=True)
+                time.sleep(1.5)
+                sys.exit(0)
             nokkel = tilstand(app)
             if nokkel != sist or time.time() - sist_t >= intervall:
                 print(status_line(app), flush=True)
                 sist, sist_t = nokkel, time.time()
     except KeyboardInterrupt:
-        pass
+        app.okt.lagre()
 
 
 if __name__ == "__main__":

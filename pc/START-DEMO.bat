@@ -9,5 +9,9 @@ timeout /t 2 >nul
 set ARG=
 :start
 python geoscan.py --config geoscan_config_demo.json %ARG%
-if %errorlevel%==3 (set ARG=--omstart& goto start)
+set KODE=%errorlevel%
+if %KODE%==3 (set ARG=--omstart& goto start)
+rem Avslutta: stopp simulatoren, og lukk vindauget (kode 0). Ved feil blir vindauget ståande.
+taskkill /fi "WINDOWTITLE eq Geoscan simulator*" /f >nul 2>&1
+if %KODE%==0 exit /b 0
 pause

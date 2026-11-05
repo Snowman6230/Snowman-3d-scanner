@@ -2,6 +2,22 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.0 – 5. november 2026
+- **Økter: halde fram der ein slapp.** Alt blir lagra fortløpande i logg/okt.json:
+  - fane og kartutsnitt
+  - skanningar, siste retta eksportfil og valde objekt
+  - profil, «grav nedover», tverrsnitt og djupnetekst
+
+  Ved oppstart spør programmet: «Hald fram med førre økt» eller «Start ny økt» (med namn). Ei ny økt arkiverer
+  den førre (logg/okt_arkiv/). Etter omstart (oppdatering, lagra innstillingar) held programmet fram utan å
+  spørje. Skanningane i økta er merkte «denne økta».
+- **⏻ Avslutt-knapp** øvst: lagrar alt, stoppar reint og lukkar det svarte vindauget. I demoen blir òg
+  simulatoren stoppa. Ved feil blir vindauget ståande, så feilen kan lesast.
+- **Oppdatering under Innstillingar:**
+  - installert versjon og versjon på GitHub
+  - når det sist vart sjekka
+  - knappane «Sjå etter ny versjon no», «Oppdater no» og «Gå tilbake til førre versjon»
+
 ## 0.7.5 – 5. november 2026
 - Namnet blir skrive éin gong øvst i vindauget (med versjon), ikkje to.
 

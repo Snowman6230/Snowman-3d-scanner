@@ -66,6 +66,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .verktoy select{width:auto}
 svg{display:block;margin:6px auto 0}
 .leaflet-container{font:inherit}
+.overlay{position:fixed;inset:0;background:rgba(5,10,14,.82);z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{max-width:640px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid var(--linje)}
 .djl{background:#0f1418;color:#e8eef2;border:1px solid #4ea8ff;font-size:11px;font-weight:700;padding:1px 5px;box-shadow:none}
 .djl:before{display:none}
 </style>
@@ -75,7 +77,10 @@ svg{display:block;margin:6px auto 0}
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
     <img src="vendor/geoscan-ikon.svg" alt="" width="48" height="48" style="border-radius:11px">
     <div><h1>Snowman Geoscan <span id="ver"></span></h1>
-    <div class="prod" style="margin:0">Alpindata HP Brunstad Sørensen</div></div></div>
+    <div class="prod" style="margin:0">Alpindata HP Brunstad Sørensen</div></div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span class="hj" id="oktinfo" style="text-align:right"></span>
+      <button class="b gra" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button></div></div>
   <div id="demo" class="banner demo" style="display:none">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
     <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
@@ -319,6 +324,12 @@ svg{display:block;margin:6px auto 0}
       Nullpunktet er gjennomsnittet av dei to. Fronten opp skal gi + stamp, og høgre side ned skal gi + krenging.</p>
   </div>
   <div class="k"><h2>Oppdatering</h2>
+    <div id="ust" style="margin-bottom:10px"></div>
+    <div class="verktoy" style="margin-bottom:12px">
+      <button type="button" class="b gra" onclick="sjekkNo()">Sjå etter ny versjon no</button>
+      <button type="button" class="b" id="ubtn" style="display:none;background:var(--var)" onclick="oppdater()">Oppdater no</button>
+      <button type="button" class="b gra" onclick="tilbake()">Gå tilbake til førre versjon</button>
+      <span class="melding" id="umeld"></span></div>
     <div class="felt"><label><span>GitHub-nøkkel (berre lesetilgang) <span id="itok" style="display:inline"></span></span>
       <input name="token" type="password" autocomplete="off" placeholder="(uendra)"></label></div>
     <p class="hj" style="margin-top:8px">Trengst for å hente nye versjonar når programmet ligg i eit privat repo. I testperioden er
@@ -330,6 +341,23 @@ svg{display:block;margin:6px auto 0}
 </section>
 </main>
 
+<div id="oktval" class="overlay" style="display:none"><div class="k modal">
+  <img src="vendor/geoscan-ikon.svg" alt="" width="56" height="56" style="border-radius:12px;float:right">
+  <h2 style="font-size:20px">Velkomen tilbake</h2>
+  <p>Vil du halde fram der du slapp, eller starte ei ny økt?</p>
+  <div class="k" style="background:var(--kort2)" id="oktforrige"></div>
+  <div class="verktoy" style="margin-top:12px">
+    <button class="b" onclick="velOkt('fortset')">↩ Hald fram med førre økt</button>
+    <span style="flex:1"></span>
+    <input id="oktnamn" placeholder="Namn på ny økt (valfritt), t.d. Storgata 12" style="max-width:280px">
+    <button class="b gra" onclick="velOkt('ny')">✚ Start ny økt</button></div>
+  <p class="hj" style="margin-top:10px">Ei ny økt tek ikkje bort noko: loggar, resultat og svar ligg der framleis, og den førre økta blir arkivert.</p>
+</div></div>
+<div id="avslutta" class="overlay" style="display:none"><div class="k modal" style="text-align:center">
+  <img src="vendor/geoscan-ikon.svg" alt="" width="72" height="72" style="border-radius:16px">
+  <h2 style="font-size:20px;margin-top:10px">Snowman Geoscan er avslutta</h2>
+  <p>Alt er lagra. Neste gong du startar, kan du halde fram der du slapp.</p>
+  <p class="hj">Du kan lukke denne fana.</p></div></div>
 <script src="vendor/leaflet.js"></script>
 <script>
 "use strict";
@@ -346,16 +374,16 @@ let fane="status";
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>visFane(b.dataset.f));
 function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("aktiv",b.dataset.f==f));
   document.querySelectorAll(".fane").forEach(s=>s.classList.toggle("aktiv",s.id=="f-"+f));
-  try{localStorage.setItem("geoscan_fane",f)}catch(e){}
+  lagreOkt();
   if(f=="resultat"){initKart();lastOkter();lastResFiler();setTimeout(()=>kart&&kart.invalidateSize(),50)}
   if(f=="send")lastInnsending();if(f=="innst")lastInnst()}
 
 // ---------- status ----------
-let radarDjupn=2.5;
+let radarDjupn=2.5,avslutta=false;
 const FIX={0:["INGEN","feil"],1:["GPS","feil"],2:["DGPS","var"],4:["RTK FIX","ok"],5:["RTK FLOAT","var"],6:["INS","var"],9:["SBAS","var"]};
-async function tikk(){let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
+async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
   const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;
-  OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);
+  OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);visUst(s.oppdatering);
   if(fane!="status")return;
   const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
   set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
@@ -381,6 +409,50 @@ let venter=false;
 function ventOmstart(){if(venter)return;venter=true;setTimeout(function sjekk(){fetch("status").then(r=>r.json()).then(s=>{
   if(!s.oppdatering.omstart)location.reload();else setTimeout(sjekk,1500)}).catch(()=>setTimeout(sjekk,1500))},2500)}
 setInterval(tikk,1000);tikk();
+// ---------- økt: lagre alt og halde fram der ein slapp (pc/okt.py) ----------
+let OKT=null,gjenopprettar=false,oktTimer=null;
+function uiTilstand(){return{fane,valde:[...valde],spor:visteSpor,valt:[...valt],profil:profilVist&&$("profil").style.display!="none"?profilFi:null,
+  grav:gravPa?+$("gdjupn").value:null,tverr:tverrAB,djupnTekst,
+  kart:kart?{lat:kart.getCenter().lat,lng:kart.getCenter().lng,zoom:kart.getZoom()}:null}}
+function lagreOkt(){if(gjenopprettar||!OKT)return;clearTimeout(oktTimer);oktTimer=setTimeout(async()=>{
+  try{await post("api/okt/lagre",{ui:uiTilstand()});visOktInfo(new Date().toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit"}))}catch(e){}},1200)}
+function visOktInfo(t){if(!OKT)return;$("oktinfo").innerHTML=`Økt${OKT.namn?": <b>"+esc(OKT.namn)+"</b>":""} · starta ${esc((OKT.starta||"").slice(0,16))}`+(t?`<br>lagra ${t}`:"")}
+async function startOkt(){let s;try{s=await api("api/okt")}catch(e){setTimeout(startOkt,1500);return}
+  if(!s.val_gjort&&s.forrige){const f=s.forrige;
+    $("oktforrige").innerHTML=`<b>${esc(f.namn||"Førre økt")}</b><br><span class="hj">Starta ${esc(f.starta||"–")} · sist lagra ${esc(f.sist_lagra||"–")}</span>
+      <br>${f.skanningar} skanning${f.skanningar==1?"":"ar"}${f.resultat?" · siste resultat: <b>"+esc(f.resultat)+"</b>":""}${f.fane?" · fane: "+esc(f.fane):""}`;
+    $("oktval").style.display="flex";return}
+  OKT=s.noverande;visOktInfo();if(OKT)gjenopprett(OKT)}
+async function velOkt(val){try{const r=await post("api/okt/val",{val,namn:$("oktnamn").value});OKT=r.okt;$("oktval").style.display="none";visOktInfo();
+  if(val=="fortset")gjenopprett(OKT);else visFane("status")}catch(e){alert("Kunne ikkje velje økt: "+e.message)}}
+async function gjenopprett(o){const ui=o.ui||{};gjenopprettar=true;
+  try{(ui.valde||[]).forEach(f=>valde.add(f));
+    if(ui.fane&&$("f-"+ui.fane))visFane(ui.fane);
+    if(ui.fane=="resultat"||o.resultat||ui.spor){initKart();if(ui.spor)await visSpor(ui.spor)}
+    if(o.resultat){const r0=o.resultat;
+      try{const r=await post("api/rett",{fil:r0.fil,z:r0.z,sone:r0.sone,okter:r0.okter,maks_avstand:r0.maks_avstand});visResultat(r,r0.namn||r0.fil);lastResFiler();
+        (ui.valt||[]).forEach(fi=>{if(fi<r.tabell.length)velObjekt(fi,true)});
+        if(ui.profil!=null&&ui.profil<r.tabell.length)visProfil(ui.profil);
+        if(ui.djupnTekst)bytDjupnTekst();
+        if(ui.grav!=null){$("gdjupn").value=ui.grav;grav(ui.grav)}
+        if(ui.tverr)visTverr(ui.tverr[0],ui.tverr[1])}
+      catch(e){$("rmeld").className="melding var";$("rmeld").textContent="Kunne ikkje opne førre resultat att: "+e.message}}
+    if(ui.kart&&kart)kart.setView([ui.kart.lat,ui.kart.lng],ui.kart.zoom)}
+  finally{gjenopprettar=false}
+  if(ui.fane)visFane(ui.fane)}
+async function avslutt(){if(!confirm("Avslutte Snowman Geoscan?\n\nAlt blir lagra, og neste gong kan du halde fram der du slapp."))return;
+  clearTimeout(oktTimer);try{if(OKT)await post("api/okt/lagre",{ui:uiTilstand()});await post("api/avslutt")}catch(e){}
+  avslutta=true;$("avslutta").style.display="flex"}
+// ---------- oppdatering under Innstillingar ----------
+function visUst(o){if(!$("ust"))return;
+  $("ust").innerHTML=`Installert: <b>v${esc(o.lokal)}</b>`+(o.github?` · på GitHub: <b>v${esc(o.github)}</b>`:"")+
+    (o.sjekka?` · sist sjekka ${esc(o.sjekka)}`:"")+"<br>"+(o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?`<b class="var">Ny versjon finst${o.melding?": «"+esc(o.melding)+"»":""}</b>`:
+    o.feil=="nokkel"?'<b class="var">Får ikkje sjekke: repoet er privat og nøkkel manglar (sjå under).</b>':o.feil=="nett"?'<span class="var">Fekk ikkje kontakt med GitHub (sjekk nettet).</span>':
+    o.github?'<span class="ok">Du har siste versjon.</span>':"");
+  $("ubtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none"}
+async function sjekkNo(){set("umeld","Sjekkar …");try{const r=await post("api/sjekk-oppdatering");visUst(r.oppdatering);set("umeld","")}catch(e){set("umeld",e.message,"feil")}}
+async function tilbake(){if(!confirm("Gå tilbake til versjonen før siste oppdatering? Snowman Geoscan startar på nytt."))return;
+  try{const r=await post("api/tilbake");set("umeld",(r.logg||[]).join(" "),r.ok?"ok":"var")}catch(e){set("umeld",e.message,"feil")}}
 // ---------- meldingar frå utviklaren (pc/meldingar.json) ----------
 async function lastMeldingar(){let d;try{d=await api("api/meldingar")}catch(e){return}
   const ulest=d.meldingar.filter(m=>!m.lest);
@@ -397,14 +469,15 @@ let kart=null,grunn=null,grunnGra=false,lagSpor=null,lagObj=null;
 const KV="https://cache.kartverket.no/v1/wmts/1.0.0/";
 function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView([62.39,6.58],12);
   setGrunn();lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
-  L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk)}
+  L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt())}
 function setGrunn(){if(grunn)kart.removeLayer(grunn);
   grunn=L.tileLayer(KV+(grunnGra?"topograatone":"topo")+"/default/webmercator/{z}/{y}/{x}.png",
    {maxZoom:22,maxNativeZoom:18,attribution:"© Kartverket"}).addTo(kart);
   let feil=0;grunn.on("tileerror",()=>{if(++feil>3)$("kartfeil").style.display="block"});grunn.on("tileload",()=>{feil=0;$("kartfeil").style.display="none"});$("kbtn").textContent=grunnGra?"Fargekart":"Gråtonekart"}
 function bytKart(){grunnGra=!grunnGra;setGrunn()}
 const farge=(t,k)=>!k?"#6b7780":t<1?"#3ecf74":t<3?"#c6d83a":t<6?"#f2b33d":"#ef5b5b";
-async function visSpor(fil){initKart();lagSpor.clearLayers();let p;try{p=await api("api/spor?fil="+encodeURIComponent(fil))}catch(e){return}
+let visteSpor=null;
+async function visSpor(fil){initKart();lagSpor.clearLayers();visteSpor=fil;lagreOkt();let p;try{p=await api("api/spor?fil="+encodeURIComponent(fil))}catch(e){return}
   if(!p.length)return;let seg=[[p[0][0],p[0][1]]],c=farge(p[0][2],p[0][3]);const all=[];
   for(let i=1;i<p.length;i++){const ci=farge(p[i][2],p[i][3]);seg.push([p[i][0],p[i][1]]);
     if(ci!=c||i==p.length-1){L.polyline(seg,{color:c,weight:4,opacity:.9}).addTo(lagSpor);seg=[[p[i][0],p[i][1]]];c=ci}all.push([p[i][0],p[i][1]])}
@@ -418,11 +491,11 @@ const valde=new Set();
 async function lastOkter(){let o;try{o=await api("api/okter")}catch(e){return}const tb=$("okter").tBodies[0];
   tb.innerHTML=o.length?"":"<tr><td colspan=7 class=hj>Ingen skanningar enno. Start Snowman Geoscan og skann, så kjem dei her.</td></tr>";
   o.forEach((r,i)=>{const tr=document.createElement("tr");tr.style.cursor="pointer";
-    tr.innerHTML=`<td><input type=checkbox ${valde.has(r.fil)?"checked":""}></td><td>${esc(r.start)}</td><td>${esc(r.slutt)}</td>
+    tr.innerHTML=`<td><input type=checkbox ${valde.has(r.fil)?"checked":""}></td><td>${esc(r.start)}${r.i_okt?' <span class="hj">· denne økta</span>':""}</td><td>${esc(r.slutt)}</td>
     <td class=n>${r.punkt}</td><td class=n>${r.med_helling}</td><td class=n>${F(r.maks_helling,1)}°</td><td class=n>${F(r.over_3_prosent,0)} %</td>`;
-    const cb=tr.querySelector("input");cb.onclick=e=>{e.stopPropagation();cb.checked?valde.add(r.fil):valde.delete(r.fil)};
+    const cb=tr.querySelector("input");cb.onclick=e=>{e.stopPropagation();cb.checked?valde.add(r.fil):valde.delete(r.fil);lagreOkt()};
     tr.onclick=()=>{[...tb.rows].forEach(x=>x.style.background="");tr.style.background="var(--kort2)";visSpor(r.fil)};tb.appendChild(tr);
-    if(i==0&&!lagSpor.getLayers().length)visSpor(r.fil)})}
+    if(i==0&&!lagSpor.getLayers().length&&!gjenopprettar)visSpor(r.fil)})}
 async function provEksempel(){try{const b=await (await fetch("vendor/demo-eksport.geojson")).blob();
   rettFil(new File([b],"demo-eksport.geojson",{type:"application/geo+json"}))}catch(e){$("rmeld").textContent="Fann ikkje eksempelfila."}}
 $("eksport").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)rettFil(f)};
@@ -471,7 +544,7 @@ function visResultat(r,namn){initKart();lagObj.clearLayers();siste=r;segs=[];val
     <td class=n>${ds(t.djupn_for)}</td><td class=n><b>${ds(t.djupn_etter)}</b></td><td class=n>${F(+t.maks_endring_cm||0,1)} cm</td><td class=n>${esc(t.retta)}</td>`;
     const cb=tr.querySelector("input");cb.onclick=e=>{e.stopPropagation();velObjekt(fi,cb.checked)};
     tr.onclick=()=>{visProfil(fi)};tb.appendChild(tr)});oppdaterUtval()}
-function bytDjupnTekst(){if(!siste||!siste.etter)return;djupnTekst=!djupnTekst;$("dbtn").textContent=djupnTekst?"Skjul djupn på kartet":"Vis djupn på kartet";
+function bytDjupnTekst(){if(!siste||!siste.etter)return;djupnTekst=!djupnTekst;lagreOkt();$("dbtn").textContent=djupnTekst?"Skjul djupn på kartet":"Vis djupn på kartet";
   if(!lagDjupn)lagDjupn=L.layerGroup().addTo(kart);lagDjupn.clearLayers();if(!djupnTekst)return;
   siste.etter.features.forEach(f=>{const d1=(f.properties||{}).djupn_retta_m||[];let k=0;
     linjer(f.geometry).forEach(ln=>{const steg=Math.max(1,Math.ceil(ln.length/8));
@@ -480,7 +553,7 @@ function bytDjupnTekst(){if(!siste||!siste.etter)return;djupnTekst=!djupnTekst;$
 // ---------- grav nedover (djupnesnitt av objekta) ----------
 const SNITT=0.05;   // ±5 cm
 let lagSnitt=null;
-function grav(cm){const d=cm/100;$("gtekst").textContent=cm+" cm";gravPa=true;if(lagFor)lagFor.setStyle({opacity:0,fillOpacity:0});
+function grav(cm){const d=cm/100;lagreOkt();$("gtekst").textContent=cm+" cm";gravPa=true;if(lagFor)lagFor.setStyle({opacity:0,fillOpacity:0});
   if(!lagSnitt)lagSnitt=L.layerGroup().addTo(kart);lagSnitt.clearLayers();const treff=new Set();
   segs.forEach(x=>{const lo=Math.min(x.a??1e9,x.b??1e9),hi=Math.max(x.a??-1,x.b??-1);
     if(x.a==null&&x.b==null){x.lag.setStyle({opacity:.15,fillOpacity:.15});return}
@@ -492,7 +565,7 @@ function grav(cm){const d=cm/100;$("gtekst").textContent=cm+" cm";gravPa=true;if
       L.circleMarker(p,{radius:9,color:"#ffffff",weight:2,fill:false}).addTo(lagSnitt)}});
   $("ginfo").innerHTML=treff.size?`På <b>${cm} cm</b> djupn (±5 cm): `+[...treff].map(esc).join(", "):`Ingen objekt på ${cm} cm djupn (±5 cm).`;
   if($("profil").style.display!="none")teiknSnittIProfil(d)}
-function slaGravAv(stille){gravPa=false;if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}
+function slaGravAv(stille){gravPa=false;lagreOkt();if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}
   if(lagSnitt)lagSnitt.clearLayers();segs.forEach(x=>x.lag.setStyle({opacity:1,fillOpacity:1}));
   if(lagFor)lagFor.setStyle({opacity:.9,fillOpacity:.6});
   if(!stille){$("gdjupn").value=0;$("gtekst").textContent="0 cm";$("ginfo").textContent="Dra for å grave nedover centimeter for centimeter."}
@@ -511,7 +584,7 @@ function teiknSnittIProfil(d){const svg=$("psvg");if(!profilY)return;let l=docum
 const valt=new Set();let lagValt=null;
 function velObjekt(fi,på){if(på===undefined)på=!valt.has(fi);på?valt.add(fi):valt.delete(fi);oppdaterUtval()}
 function velAlle(på){valt.clear();if(på&&siste)siste.etter.features.forEach((f,i)=>valt.add(i));oppdaterUtval()}
-function oppdaterUtval(){if(!siste)return;document.querySelectorAll("#rtab input[data-fi]").forEach(c=>c.checked=valt.has(+c.dataset.fi));
+function oppdaterUtval(){if(!siste)return;lagreOkt();document.querySelectorAll("#rtab input[data-fi]").forEach(c=>c.checked=valt.has(+c.dataset.fi));
   const n=valt.size,nam=[...valt].sort((a,b)=>a-b).map(i=>{const t=siste.tabell[i];return t.id||t.nr});
   $("eksval").textContent=n?`${n} objekt valt: ${nam.slice(0,6).join(", ")}${n>6?" …":""}`:"Ingen objekt valde";$("eksbtn").disabled=!n;
   if(!lagValt)lagValt=L.layerGroup().addTo(kart);lagValt.clearLayers();
@@ -661,13 +734,17 @@ let tverrModus=false,tverrA=null,lagTverr=null,tverrLinje=null;
 function startTverr(){if(!siste||!siste.etter)return;initKart();if(!lagTverr)lagTverr=L.layerGroup().addTo(kart);
   lagTverr.clearLayers();tverrModus=true;tverrA=null;kart.getContainer().style.cursor="crosshair";
   $("tbtn").textContent="Klikk punkt A på kartet …";$("kart").scrollIntoView({behavior:"smooth",block:"center"})}
-function lukkTverr(){$("tverr").style.display="none";if(lagTverr)lagTverr.clearLayers();tverrModus=false;
+function lukkTverr(){$("tverr").style.display="none";tverrAB=null;lagreOkt();if(lagTverr)lagTverr.clearLayers();tverrModus=false;
   if(kart)kart.getContainer().style.cursor="";$("tbtn").textContent="✚ Tverrsnitt"}
 function tverrKlikk(e){if(!tverrModus){visPosVed(e.latlng,true);return}const ll=[e.latlng.lat,e.latlng.lng];
   const merke=(p,t)=>L.marker(p,{icon:L.divIcon({className:"",html:`<div style="background:#fff;color:#0f1418;font-weight:800;border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;box-shadow:0 0 0 2px #0f1418">${t}</div>`,iconSize:[22,22],iconAnchor:[11,11]})}).addTo(lagTverr);
   if(!tverrA){tverrA=ll;merke(ll,"A");$("tbtn").textContent="Klikk punkt B …";return}
   tverrModus=false;kart.getContainer().style.cursor="";$("tbtn").textContent="✚ Tverrsnitt";
-  merke(ll,"B");L.polyline([tverrA,ll],{color:"#ffffff",weight:2,dashArray:"6 4"}).addTo(lagTverr);teiknTverr(tverrA,ll)}
+  merke(ll,"B");L.polyline([tverrA,ll],{color:"#ffffff",weight:2,dashArray:"6 4"}).addTo(lagTverr);tverrAB=[tverrA,ll];lagreOkt();teiknTverr(tverrA,ll)}
+let tverrAB=null;
+function visTverr(A,B){/* teikn eit lagra tverrsnitt på nytt (gjenoppretting) */
+  initKart();if(!lagTverr)lagTverr=L.layerGroup().addTo(kart);lagTverr.clearLayers();tverrModus=true;tverrA=null;
+  tverrKlikk({latlng:L.latLng(A[0],A[1])});tverrKlikk({latlng:L.latLng(B[0],B[1])})}
 // ---------- posisjon under bakken ----------
 let posMerke=null,posTekst="";
 const arrInt=(arr,i,t)=>{const a=arr?.[i],b=arr?.[i+1];if(a==null)return b??null;if(b==null||t==null)return a;return a+(b-a)*t};
@@ -744,8 +821,8 @@ function teiknTverr(Ag,Bg){const til=lokal(Ag),A=[0,0],B=til(Bg),Lg=Math.hypot(B
   $("tverr").scrollIntoView({behavior:"smooth",block:"nearest"})}
 function avstand(a,b){const R=6371000,t=Math.PI/180,dl=(b[1]-a[1])*t,df=(b[0]-a[0])*t;
   const x=Math.sin(df/2)**2+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
-let profilFi=0;
-function visProfil(fi){if(!siste||!siste.etter)return;profilFi=fi;const f=siste.etter.features[fi],pr=f.properties||{},t=siste.tabell[fi];
+let profilFi=0,profilVist=false;
+function visProfil(fi){if(!siste||!siste.etter)return;profilFi=fi;profilVist=true;lagreOkt();const f=siste.etter.features[fi],pr=f.properties||{},t=siste.tabell[fi];
   [...$("rtab").tBodies[0].rows].forEach((x,i)=>x.style.background=i==fi?"var(--kort2)":"");
   if(uthev)kart.removeLayer(uthev);const pts=[];let k=0;linjer(f.geometry).forEach(ln=>{ln.forEach((p,j)=>pts.push({ll:[p[1],p[0]],i:k+j}));k+=ln.length});
   uthev=L.polyline(pts.map(p=>p.ll),{color:"#ffffff",weight:10,opacity:.25}).addTo(kart);
@@ -833,7 +910,7 @@ async function lagreInnst(e){e.preventDefault();const f=$("iform"),d={};
   for(const el of f.elements){if(!el.name)continue;d[el.name]=el.type=="checkbox"?el.checked:el.value}
   try{await post("api/innstillingar",d);set("imeld","Lagra – startar på nytt …","ok")}catch(err){set("imeld",err.message,"feil")}}
 
-try{const f=localStorage.getItem("geoscan_fane");if(f&&$("f-"+f))visFane(f)}catch(e){}
+startOkt();
 </script>
 </body>
 </html>

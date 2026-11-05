@@ -148,9 +148,22 @@ oppdateringa ser du:
 
 Lag så ei ny pakke.
 
+## Avslutte og halde fram
+
+Trykk **⏻ Avslutt** øvst til høgre når du er ferdig. Programmet lagrar alt og lukkar seg. Neste gong du startar,
+spør det om du vil **halde fram med førre økt** eller **starte ei ny økt**:
+- **Hald fram** opnar fana du var på, siste retta eksportfil, objekta du hadde valt, profilen, djupna i «grav
+  nedover», tverrsnittet og kartutsnittet.
+- **Ny økt** byrjar med blanke ark. Gi henne gjerne eit namn, til dømes «Storgata 12». Ingenting blir sletta:
+  loggar, resultat og svar ligg der framleis, og den førre økta blir arkivert.
+
+Alt blir lagra fortløpande, så du kan òg halde fram om PC-en går tom for straum.
+
 ## 7. Oppdatere
 
-Når det finst ein ny versjon, kjem det ein gul linje øvst med knappen **Oppdater no**. Trykk på han, så lastar
+Under **Innstillingar → Oppdatering** ser du kva versjon du har og kva som ligg på GitHub. Der kan du trykke
+**Sjå etter ny versjon no**, **Oppdater no** og **Gå tilbake til førre versjon**. Når det finst ein ny versjon,
+kjem det òg ein gul linje øvst med knappen **Oppdater no**. Trykk på han, så lastar
 programmet ned den nye versjonen og startar på nytt av seg sjølv. Innstillingane dine blir verande som dei er.
 Går noko gale, dobbeltklikk `pc\TILBAKE-TIL-FORRIGE.bat`.
 

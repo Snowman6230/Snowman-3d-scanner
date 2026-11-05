@@ -83,8 +83,11 @@ def start(app, port=8088, lan=False):
                     return self._send(app.snapshot())
                 if path == "/api/innstillingar":
                     return self._send(INN.hent(app.cfg_path, app.cfg))
+                if path == "/api/okt":
+                    return self._send(app.okt.status())
                 if path == "/api/okter":
-                    return self._send(RES.okter(loggdir()))
+                    mine = set((app.okt.noverande or {}).get("loggar") or [])
+                    return self._send([dict(o, i_okt=o["fil"] in mine) for o in RES.okter(loggdir())])
                 if path == "/api/spor":
                     f = loggdir() / Path(q.get("fil", "")).name
                     return self._send(RES.spor(f) if f.is_file() else [])
@@ -123,6 +126,26 @@ def start(app, port=8088, lan=False):
                 if path == "/oppdater":
                     threading.Thread(target=app.run_update, daemon=True).start()
                     return self._send({"ok": True}, code=202)
+                if path == "/api/okt/val":
+                    d = json.loads(self._body() or b"{}")
+                    o = app.okt.fortset() if d.get("val") == "fortset" else app.okt.ny(d.get("namn", ""))
+                    return self._send({"ok": True, "okt": o})
+                if path == "/api/okt/lagre":
+                    app.okt.lagre_ui(json.loads(self._body() or b"{}").get("ui") or {})
+                    return self._send({"ok": True})
+                if path == "/api/avslutt":
+                    app.avslutt()
+                    return self._send({"ok": True})
+                if path == "/api/sjekk-oppdatering":
+                    app.check_update()
+                    return self._send({"ok": True, "oppdatering": dict(app.oppd)})
+                if path == "/api/tilbake":
+                    import oppdater
+                    logg = []
+                    ok = oppdater.rollback(log=logg.append)
+                    if ok:
+                        app.oppd["omstart"] = True
+                    return self._send({"ok": ok, "logg": logg})
                 if path == "/api/omstart":
                     app.oppd["omstart"] = True
                     return self._send({"ok": True})
@@ -173,6 +196,8 @@ def start(app, port=8088, lan=False):
                                          int(sone) if str(sone or "").isdigit() else None,
                                          float(d.get("maks_avstand") or 1.0))
                     r["ok"] = True
+                    app.okt.sett_resultat({"fil": src.name, "namn": src.name.split("_", 3)[-1], "z": d.get("z", "auto"),
+                                           "sone": sone, "okter": okter, "maks_avstand": d.get("maks_avstand")})
                     return self._send(r)
                 if path == "/api/pakke":
                     d = json.loads(self._body() or b"{}")

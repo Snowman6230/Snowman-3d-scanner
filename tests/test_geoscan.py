@@ -495,3 +495,54 @@ def test_oppdatering_seier_ifra_om_privat_repo_utan_nokkel(monkeypatch):
     assert O.SISTE_FEIL[0] == "nett"
     monkeypatch.setattr(O, "_get", lambda *a, **k: b'VERSJON = "99.0.0"\n')
     assert O.check()[2] is True and O.SISTE_FEIL[0] is None
+
+
+def test_okt_ny_fortset_og_arkiv(tmp_path):
+    """Første oppstart: ny økt utan spørsmål. Neste: val. «Hald fram» tek med loggen frå denne oppstarten;
+    «ny» arkiverer den førre. Omstart (oppdatering) held fram utan spørsmål."""
+    from okt import Okt
+    a = Okt(tmp_path)
+    a.legg_til_logg("geoscan_1.csv")
+    a.auto(omstart=False)
+    assert a.val_gjort and a.noverande["loggar"] == ["geoscan_1.csv"]
+    a.sett_resultat({"fil": "x.geojson", "namn": "x.geojson"})
+    a.lagre_ui({"fane": "resultat", "valt": [1]})
+    b = Okt(tmp_path)                                   # neste oppstart
+    b.legg_til_logg("geoscan_2.csv")
+    b.auto(omstart=False)
+    st = b.status()
+    assert not st["val_gjort"] and st["forrige"]["skanningar"] == 1 and st["forrige"]["resultat"] == "x.geojson"
+    o = b.fortset()
+    assert o["loggar"] == ["geoscan_1.csv", "geoscan_2.csv"] and o["ui"]["valt"] == [1] and o["resultat"]["fil"] == "x.geojson"
+    c = Okt(tmp_path)
+    c.auto(omstart=True)                                # omstart: same økt, ikkje spørsmål
+    assert c.val_gjort and c.noverande["id"] == o["id"]
+    d = Okt(tmp_path)
+    n = d.ny("Storgata 12")
+    assert n["namn"] == "Storgata 12" and n["resultat"] is None and n["id"] != o["id"]
+    assert len(list((tmp_path / "okt_arkiv").glob("*.json"))) == 1
+
+
+def test_avslutt_og_okt_via_api(tmp_path, monkeypatch):
+    import json as _json
+    import time as _time
+    import urllib.request as _u
+    import innsending as INS
+    import webtenar as W
+    for mod in (INS, W):
+        monkeypatch.setattr(mod, "HER", tmp_path)
+    ps = _free_port()
+    cfg = dict(G.STANDARD, inn=[{"port": "socket://127.0.0.1:1"}], ut_seriell=[], tcp_port=_free_port(), status_port=ps,
+               logg=str(tmp_path / "logg"), sjekk_oppdatering=False, opne_nettlesar=False)
+    app = G.App(cfg, tmp_path / "cfg.json")
+    app.start()
+    _time.sleep(0.3)
+    base = f"http://127.0.0.1:{ps}/"
+    post = lambda p, d=None: _json.loads(_u.urlopen(_u.Request(base + p, data=_json.dumps(d or {}).encode(), method="POST"), timeout=5).read())
+    st = _json.loads(_u.urlopen(base + "api/okt", timeout=5).read())
+    assert st["val_gjort"] and st["noverande"]["loggar"]                 # første oppstart: ny økt, loggen med
+    post("api/okt/lagre", {"ui": {"fane": "resultat", "grav": 150}})
+    assert _json.loads((tmp_path / "logg" / "okt.json").read_text())["ui"]["grav"] == 150
+    assert not app.oppd["avslutt"]
+    post("api/avslutt")
+    assert app.oppd["avslutt"] and app.ntrip.stop.is_set()
