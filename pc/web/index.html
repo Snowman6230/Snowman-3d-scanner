@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Snowman Geoscan</title>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+:root{--bg:#0f1418;--kort:#1a2228;--kort2:#222c33;--linje:#2c3a44;--tekst:#e8eef2;--svak:#8a9aa6;--ok:#3ecf74;--var:#f2b33d;--feil:#ef5b5b;--blaa:#4ea8ff;--for:#9aa7b1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tekst);font:15px/1.45 system-ui,"Segoe UI",sans-serif}
+header{padding:14px 16px 0;max-width:1200px;margin:0 auto}
+h1{font-size:22px;margin:0;font-weight:700}
+#ver{font-weight:400;color:var(--svak);font-size:14px}
+.prod{color:var(--svak);font-size:13px;margin:2px 0 10px}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--linje);overflow-x:auto}
+nav button{background:none;border:0;color:var(--svak);font:inherit;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.aktiv{color:var(--tekst);border-bottom-color:var(--blaa)}
+main{max-width:1200px;margin:0 auto;padding:14px 16px 40px}
+.fane{display:none}.fane.aktiv{display:block}
+.rad{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.k{background:var(--kort);border-radius:10px;padding:14px;margin-bottom:12px}
+.rad .k{margin-bottom:0}
+.l{color:var(--svak);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.v{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:4px}
+.s{color:var(--svak);font-size:13px;margin-top:4px}
+.ok{color:var(--ok)}.var{color:var(--var)}.feil{color:var(--feil)}
+h2{font-size:16px;margin:0 0 8px}
+.hj{color:var(--svak);font-size:13px}
+p.hj{margin:4px 0 10px}
+pre{white-space:pre-wrap;color:var(--svak);font-size:13px;margin:0}
+.banner{border-radius:10px;padding:12px 14px;margin:10px 0 0;font-weight:600}
+.demo{background:#5a1f1f}
+.oppd{border:1px solid var(--var);background:var(--kort)}
+button.b,label.b,a.b{display:inline-block;text-decoration:none;background:var(--blaa);color:#06121e;border:0;border-radius:7px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+button.b.gra,label.b.gra,a.b.gra{background:var(--kort2);color:var(--tekst);border:1px solid var(--linje)}
+button.b:disabled{opacity:.5;cursor:default}
+input,select,textarea{background:var(--bg);color:var(--tekst);border:1px solid var(--linje);border-radius:6px;padding:7px 9px;font:inherit;width:100%}
+textarea{min-height:70px}
+input[type=checkbox]{width:auto;margin-right:6px}
+.felt{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 14px}
+.felt label{display:block;font-size:13px;color:var(--svak)}
+.felt label>span{display:block;margin-bottom:3px}
+.sp{margin-bottom:14px}
+.sp .t{font-weight:600}
+.sp .hj{margin:2px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--linje);vertical-align:top}
+th{color:var(--svak);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.tabell{overflow-x:auto}
+#kart{height:520px;border-radius:10px;background:#0b0f12}
+.forkl{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--svak);margin-top:8px}
+.forkl i{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.melding{margin-top:8px;font-size:13px}
+.verktoy{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.verktoy select{width:auto}
+svg{display:block;margin:6px auto 0}
+.leaflet-container{font:inherit}
+</style>
+</head>
+<body>
+<header>
+  <h1>Snowman Geoscan <span id="ver"></span></h1>
+  <div class="prod">Alpindata v/Hans Petter B. Sørensen</div>
+  <div id="demo" class="banner demo" style="display:none">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
+  <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
+    <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
+    <pre id="ologg" style="margin-top:6px"></pre></div>
+  <nav>
+    <button data-f="status" class="aktiv">Status</button>
+    <button data-f="resultat">Resultat</button>
+    <button data-f="send">Send inn</button>
+    <button data-f="innst">Innstillingar</button>
+  </nav>
+</header>
+<main>
+
+<!-- ================= STATUS ================= -->
+<section id="f-status" class="fane aktiv">
+  <div class="rad">
+    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div></div>
+    <div class="k"><div class="l">Helling</div><div class="v" id="hell">–</div><div class="s" id="hsrc"></div>
+      <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="#2c3a44" stroke-width="2"/>
+      <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="#3b4b57"/><line x1="0" y1="10" x2="0" y2="-28" stroke="#8a9aa6" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="#e8eef2"/></g></svg></div>
+    <div class="k"><div class="l">Retting no</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
+    <div class="k"><div class="l">NTRIP</div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div></div>
+  </div>
+  <div class="k" style="margin-top:12px"><div class="l">Portar</div><pre id="portar"></pre></div>
+  <div class="k"><div class="l">Kva skjer</div>
+    <p class="hj" style="margin-bottom:0">Snowman Geoscan les posisjonen frå mottakaren, rettar han for hellinga til vogna og sender han
+    vidare til OneVision. Under skanninga ser du resultatet i OneVision som vanleg. Etterpå: gå til <b>Resultat</b> for
+    å sjå sporet og rette røyr og kablar for djupna.</p></div>
+</section>
+
+<!-- ================= RESULTAT ================= -->
+<section id="f-resultat" class="fane">
+  <div class="k">
+    <h2>1. Skanningar</h2>
+    <p class="hj">Kvar gong Snowman Geoscan køyrer, blir det lagra ein logg med posisjon og helling. Trykk på ei rad for å sjå
+    sporet på kartet. Kryss av for kva skanningar objekta skal rettast mot (ingen kryss = alle).</p>
+    <div class="tabell"><table id="okter"><thead><tr><th></th><th>Start</th><th>Slutt</th><th class="n">Punkt</th>
+      <th class="n">Med helling</th><th class="n">Maks helling</th><th class="n">&gt; 3°</th></tr></thead><tbody></tbody></table></div>
+    <div class="verktoy" style="margin-top:8px"><button class="b gra" onclick="lastOkter()">Oppdater lista</button></div>
+  </div>
+  <div class="k">
+    <h2>2. Rett røyr og kablar frå GRED HD / OneVision</h2>
+    <p class="hj">Eksporter objekta frå GRED HD eller OneVision som <b>GeoJSON</b> (eller CSV med austing, nording og djupn), og
+    vel fila her. Ho blir retta for hellinga og lagra, så utviklaren òg kan sjå henne.</p>
+    <div class="verktoy">
+      <label class="b">Vel eksportfil …<input type="file" id="eksport" accept=".geojson,.json,.csv,.txt" style="display:none"></label>
+      <label style="font-size:13px;color:var(--svak)">z er
+        <select id="zmode"><option value="auto">finn ut sjølv</option><option value="djupn">djupn (m under bakken)</option><option value="hoegd">høgd (NN2000)</option></select></label>
+      <label style="font-size:13px;color:var(--svak)">UTM-sone
+        <select id="rsone"><option value="">frå fila</option><option>32</option><option>33</option><option>35</option></select></label>
+    </div>
+    <div class="melding" id="rmeld"></div>
+  </div>
+  <div class="k">
+    <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
+      <span><button class="b gra" id="kbtn" onclick="bytKart()">Gråtonekart</button></span></div>
+    <div id="kart"></div>
+    <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet frå Kartverket kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel.</div>
+    <div class="forkl">
+      <span><i style="background:#3ecf74"></i>helling under 1°</span><span><i style="background:#c6d83a"></i>1–3°</span>
+      <span><i style="background:#f2b33d"></i>3–6°</span><span><i style="background:#ef5b5b"></i>over 6°</span>
+      <span><i style="background:#6b7780"></i>utan hellingsdata</span>
+      <span><i style="background:repeating-linear-gradient(90deg,#9aa7b1 0 5px,transparent 5px 8px)"></i>objekt før retting</span>
+      <span><i style="background:#4ea8ff;height:5px"></i>objekt etter retting</span>
+    </div>
+  </div>
+  <div class="k" id="rboks" style="display:none">
+    <h2>Resultat</h2>
+    <div id="rsamandrag" class="hj"></div>
+    <div class="verktoy" id="rnedlast" style="margin:8px 0 12px"></div>
+    <div class="tabell"><table id="rtab"><thead><tr><th>#</th><th>Id</th><th>Lag</th><th>Type</th><th>Skildring</th>
+      <th class="n">z (snitt)</th><th class="n">Maks flytta</th><th class="n">Punkt retta</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="k"><h2>Tidlegare resultatfiler</h2><div id="rfiler" class="hj">–</div></div>
+</section>
+
+<!-- ================= SEND INN ================= -->
+<section id="f-send" class="fane">
+  <div class="k">
+    <h2>Svar på spørsmåla</h2>
+    <p class="hj">Svara trengst for å stille inn rettinga rett. Svar det du veit – resten kan du fylle ut seinare. Alt blir lagra på denne PC-en.</p>
+    <div class="felt" style="margin-bottom:12px"><label><span>Namnet ditt</span><input id="snamn"></label></div>
+    <div id="sporsmal"></div>
+    <button class="b" onclick="lagreSvar()">Lagre svara</button> <span class="melding" id="smeld"></span>
+  </div>
+  <div class="k">
+    <h2>Legg ved filer</h2>
+    <p class="hj">Til dømes ei ekte eksportfil frå GRED HD/OneVision, SCANNH.xml frå R12i, bilete av vogna og masta, eller skjermbilete av
+    GPS-oppsettet i OneVision.</p>
+    <div class="verktoy">
+      <select id="ftype"></select>
+      <label class="b">Vel filer …<input type="file" id="ffiler" multiple style="display:none"></label>
+      <span class="melding" id="fmeld"></span>
+    </div>
+    <div class="tabell" style="margin-top:10px"><table id="ftab"><thead><tr><th>Fil</th><th>Type</th><th class="n">kB</th><th>Lagt inn</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="k">
+    <h2>Lag pakke til Hans Petter</h2>
+    <p class="hj">Pakka (ei zip-fil) inneheld svara, filene over, loggane frå skanningane og innstillingane – <b>aldri passord eller
+    brukarnamn</b>. Send henne på e-post eller del henne via OneDrive/Google Drive.</p>
+    <div class="verktoy">
+      <label style="font-size:13px;color:var(--svak)"><input type="checkbox" id="praa" checked>ta med rådata (større fil, men turen kan spelast av att)</label>
+      <label style="font-size:13px;color:var(--svak)">loggar frå
+        <select id="pdagar"><option value="">alle dagar</option><option value="1">siste døgn</option><option value="7" selected>siste 7 dagar</option><option value="30">siste 30 dagar</option></select></label>
+      <button class="b" onclick="lagPakke()">Lag pakke</button>
+    </div>
+    <div class="melding" id="pmeld"></div>
+  </div>
+</section>
+
+<!-- ================= INNSTILLINGAR ================= -->
+<section id="f-innst" class="fane">
+  <form id="iform" onsubmit="lagreInnst(event)">
+  <div class="k"><h2>Portar</h2>
+    <p class="hj">Tilgjengelege portar på denne PC-en: <span id="iporter">–</span></p>
+    <div class="felt">
+      <label><span>Mottakar (R12i), t.d. COM23</span><input name="mottakar" list="plist" required></label>
+      <label><span>Ekstra IMU på ramma (tom = ingen)</span><input name="imu" list="plist"></label>
+      <label><span>Til OneVision (com0com, t.d. COM34 → COM24)</span><input name="onevision" list="plist"></label>
+      <label><span>TCP-port for andre program</span><input name="tcp_port" type="number"></label>
+    </div><datalist id="plist"></datalist></div>
+  <div class="k"><h2>Vogn og mast</h2>
+    <div class="felt">
+      <label><span>Mastehøgd (m), frå antennemerket til underkant radar</span><input name="mast" inputmode="decimal"></label>
+      <label><span>Midten av radaren framfor masta (m)</span><input name="fram" inputmode="decimal"></label>
+      <label><span>Midten av radaren til høgre for masta (m)</span><input name="hogre" inputmode="decimal"></label>
+      <label><span>Kva blir sendt til OneVision</span><select name="utgang">
+        <option value="rett_antenne">«rett antenne» – OneVision-oppsettet står som før (tilrådd)</option>
+        <option value="referansepunkt">referansepunktet på radaren – sett antennehøgda i OneVision til 0</option></select></label>
+    </div>
+    <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="mottakar_kompenserer">R12i rettar masta sjølv (tilt på, stanghøgd = mastehøgd)</label></p>
+  </div>
+  <div class="k"><h2>Retting og lagring</h2>
+    <div class="felt">
+      <label><span>Djupn å rette for under skanninga (m, 0 = berre masta)</span><input name="djupn_sanntid" inputmode="decimal"></label>
+      <label><span>UTM-sone for loggen</span><select name="sone"><option>32</option><option>33</option><option>35</option><option value="auto">auto</option></select></label>
+    </div>
+    <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="opptak">Lagre all rådata frå mottakaren (tilrådd under testing)</label><br>
+    <label><input type="checkbox" name="status_lan">Vis statussida på mobil/nettbrett på same nett (berre lesing)</label></p>
+  </div>
+  <div class="k"><h2>NTRIP (korreksjonar til R12i)</h2>
+    <p class="hj"><label><input type="checkbox" name="ntrip_pa">Hent korreksjonar med Snowman Geoscan (Trimble Access skal då vere lukka)</label></p>
+    <div class="felt">
+      <label><span>Caster (adresse)</span><input name="caster" autocomplete="off"></label>
+      <label><span>Port</span><input name="ntrip_port" type="number"></label>
+      <label><span>Mountpoint</span><input name="mountpoint" autocomplete="off"></label>
+      <label><span>Brukarnamn</span><input name="brukar" autocomplete="off"></label>
+      <label><span>Passord <span id="ipw" style="display:inline"></span></span><input name="passord" type="password" autocomplete="new-password" placeholder="(uendra)"></label>
+      <label><span>RTCM til port (tom = same som mottakaren/USB, t.d. COM20 = Bluetooth port 2)</span><input name="rtcm_til" list="plist"></label>
+      <label><span>NTRIP-versjon</span><select name="ntrip_versjon"><option value="auto">auto</option><option value="1">1</option><option value="2">2</option></select></label>
+    </div>
+    <p class="hj" style="margin-top:8px">Brukarnamn og passord blir lagra berre på denne PC-en (ntrip_lokal.json), og blir aldri med i pakka.</p>
+  </div>
+  <div class="k"><h2>Avansert: ekstra IMU</h2>
+    <div class="felt">
+      <label><span>Nullpunkt stamp (°)</span><input name="stamp_null" inputmode="decimal"></label>
+      <label><span>Nullpunkt krenging (°)</span><input name="krenging_null" inputmode="decimal"></label>
+    </div>
+    <p class="hj" style="margin-top:8px"><label><input type="checkbox" name="snu_stamp">Snu forteikn på stamp</label>
+      <label style="margin-left:14px"><input type="checkbox" name="snu_krenging">Snu forteikn på krenging</label></p>
+    <p class="hj">Kalibrering: still vogna på eit fast punkt og les av hellinga på Status. Snu vogna 180° på same punkt og les på nytt.
+      Nullpunktet er gjennomsnittet av dei to. Fronten opp skal gi + stamp, og høgre side ned skal gi + krenging.</p>
+  </div>
+  <div class="k"><h2>Oppdatering</h2>
+    <div class="felt"><label><span>GitHub-nøkkel (berre lesetilgang) <span id="itok" style="display:inline"></span></span>
+      <input name="token" type="password" autocomplete="off" placeholder="(uendra)"></label></div>
+    <p class="hj" style="margin-top:8px">Trengst for å hente nye versjonar, sidan programmet ligg i eit privat repo. Du får nøkkelen av Hans Petter.
+      Han blir lagra berre på denne PC-en.</p></div>
+  <div class="k"><button class="b" type="submit">Lagre og start på nytt</button> <span class="melding" id="imeld"></span>
+    <p class="hj" id="ifil"></p></div>
+  </form>
+</section>
+</main>
+
+<script src="vendor/leaflet.js"></script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const F=(x,d)=>x.toFixed(d).replace(".",",");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(url,opt){const r=await fetch(url,opt);const j=await r.json().catch(()=>({ok:false,feil:"ugyldig svar"}));
+  if(!r.ok||j.ok===false)throw new Error(j.feil||("feil "+r.status));return j}
+const post=(url,data)=>api(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data||{})});
+function set(id,t,c){const e=$(id);e.textContent=t;e.classList.remove("ok","var","feil");if(c)e.classList.add(c)}
+
+// ---------- faner ----------
+let fane="status";
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>visFane(b.dataset.f));
+function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("aktiv",b.dataset.f==f));
+  document.querySelectorAll(".fane").forEach(s=>s.classList.toggle("aktiv",s.id=="f-"+f));
+  try{localStorage.setItem("geoscan_fane",f)}catch(e){}
+  if(f=="resultat"){initKart();lastOkter();lastResFiler();setTimeout(()=>kart&&kart.invalidateSize(),50)}
+  if(f=="send")lastInnsending();if(f=="innst")lastInnst()}
+
+// ---------- status ----------
+const FIX={0:["INGEN","feil"],1:["GPS","feil"],2:["DGPS","var"],4:["RTK FIX","ok"],5:["RTK FLOAT","var"],6:["INS","var"],9:["SBAS","var"]};
+async function tikk(){let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
+  const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;$("demo").style.display=s.demo?"block":"none";visOppd(s.oppdatering);
+  if(fane!="status")return;
+  const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
+  set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
+  if(k.korrigert){set("hell",(k.krenging>0?"+":"")+F(k.krenging,1)+"°",Math.abs(k.krenging)>5||Math.abs(k.stamp)>5?"var":"ok");
+    set("hsrc","krenging · stamp "+F(k.stamp,1)+"° · "+k.hellingskjelde);$("vogn").setAttribute("transform","rotate("+k.krenging+" 0 24)")}
+  else{set("hell","–","var");set("hsrc",k.melding);$("vogn").setAttribute("transform","")}
+  set("fors",k.forskyving_cm==null?"–":F(k.forskyving_cm,1)+" cm");
+  set("djup",s.djupnfeil_25==null?"":"objekt på 2,5 m: "+F(s.djupnfeil_25,0)+" cm (blir retta under Resultat)");
+  const n=s.ntrip;set("ntrip",n.tilstand,n.tilstand=="tilkopla"?"ok":n.tilstand=="av"?"":"feil");
+  set("nmeld",n.tilstand=="tilkopla"?(n.protokoll+" · "+F(n.byte/1024,0)+" kB · alder "+(n.alder==null?"–":F(n.alder,0)+" s")):n.melding);
+  $("portar").textContent=Object.entries(s.inn).map(([p,v])=>"inn "+p+": "+v)
+    .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n")}
+function visOppd(o){const vis=o.nyare||o.koyrer||o.logg.length||o.omstart;$("oppd").style.display=vis?"block":"none";
+  $("otekst").textContent=o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?"Ny versjon v"+o.github+" finst.":"";
+  $("obtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none";$("ologg").textContent=o.logg.join("\n");
+  if(o.omstart)ventOmstart()}
+async function oppdater(){if(!confirm("Hente og leggje inn ny versjon? Snowman Geoscan startar på nytt."))return;
+  $("obtn").disabled=true;try{await fetch("oppdater",{method:"POST"})}catch(e){}}
+let venter=false;
+function ventOmstart(){if(venter)return;venter=true;setTimeout(function sjekk(){fetch("status").then(r=>r.json()).then(s=>{
+  if(!s.oppdatering.omstart)location.reload();else setTimeout(sjekk,1500)}).catch(()=>setTimeout(sjekk,1500))},2500)}
+setInterval(tikk,1000);tikk();
+
+// ---------- resultat: kart ----------
+let kart=null,grunn=null,grunnGra=false,lagSpor=null,lagObj=null;
+const KV="https://cache.kartverket.no/v1/wmts/1.0.0/";
+function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView([62.39,6.58],12);
+  setGrunn();lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
+  L.control.scale({imperial:false}).addTo(kart)}
+function setGrunn(){if(grunn)kart.removeLayer(grunn);
+  grunn=L.tileLayer(KV+(grunnGra?"topograatone":"topo")+"/default/webmercator/{z}/{y}/{x}.png",
+   {maxZoom:22,maxNativeZoom:18,attribution:"© Kartverket"}).addTo(kart);
+  let feil=0;grunn.on("tileerror",()=>{if(++feil>3)$("kartfeil").style.display="block"});grunn.on("tileload",()=>{feil=0;$("kartfeil").style.display="none"});$("kbtn").textContent=grunnGra?"Fargekart":"Gråtonekart"}
+function bytKart(){grunnGra=!grunnGra;setGrunn()}
+const farge=(t,k)=>!k?"#6b7780":t<1?"#3ecf74":t<3?"#c6d83a":t<6?"#f2b33d":"#ef5b5b";
+async function visSpor(fil){initKart();lagSpor.clearLayers();let p;try{p=await api("api/spor?fil="+encodeURIComponent(fil))}catch(e){return}
+  if(!p.length)return;let seg=[[p[0][0],p[0][1]]],c=farge(p[0][2],p[0][3]);const all=[];
+  for(let i=1;i<p.length;i++){const ci=farge(p[i][2],p[i][3]);seg.push([p[i][0],p[i][1]]);
+    if(ci!=c||i==p.length-1){L.polyline(seg,{color:c,weight:4,opacity:.9}).addTo(lagSpor);seg=[[p[i][0],p[i][1]]];c=ci}all.push([p[i][0],p[i][1]])}
+  kart.fitBounds(L.latLngBounds(all.length?all:[[p[0][0],p[0][1]]]).pad(.15))}
+function geoTilKart(gj,stil){const lag=L.geoJSON(gj,{style:stil,pointToLayer:(f,ll)=>L.circleMarker(ll,Object.assign({radius:5},stil(f)))});
+  lag.eachLayer(l=>{const pr=l.feature.properties||{};l.bindTooltip(esc([pr.id,pr.layer,pr.description].filter(Boolean).join(" · ")||"objekt")+
+    (pr.helling_maks_endring_cm!=null?"<br>flytta inntil "+F(+pr.helling_maks_endring_cm,1)+" cm":""))});return lag}
+
+// ---------- resultat: økter og retting ----------
+const valde=new Set();
+async function lastOkter(){let o;try{o=await api("api/okter")}catch(e){return}const tb=$("okter").tBodies[0];
+  tb.innerHTML=o.length?"":"<tr><td colspan=7 class=hj>Ingen skanningar enno. Start Snowman Geoscan og skann, så kjem dei her.</td></tr>";
+  o.forEach((r,i)=>{const tr=document.createElement("tr");tr.style.cursor="pointer";
+    tr.innerHTML=`<td><input type=checkbox ${valde.has(r.fil)?"checked":""}></td><td>${esc(r.start)}</td><td>${esc(r.slutt)}</td>
+    <td class=n>${r.punkt}</td><td class=n>${r.med_helling}</td><td class=n>${F(r.maks_helling,1)}°</td><td class=n>${F(r.over_3_prosent,0)} %</td>`;
+    const cb=tr.querySelector("input");cb.onclick=e=>{e.stopPropagation();cb.checked?valde.add(r.fil):valde.delete(r.fil)};
+    tr.onclick=()=>{[...tb.rows].forEach(x=>x.style.background="");tr.style.background="var(--kort2)";visSpor(r.fil)};tb.appendChild(tr);
+    if(i==0&&!lagSpor.getLayers().length)visSpor(r.fil)})}
+$("eksport").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const m=$("rmeld");
+  m.className="melding";m.textContent="Lastar opp "+f.name+" …";
+  try{const up=await api("api/last-opp?type=eksport&namn="+encodeURIComponent(f.name),{method:"POST",body:f});
+    m.textContent="Rettar …";
+    const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde]});
+    visResultat(r,f.name);m.textContent="";lastResFiler()}
+  catch(err){m.className="melding feil";m.textContent="Kunne ikkje rette: "+err.message}};
+function visResultat(r,namn){initKart();lagObj.clearLayers();$("rboks").style.display="block";
+  if(r.for)geoTilKart(r.for,()=>({color:"#9aa7b1",weight:2,dashArray:"5 4",opacity:.9,fillOpacity:.6})).addTo(lagObj);
+  let etter=null;if(r.etter){etter=geoTilKart(r.etter,()=>({color:"#4ea8ff",weight:4,opacity:1,fillOpacity:.9})).addTo(lagObj)}
+  if(etter&&etter.getBounds().isValid())kart.fitBounds(etter.getBounds().pad(.4));
+  const maks=Math.max(0,...r.tabell.map(t=>+t.maks_endring_cm||0));
+  $("rsamandrag").innerHTML=`<b>${esc(namn)}</b>: ${r.retta_punkt} punkt retta, ${r.utan_logg} utan logg innan 1 m (står urørte).
+    z er tolka som <b>${r.z=="djupn"?"djupn":"høgd (NN2000)"}</b>, UTM-sone ${r.sone}. Største flytting: <b>${F(maks,1)} cm</b>.
+    ${r.utan_logg&&!r.retta_punkt?"<br><span class=var>Ingen punkt låg nær ein logg med helling. Er skanninga gjort med Snowman Geoscan, og var hellinga tilgjengeleg (ekstra IMU)?</span>":""}`;
+  $("rnedlast").innerHTML=["geojson","csv","dxf"].map(k=>`<a class="b gra" href="last-ned/resultat/${encodeURIComponent(r.filer[k])}">Last ned ${k.toUpperCase()}</a>`).join(" ");
+  const tb=$("rtab").tBodies[0];tb.innerHTML="";r.tabell.forEach(t=>{const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${t.nr}</td><td>${esc(t.id)}</td><td>${esc(t.lag)}</td><td>${esc(t.type)}</td><td>${esc(t.skildring)}</td>
+    <td class=n>${t.z==null?"–":F(t.z,2)}</td><td class=n>${F(+t.maks_endring_cm||0,1)} cm</td><td class=n>${esc(t.retta)}</td>`;tb.appendChild(tr)})}
+async function lastResFiler(){let l;try{l=await api("api/resultatfiler")}catch(e){return}
+  $("rfiler").innerHTML=l.length?l.map(f=>`<a style="color:var(--blaa)" href="last-ned/resultat/${encodeURIComponent(f.fil)}">${esc(f.fil)}</a> (${f.kb} kB)`).join("<br>"):"Ingen enno."}
+
+// ---------- send inn ----------
+async function lastInnsending(){let d;try{d=await api("api/innsending")}catch(e){return}
+  $("snamn").value=d.svar.namn||"";
+  $("sporsmal").innerHTML=d.sporsmal.map(s=>`<div class=sp><div class=t>${esc(s.tekst)}</div>${s.hjelp?`<div class="hj">${esc(s.hjelp)}</div>`:""}
+    ${s.type=="langtekst"?`<textarea data-id="${s.id}">${esc(d.svar.svar[s.id]||"")}</textarea>`:
+     `<input data-id="${s.id}" ${s.type=="tal"?'inputmode="decimal" style="max-width:200px"':""} value="${esc(d.svar.svar[s.id]||"")}">`}</div>`).join("");
+  if(d.svar.lagra)$("smeld").textContent="Sist lagra "+d.svar.lagra;
+  $("ftype").innerHTML=Object.entries(d.filtypar).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("");
+  const tb=$("ftab").tBodies[0];tb.innerHTML=d.filer.length?"":"<tr><td colspan=5 class=hj>Ingen filer lagde ved enno.</td></tr>";
+  d.filer.forEach(f=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${esc(f.namn)}</td><td>${esc(d.filtypar[f.type]||f.type)}</td>
+    <td class=n>${f.kb}</td><td>${esc(f.tid)}</td><td><button class="b gra" style="padding:3px 9px">Slett</button></td>`;
+    tr.querySelector("button").onclick=async()=>{if(confirm("Slette "+f.namn+"?")){await post("api/slett-fil",{fil:f.fil});lastInnsending()}};tb.appendChild(tr)})}
+async function lagreSvar(){const svar={};document.querySelectorAll("#sporsmal [data-id]").forEach(e=>svar[e.dataset.id]=e.value);
+  try{const r=await post("api/svar",{namn:$("snamn").value,svar});set("smeld","Lagra "+r.svar.lagra,"ok")}catch(e){set("smeld",e.message,"feil")}}
+$("ffiler").onchange=async e=>{const fl=[...e.target.files];e.target.value="";let n=0;
+  for(const f of fl){set("fmeld","Lastar opp "+f.name+" …");
+    try{await api("api/last-opp?type="+$("ftype").value+"&namn="+encodeURIComponent(f.name),{method:"POST",body:f});n++}
+    catch(err){set("fmeld",f.name+": "+err.message,"feil");return}}
+  set("fmeld",n+" fil"+(n==1?"":"er")+" lagt ved.","ok");lastInnsending()};
+async function lagPakke(){set("pmeld","Lagar pakke …");
+  try{const r=await post("api/pakke",{med_raa:$("praa").checked,dagar:$("pdagar").value});
+    $("pmeld").className="melding ok";$("pmeld").innerHTML=`Pakka er klar (${F(r.mb,1)} MB): <a class="b" style="text-decoration:none" href="last-ned/pakke/${encodeURIComponent(r.fil)}">Last ned ${esc(r.fil)}</a>
+    <div class="hj">Ho ligg òg i mappa pc\\pakkar på denne PC-en.</div>`}catch(e){set("pmeld",e.message,"feil")}}
+
+// ---------- innstillingar ----------
+let innst=null;
+async function lastInnst(){try{innst=await api("api/innstillingar")}catch(e){return}const f=$("iform");
+  for(const [k,v] of Object.entries(innst)){const el=f.elements[k];if(!el)continue;
+    if(el.type=="checkbox")el.checked=!!v;else el.value=(typeof v=="number"?String(v).replace(".",","):v)}
+  f.elements.passord.value="";$("ipw").textContent=innst.har_passord?"(lagra)":"(ikkje sett)";
+  f.elements.token.value="";$("itok").textContent=innst.har_token?"(lagra)":"(ikkje sett)";
+  $("plist").innerHTML=innst.porter.map(p=>`<option value="${esc(p.port)}">${esc(p.skildring)}</option>`).join("");
+  $("iporter").textContent=innst.porter.length?innst.porter.map(p=>p.port+" ("+p.skildring+")").join(", "):"ingen funne";
+  $("ifil").textContent="Lagra i "+innst.config_fil+(innst.demo?" (DEMO)":"")+". Etter lagring startar Snowman Geoscan på nytt (om det er starta med START-GEOSCAN.bat)."}
+async function lagreInnst(e){e.preventDefault();const f=$("iform"),d={};
+  for(const el of f.elements){if(!el.name)continue;d[el.name]=el.type=="checkbox"?el.checked:el.value}
+  try{await post("api/innstillingar",d);set("imeld","Lagra – startar på nytt …","ok")}catch(err){set("imeld",err.message,"feil")}}
+
+try{const f=localStorage.getItem("geoscan_fane");if(f&&$("f-"+f))visFane(f)}catch(e){}
+</script>
+</body>
+</html>

@@ -2,6 +2,24 @@
 
 *Alpindata v/Hans Petter B. Sørensen*
 
+## 0.3.0 – 5. november 2026
+Klar til testing hos Norman Hole.
+- Nytt grensesnitt i nettlesaren med fire faner. Det opnar seg av seg sjølv ved oppstart.
+  - **Status:** fix, helling, retting, NTRIP og portar.
+  - **Resultat:** skanningane (loggane), og kart med sporet farga etter helling (Kartverket). Eksport frå GRED
+    HD/OneVision (GeoJSON/CSV) blir retta. Objekta blir viste før og etter, og kan lastast ned som GeoJSON, CSV og
+    DXF.
+  - **Send inn:** svar på dei opne spørsmåla, vedlegg (eksport, SCANNH.xml, bilete), og ei pakke (zip) til
+    utviklaren utan passord og brukarnamn.
+  - **Innstillingar:** portar (med liste over COM-portar), mast, retting, NTRIP-innlogging og GitHub-nøkkel for
+    oppdatering. Lagring startar programmet på nytt.
+- Berre PC-en sjølv kan endre noko. Mobil og nettbrett kan berre sjå.
+- INSTALL.bat installerer Python med winget om det manglar, og lagar snarvegar på skrivebordet (vanleg og DEMO).
+- Simulatoren køyrer no i parallelle stripar, som ein ekte georadar.
+- statusside.py er erstatta av webtenar.py og web/index.html. Leaflet 1.9.4 er kopiert frå Snødjupne (BSD-2,
+  web/vendor/LEAFLET-LICENSE).
+- docs/BRUKARRETTLEIING.md for operatøren.
+
 ## 0.2.2 – 5. november 2026
 - Namnet er no **Snowman Geoscan**, med «Alpindata v/Hans Petter B. Sørensen» under, på statussida, ved oppstart,
   i startfilene og i dokumenta.

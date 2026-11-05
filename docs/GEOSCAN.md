@@ -89,9 +89,10 @@ Ikkje avklart (frå overleveringa): om R12i tek imot RTCM over USB, eller berre 
 støtta. Prøv først utan `rtcm_til` (USB). Viser statussida at NTRIP er tilkopla, men fixen ikkje blir RTK, set
 `rtcm_til` til Bluetooth-porten.
 
-## Statusside
+## Grensesnittet i nettlesaren
 
-http://localhost:8088 viser fix, helling (med ei teikning av vogna), kor mykje som blir retta no, kor stor
+Sjå [BRUKARRETTLEIING.md](BRUKARRETTLEIING.md). Fanene er Status, Resultat, Send inn og Innstillingar.
+Status-fana på http://localhost:8088 viser fix, helling (med ei teikning av vogna), kor mykje som blir retta no, kor stor
 djupnfeilen ville vore på 2,5 m, NTRIP og portar. Ho oppdaterer seg kvart sekund og fungerer på mobil.
 
 ## Oppdatering utan ny installasjon

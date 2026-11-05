@@ -5,6 +5,8 @@ cd /d "%~dp0"
 echo Snowman Geoscan DEMO - simulert mottakar og NTRIP-caster. Ikkje ekte malingar.
 start "Geoscan simulator" python simuler.py --caster 2101
 timeout /t 2 >nul
-start "" http://localhost:8088
-python geoscan.py --config geoscan_config_demo.json
+set ARG=
+:start
+python geoscan.py --config geoscan_config_demo.json %ARG%
+if %errorlevel%==3 (set ARG=--omstart& goto start)
 pause

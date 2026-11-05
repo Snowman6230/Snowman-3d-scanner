@@ -21,22 +21,28 @@ LAT0, LON0 = 62.3900, 6.5800   # Sykkylven (berre eit testpunkt)
 
 
 class Mottakar:
-    """Vogna går aust–vest i 1,2 m/s. Bakken hallar mot sør (krenging ±6° alt etter retning), stamp ±1,5°."""
+    """Vogna skannar som ein ekte georadar: parallelle stripar aust–vest (40 m lange, 0,9 m mellom) over eit
+    felt på 10 stripar, og så om att. Bakken hallar mot sør, så krenginga er ±6° alt etter køyreretninga.
+    Stampen varierer ±1,5° langs stripa."""
 
-    def __init__(self, hz=5.0, speed=1.2, length=40.0, sideslope=6.0, alt=150.0, sep=44.775):
+    def __init__(self, hz=5.0, speed=1.2, length=40.0, sideslope=6.0, alt=150.0, sep=44.775, lanes=10, gap=0.9):
         self.hz, self.speed, self.length, self.side, self.alt, self.sep = hz, speed, length, sideslope, alt, sep
+        self.lanes, self.gap = lanes, gap
         self.rtcm_bytes = 0
 
     def state(self, t):
-        s = (t * self.speed) % (2 * self.length)
-        east = s if s < self.length else 2 * self.length - s
-        hdg = 90.0 if s < self.length else 270.0
+        s = (t * self.speed) % (self.lanes * self.length)
+        lane, along = int(s // self.length), s % self.length
+        aust = lane % 2 == 0
+        east = along if aust else self.length - along
+        north = lane * self.gap
+        hdg = 90.0 if aust else 270.0
         # bakken fell mot sør: køyrer ein aust, er høgre side (sør) nede → krenging +; vest → −
-        roll = self.side if hdg == 90.0 else -self.side
+        roll = self.side if aust else -self.side
         pitch = 1.5 * math.sin(east / 6.0)
         my = 111320.0
         mx = my * math.cos(math.radians(LAT0))
-        return LAT0, LON0 + east / mx, hdg, pitch, roll
+        return LAT0 + north / my, LON0 + east / mx, hdg, pitch, roll
 
     def lines(self, t):
         lat, lon, hdg, pitch, roll = self.state(t)

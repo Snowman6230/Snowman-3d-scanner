@@ -17,7 +17,7 @@ ca. 15 cm og NTRIP «tilkopla». Simulatorvindauget skal vise at RTCM kjem fram 
 ## Steg 2 – Mot R12i innandørs (Norman sin T100, 30 min)
 
 1. Lukk Trimble Access. Berre eitt program kan ha COM23 open.
-2. I `pc\geoscan_config.json`: `"inn": [{"port": "COM23"}]`, `"ut_seriell": []` og `"mottakar_kompenserer": false`.
+2. Under **Innstillingar**: Mottakar = COM23, Til OneVision = tom, og ingen kryss for «R12i rettar masta sjølv». Lagre.
 3. Start `START-GEOSCAN.bat`.
 
 **Godkjent når** porten står som «open», fix og satellittar blir viste, og posisjonen er fornuftig (DGPS innandørs
@@ -25,8 +25,8 @@ er greitt). Statussida skal seie «ingen fersk helling», sidan R12i ikkje sende
 
 ## Steg 3 – NTRIP og RTK ute (30 min)
 
-1. Kopier `ntrip_lokal.eksempel.json` til `ntrip_lokal.json`, og fyll inn caster, port, mountpoint TH, brukar og
-   passord. Fila blir aldri lagd i git.
+1. Under **Innstillingar → NTRIP**: kryss av, og fyll inn caster, port, mountpoint TH, brukarnamn og passord.
+   Innlogginga blir berre lagra på PC-en.
 2. Prøv først utan `rtcm_til`, så RTCM går over USB.
 3. Gå ut med fri sikt og vent 1–3 minutt.
 
@@ -52,7 +52,7 @@ Godkjent: OneVision viser «GNSS connection OK» med RTK.
 **4c. Djupna (krev ekstra IMU på ramma):**
 1. Skann eit røyr med kjent trasé i ein sidebakke, éin gong i kvar retning.
 2. Eksporter objekta.
-3. Køyr `korriger_objekt.py` med loggen.
+3. Vel eksportfila under **Resultat**.
 
 Godkjent: utan retting ligg dei to sporane 2·(h + d)·sin(helling) frå kvarandre, med retting skal dei falle saman.
 Ta vare på eksportfila: ho er den ekte eksempelfila som manglar (punkt 4).

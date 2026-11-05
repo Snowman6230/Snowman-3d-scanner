@@ -27,7 +27,10 @@ def load(cfg, here):
     n.update(cfg.get("ntrip") or {})
     lokal = Path(here) / "ntrip_lokal.json"
     if lokal.exists() and not cfg.get("demo"):     # demoen skal aldri bruke ekte innlogging
-        n.update(json.loads(lokal.read_text(encoding="utf-8")))
+        lok = json.loads(lokal.read_text(encoding="utf-8"))
+        styrt = set((cfg.get("ntrip") or {}).keys())  # av/på, rtcm_til osb. frå oppsettet går føre
+        n.update({k: v for k, v in lok.items() if k not in styrt or k in ("caster", "port", "mountpoint",
+                                                                         "brukar", "passord")})
     return n
 
 

@@ -27,7 +27,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.2.2"
+VERSJON = "0.3.0"
 NAMN = "Snowman Geoscan"
 PRODUSENT = "Alpindata v/Hans Petter B. Sørensen"
 STANDARD = {
@@ -48,6 +48,7 @@ STANDARD = {
     "status_port": 8088,
     "status_lan": False,
     "sjekk_oppdatering": True,
+    "opne_nettlesar": True,
     "ntrip": {"pa": False, "rtcm_til": None, "gga_intervall": 10},
 }
 
@@ -247,9 +248,13 @@ class App:
 
     open_port = staticmethod(lambda spec: open_port(spec))
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, cfg_path=None):
         import ntrip_teneste as NT
         self.cfg = cfg
+        self.cfg_path = Path(cfg_path) if cfg_path else HER / "geoscan_config.json"
+        self.versjon = VERSJON
+        self.loggdir = HER / (cfg.get("logg") or "logg")
+        self.loggdir.mkdir(parents=True, exist_ok=True)
         self.k = Korrigerar(cfg)
         self.ut = Utgangar(cfg)
         self.state, self.handles = {}, {}
@@ -271,8 +276,8 @@ class App:
         if self.cfg.get("sjekk_oppdatering", True):
             threading.Thread(target=self.check_update, daemon=True).start()
         if self.cfg.get("status_port"):
-            import statusside
-            statusside.start(self, int(self.cfg["status_port"]), bool(self.cfg.get("status_lan")))
+            import webtenar
+            webtenar.start(self, int(self.cfg["status_port"]), bool(self.cfg.get("status_lan")))
 
     def line_in(self, line, now=None):
         """Éi NMEA-linje frå ein inngang: opptak, GGA til casteren, korreksjon og ut."""
@@ -371,6 +376,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Hellingskorrigert GNSS til IDS Stream C")
     ap.add_argument("--config", default=str(HER / "geoscan_config.json"))
     ap.add_argument("--fil", help="spel av ei NMEA-fil og skriv korrigert NMEA til skjermen")
+    ap.add_argument("--omstart", action="store_true", help="(brukt av START-GEOSCAN.bat) ikkje opne nettlesaren på nytt")
     a = ap.parse_args(argv)
     cfg = load_cfg(Path(a.config))
     if a.fil:
@@ -385,9 +391,12 @@ def main(argv=None):
         return
     if cfg.get("hoegd") == "nn2000" and GEOID.n(62.4, 6.6) is None:
         print(f"ÅTVARING: geoiden kan ikkje lesast ({GEOID.err}). Høgda frå mottakaren blir brukt.", file=sys.stderr)
-    app = App(cfg)
+    app = App(cfg, a.config)
     app.start()
     k = app.k
+    if cfg.get("status_port") and cfg.get("opne_nettlesar", True) and not a.omstart:
+        import webbrowser
+        threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{cfg['status_port']}")).start()
     if cfg.get("demo"):
         print("*** DEMO: simulert mottakar og NTRIP-caster. Dette er IKKJE ekte målingar. ***")
     print(f"{NAMN} {VERSJON}\n{PRODUSENT}\n")

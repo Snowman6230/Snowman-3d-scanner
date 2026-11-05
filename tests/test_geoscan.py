@@ -306,3 +306,84 @@ def test_demo_brukar_aldri_ekte_ntrip_innlogging(tmp_path):
     n = NT.load(demo, tmp_path)
     assert n["caster"] == "127.0.0.1" and n.get("passord", "") == ""
     assert NT.load({"ntrip": {"pa": True}}, tmp_path)["caster"] == "ekte.caster.no"
+
+
+def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
+    """Heile arbeidsflyten til operatøren via nettlesar-API-et: skann (simulert) → last opp eksport → rett →
+    last ned DXF → svar på spørsmål → lag pakke (utan passord) → lagre innstillingar."""
+    import json as _json
+    import threading as _t
+    import time as _time
+    import urllib.request as _u
+    import zipfile as _zf
+    import innsending as INS
+    import innstillingar as INN
+    import koordinat as KK
+    import simuler as S
+    import webtenar as W
+    from urllib.parse import quote as _uq
+    for mod in (INS, INN, W):
+        monkeypatch.setattr(mod, "HER", tmp_path)
+    (tmp_path / "ntrip_lokal.json").write_text(_json.dumps({"caster": "c.no", "brukar": "norman", "passord": "hemmeleg"}))
+    cfgp = tmp_path / "geoscan_config.json"
+    cfgp.write_text("{}")
+    stop = _t.Event()
+    pm, ps = _free_port(), _free_port()
+    m = S.Mottakar(hz=10, speed=2.0)
+    _t.Thread(target=m.serve, args=(pm, stop), daemon=True).start()
+    _time.sleep(0.3)
+    cfg = dict(G.STANDARD, inn=[{"port": f"socket://127.0.0.1:{pm}"}], ut_seriell=[], tcp_port=_free_port(),
+               status_port=ps, logg=str(tmp_path / "logg"), sjekk_oppdatering=False, opne_nettlesar=False)
+    app = G.App(cfg, cfgp)
+    app.start()
+    base = f"http://127.0.0.1:{ps}/"
+
+    def get(p):
+        return _json.loads(_u.urlopen(base + p, timeout=5).read())
+
+    def post(p, data=None, raw=None):
+        body = raw if raw is not None else _json.dumps(data or {}).encode()
+        return _json.loads(_u.urlopen(_u.Request(base + p, data=body, method="POST"), timeout=10).read())
+    try:
+        _time.sleep(3.0)
+        app.k.logfile.flush()
+        okter = get("api/okter")
+        assert okter and okter[0]["med_helling"] > 5
+        spor = get("api/spor?fil=" + okter[0]["fil"])
+        med = [p for p in spor if p[3] == 1]
+        assert len(med) > 5 and all(5.5 < p[2] < 7.0 for p in med)       # ±6° krenging + litt stamp
+        # eksport i UTM33 langs sporet, 2,0 m djupt
+        pts = [KK.utm_forward(p[0], p[1], 33) for p in med[::max(1, len(med) // 4)]]
+        gj = {"type": "FeatureCollection", "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::5973"}},
+              "features": [{"type": "Feature", "properties": {"id": 7, "layer": "Vatn", "type": "Pipe"},
+                            "geometry": {"type": "LineString", "coordinates": [[e, n, 2.0] for e, n in pts]}}]}
+        up = post("api/last-opp?type=eksport&namn=r%C3%B8yr.geojson", raw=_json.dumps(gj).encode())
+        r = post("api/rett", {"fil": up["fil"], "z": "auto"})
+        assert r["ok"] and r["z"] == "djupn" and r["sone"] == 33 and r["retta_punkt"] >= 2
+        assert 2.0 * math.sin(math.radians(5.5)) * 100 < r["tabell"][0]["maks_endring_cm"] < 2.0 * math.sin(math.radians(7)) * 100
+        dxf = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["dxf"]), timeout=5).read().decode()
+        assert "POLYLINE" in dxf and "Vatn" in dxf and dxf.rstrip().endswith("EOF")
+        assert r["filer"]["geojson"] == "røyr_retta.geojson"
+        # svar og pakke
+        post("api/svar", {"namn": "Norman", "svar": {"mast": "1,45", "ukjend": "x"}})
+        pk = post("api/pakke", {"med_raa": True})
+        with _zf.ZipFile(tmp_path / "pakkar" / pk["fil"]) as z:
+            names = z.namelist()
+            alt = b"".join(z.read(n) for n in names)
+        assert "SVAR.txt" in names and any(n.startswith("logg/") for n in names) and any(n.startswith("filer/") for n in names)
+        assert b"hemmeleg" not in alt and b"norman" not in alt and "1,45".encode() in alt
+        # innstillingar: passordet blir aldri sendt ut, tomt passord = behald
+        ii = get("api/innstillingar")
+        assert ii["har_passord"] and "passord" not in ii
+        post("api/innstillingar", dict(ii, mottakar="COM23", mast="1,45", sone="33", passord=""))
+        saved = _json.loads(cfgp.read_text())
+        assert saved["spakarm"]["opp"] == 1.45 and saved["sone"] == "33" and saved["inn"][0]["port"] == "COM23"
+        assert _json.loads((tmp_path / "ntrip_lokal.json").read_text())["passord"] == "hemmeleg"
+        assert app.oppd["omstart"]
+        try:
+            post("api/innstillingar", dict(ii, mottakar="COM23", mast="tjue"))
+            assert False
+        except _u.HTTPError as e:
+            assert e.code == 400 and "mastehøgd" in _json.loads(e.read())["feil"]
+    finally:
+        stop.set()
