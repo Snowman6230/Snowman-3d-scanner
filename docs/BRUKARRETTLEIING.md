@@ -33,6 +33,13 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
      før Geoscan startar: berre eitt program kan ha COM23 og COM34 opne. Viser statussida «ingen les porten»,
      er ikkje OneVision kopla til COM24 – Geoscan held fram, men linjene til OneVision blir kasta.
 
+### Live-kart på Status
+
+Under skanninga viser Status eit kart med vogna, teikna som på logoen og snudd i køyreretninga. GPS-prikken på
+vogna er **grøn** ved RTK FIX, **gul** ved FLOAT/DGPS og **raud** ved berre GPS. Vogna står på den retta
+posisjonen (det OneVision får). Den opne ringen er posisjonen frå mottakaren. Sporet har farge etter hellinga.
+Dreg du i kartet, sluttar det å følgje vogna – kryss av for «Følg vogna» for å slå det på att.
+
 ### Lagring av innstillingar
 
 Alt du endrar under **Innstillingar** blir lagra med ein gong. Stripa øvst viser *«✓ Lagra kl. … i

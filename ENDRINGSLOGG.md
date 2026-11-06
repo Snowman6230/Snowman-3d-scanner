@@ -2,6 +2,16 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.0 – 7. november 2026
+- **Live-kart på Status.** Kartet viser kvar vogna er medan ein skannar, og blir oppdatert kvart sekund.
+  - Vogna er teikna som på logoen, sett ovanfrå: raud radarkasse, hjul, handtak bak og GNSS-antenna 0,6 m til
+    venstre. Ho snur seg etter køyreretninga. GPS-prikken har farge etter fix (grøn RTK FIX, gul FLOAT/DGPS, raud GPS).
+  - Vogna står på den retta posisjonen som blir sendt til OneVision. Ein open ring viser posisjonen frå
+    mottakaren, så ein ser kor mykje Geoscan flyttar punktet i sidebakke.
+  - Sporet veks medan ein køyrer, med farge etter hellinga (som i Resultat).
+  - «Følg vogna», «Vis mottakarposisjon», «Tøm sporet» og same kartval som i Resultat (flyfoto o.a.).
+- Status-svaret har ny `korr.pos` (lat/lon inn og ut, fix, kurs, stamp, krenging).
+
 ## 0.8.10 – 6. november 2026
 - **NTRIP-adressa blir reinska:** «http://caster.no:2101/TH» blir lagra som caster «caster.no», port 2101 og
   mountpoint TH. Køyring 6.11 kl. 23.04 gav «getaddrinfo failed» (namnet på casteren vart ikkje funne).

@@ -781,3 +781,12 @@ def test_casteradresse_blir_reinska(tmp_path, monkeypatch):
     INN.lagre(cfgp, d)
     lok = _json.loads((tmp_path / "ntrip_lokal.json").read_text())
     assert lok["caster"] == "caster.eksempel.no" and lok["port"] == 2102 and lok["mountpoint"] == "TH"
+
+
+def test_live_posisjon_i_status():
+    """Live-kartet på Status les korr.pos: mottakarposisjon, retta posisjon, fix og kurs."""
+    k = G.Korrigerar(dict(G.STANDARD, logg=None))
+    k.handle("$GPGGA,094016.70,6223.8710022,N,00634.9919464,E,4,20,0.60,14.594,M,45.01,M,01,2769*52")
+    p = k.status["pos"]
+    assert p["fix"] == 4 and abs(p["lat"] - 62.39785) < 1e-4 and abs(p["lon"] - 6.58320) < 1e-4
+    assert {"lat_ut", "lon_ut", "kurs", "krenging", "stamp", "korrigert", "t"} <= set(p)

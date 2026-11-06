@@ -116,7 +116,21 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
     <div class="k"><div class="l">Retting no</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
     <div class="k"><div class="l">NTRIP</div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div></div>
   </div>
-  <div class="k" style="margin-top:12px"><div class="l">Portar</div><pre id="portar"></pre></div>
+  <div class="k" style="margin-top:12px">
+    <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><div class="l" style="margin:0">Kart – live</div>
+      <span class="verktoy" style="gap:10px">
+        <label class="hj"><input type="checkbox" id="lfolg" checked onchange="lfolg=this.checked;if(lfolg&&lsist)lkart.panTo(lsist)"> Følg vogna</label>
+        <label class="hj"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
+        <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
+        <select class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
+          <option value="topo">Fargekart</option><option value="graatone">Gråtonekart</option>
+          <option value="flyfoto">Flyfoto</option><option value="osm">OpenStreetMap</option></select></span></div>
+    <div id="livekart" style="height:380px;border-radius:10px;overflow:hidden"></div>
+    <div class="hj" id="liveinfo" style="margin-top:6px">Ventar på posisjon frå mottakaren …</div>
+    <div class="hj">Vogna står på den retta posisjonen (det som blir sendt til OneVision) og snur seg etter køyreretninga.
+      GPS-prikken på vogna har farge etter fix: <span class="ok">grøn = RTK FIX</span> · <span class="var">gul = FLOAT/DGPS</span> · <span class="feil">raud = GPS</span>.
+      ○ Open ring = posisjonen frå mottakaren. Sporet har farge etter hellinga.</div></div>
+  <div class="k"><div class="l">Portar</div><pre id="portar"></pre></div>
   <div class="k"><div class="l">Kva skjer</div>
     <p class="hj" style="margin-bottom:0">Snowman Geoscan les posisjonen frå mottakaren, rettar han for hellinga til vogna og sender han
     vidare til OneVision. Under skanninga ser du resultatet i OneVision som vanleg. Etterpå: gå til <b>Resultat</b> for
@@ -152,7 +166,7 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
       <span><button class="b gra" id="tbtn" onclick="startTverr()" style="display:none">✚ Tverrsnitt</button>
       <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
       <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Kart:
-        <select id="kartlag" onchange="velKartlag(this.value)" style="width:auto">
+        <select id="kartlag" class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
           <option value="topo">Fargekart (Kartverket)</option>
           <option value="graatone">Gråtonekart (Kartverket)</option>
           <option value="flyfoto">Flyfoto (Esri)</option>
@@ -404,6 +418,7 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>visFane(b.datas
 function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("aktiv",b.dataset.f==f));
   document.querySelectorAll(".fane").forEach(s=>s.classList.toggle("aktiv",s.id=="f-"+f));
   lagreOkt();
+  if(f=="status")setTimeout(()=>lkart&&lkart.invalidateSize(),50);
   if(f=="resultat"){initKart();lastOkter();lastResFiler();setTimeout(()=>kart&&kart.invalidateSize(),50)}
   if(f=="send")lastInnsending();if(f=="innst")lastInnst()}
 
@@ -414,6 +429,7 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
   const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;
   OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);visUst(s.oppdatering);
   if(fane!="status")return;
+  if(k.pos)oppdaterLive(k.pos,k);
   const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
   set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
   if(k.korrigert){set("hell",(k.krenging>0?"+":"")+F(k.krenging,1)+"°",Math.abs(k.krenging)>5||Math.abs(k.stamp)>5?"var":"ok");
@@ -506,11 +522,55 @@ const KARTLAG={
 function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView([62.39,6.58],12);
   setGrunn();lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
   L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt());
-  api("api/kartlag").then(r=>{if(KARTLAG[r.kartlag]&&r.kartlag!=kartlag){kartlag=r.kartlag;setGrunn()}$("kartlag").value=kartlag}).catch(()=>{})}
+  hentKartlag()}
+let kartlagHenta=null;
+function hentKartlag(){if(!kartlagHenta)kartlagHenta=api("api/kartlag").then(r=>{if(KARTLAG[r.kartlag])kartlag=r.kartlag}).catch(()=>{});
+  kartlagHenta.then(()=>{if(kart)setGrunn();setLiveGrunn();document.querySelectorAll(".kartlagval").forEach(e=>e.value=kartlag)})}
+
+// ---------- live-kart på Status ----------
+let lkart=null,lgrunn=null,lspor=null,lmerke=null,lraa=null,lpil=null,lfolg=true,lsist=null,lforr=null,lnseg=0,lforsteZoom=true;
+const FIXFARGE=q=>q==4?"#19e07a":(q==5||q==2||q==9||q==6)?"#f2b33d":"#ef5b5b";
+// Georadarvogna frå logoen sett ovanfrå: raud radarkasse, hjul, handtak bak, GNSS-antenne 0,6 m til venstre.
+// Peikar opp (nord) ved kurs 0 og blir snudd etter køyreretninga. GPS-prikken har farge etter fix.
+const VOGN_SVG=`<svg viewBox="-22 -30 44 60" width="48" height="65" style="overflow:visible;filter:drop-shadow(0 0 2px #000)">
+  <path d="M0 -29 L-5 -23 L5 -23 Z" fill="#ffffff"/>
+  <g fill="#1a252d" stroke="#5d6f7b" stroke-width="1.5"><rect x="-19" y="-19" width="6" height="10" rx="2"/><rect x="13" y="-19" width="6" height="10" rx="2"/>
+    <rect x="-19" y="7" width="6" height="10" rx="2"/><rect x="13" y="7" width="6" height="10" rx="2"/></g>
+  <line x1="0" y1="14" x2="0" y2="27" stroke="#8d9ba5" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="-7" y1="27" x2="7" y2="27" stroke="#1a252d" stroke-width="4" stroke-linecap="round"/>
+  <rect x="-13" y="-22" width="26" height="38" rx="5" fill="#d42c2c" stroke="#7a1010" stroke-width="2.5"/>
+  <rect x="-9" y="-17" width="18" height="6" rx="2" fill="#ec5048"/>
+  <g stroke="#8f1717" stroke-width="1.6"><line x1="-8" y1="-6" x2="8" y2="-6"/><line x1="-8" y1="-1" x2="8" y2="-1"/><line x1="-8" y1="4" x2="8" y2="4"/><line x1="-8" y1="9" x2="8" y2="9"/></g>
+  <ellipse cx="-9" cy="-3" rx="7" ry="7" fill="#1a252d" stroke="#ffffff" stroke-width="2"/>
+  <circle class="gpsprikk" cx="-9" cy="-3" r="3.6" fill="#19e07a"/></svg>`;
+function initLive(){if(lkart||typeof L=="undefined")return;lkart=L.map("livekart",{zoomControl:true}).setView([62.39,6.58],12);
+  lspor=L.layerGroup().addTo(lkart);L.control.scale({imperial:false}).addTo(lkart);
+  lkart.on("dragstart",()=>{lfolg=false;$("lfolg").checked=false});hentKartlag()}
+function setLiveGrunn(){if(!lkart)return;if(lgrunn)lkart.removeLayer(lgrunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
+  lgrunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(lkart);lgrunn.bringToBack()}
+function nullstillLive(){if(lspor)lspor.clearLayers();lforr=null;lnseg=0}
+const avst=(a,b)=>{const dy=(b[0]-a[0])*111320,dx=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);return Math.hypot(dx,dy)};
+function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
+  const ut=[p.lat_ut,p.lon_ut],inn=[p.lat,p.lon],c=FIXFARGE(p.fix);
+  if(!lforr||avst(lforr,ut)>0.15){if(lforr&&avst(lforr,ut)<50){
+      L.polyline([lforr,ut],{color:farge(Math.hypot(p.stamp||0,p.krenging||0),p.korrigert),weight:4,opacity:.9,interactive:false}).addTo(lspor);
+      if(++lnseg>4000){const f=lspor.getLayers()[0];lspor.removeLayer(f);lnseg--}}
+    lforr=ut}
+  if(!lraa)lraa=L.circleMarker(inn,{radius:7,color:"#cfd8dc",weight:2,fill:false,interactive:false}).addTo(lkart);else lraa.setLatLng(inn);
+  if(!lmerke){lmerke=L.marker(ut,{interactive:false,zIndexOffset:1000,icon:L.divIcon({className:"",iconSize:[48,65],iconAnchor:[24,32],
+      html:`<div class="vognikon" style="width:48px;height:65px;transform-origin:24px 32px">${VOGN_SVG}</div>`})}).addTo(lkart)}
+  else lmerke.setLatLng(ut);
+  const el=lmerke.getElement();if(el){const v=el.querySelector(".vognikon");if(v){v.style.transform=`rotate(${p.kurs==null?0:p.kurs}deg)`;v.style.opacity=p.kurs==null?.75:1}
+    const g=el.querySelector(".gpsprikk");if(g)g.setAttribute("fill",c)}
+  lsist=ut;if(lforsteZoom){lkart.setView(ut,19);lforsteZoom=false}else if(lfolg)lkart.panTo(ut,{animate:false});
+  const fl=avst(inn,ut);
+  $("liveinfo").innerHTML=`${(FIX[p.fix]||["FIX "+p.fix])[0]} · ${p.kurs==null?"kurs –":"kurs "+F(p.kurs,0)+"°"} · `+
+    (p.korrigert?`krenging ${F(p.krenging,1)}° · stamp ${F(p.stamp,1)}° · `:"")+`retta punkt ${F(fl*100,0)} cm frå mottakarposisjonen`}
 function setGrunn(){if(grunn)kart.removeLayer(grunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
   grunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(kart);grunn.bringToBack();
   let feil=0;grunn.on("tileerror",()=>{if(++feil>3)$("kartfeil").style.display="block"});grunn.on("tileload",()=>{feil=0;$("kartfeil").style.display="none"})}
-async function velKartlag(v){if(!KARTLAG[v])return;kartlag=v;if(kart)setGrunn();set("kartlagmeld","Lagrar …","var");
+async function velKartlag(v){if(!KARTLAG[v])return;kartlag=v;if(kart)setGrunn();setLiveGrunn();
+  document.querySelectorAll(".kartlagval").forEach(e=>e.value=v);set("kartlagmeld","Lagrar …","var");
   try{const r=await post("api/kartlag",{kartlag:v});set("kartlagmeld","✓ lagra","ok");setTimeout(()=>set("kartlagmeld",""),4000)}
   catch(e){set("kartlagmeld","✗ ikkje lagra","feil")}}
 const farge=(t,k)=>!k?"#6b7780":t<1?"#3ecf74":t<3?"#c6d83a":t<6?"#f2b33d":"#ef5b5b";

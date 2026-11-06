@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-07-livekart",
+   "dato": "2026-11-07",
+   "versjon": "0.9.0",
+   "tittel": "Nytt: live-kart med vogna på Status",
+   "tekst": "Status-sida har no eit kart som viser kvar vogna er medan du skannar. Vogna er teikna som på logoen og snur seg etter køyreretninga.\n\nGPS-prikken på vogna viser fix: grøn = RTK FIX, gul = FLOAT/DGPS, raud = berre GPS. Den opne ringen er posisjonen frå mottakaren, og vogna står der Geoscan har retta punktet – det OneVision får. Sporet har farge etter hellinga.\n\nDu kan velje flyfoto over kartet, og slå av «Følg vogna» om du vil sjå rundt.",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-06-portpar",
    "dato": "2026-11-06",
    "versjon": "0.8.7",

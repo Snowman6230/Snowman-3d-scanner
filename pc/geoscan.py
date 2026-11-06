@@ -28,7 +28,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.8.10"
+VERSJON = "0.9.0"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -154,6 +154,10 @@ class Korrigerar:
         else:
             out = N.rewrite(fields, la, lo, dh=None if h2 is None else h2 - h_in)
         st["forskyving_cm"] = round(off * 100, 1) if st["korrigert"] else None
+        # Live-kartet på Status: posisjonen frå mottakaren og den retta posisjonen som blir sendt til OneVision
+        st["pos"] = {"lat": round(lat, 8), "lon": round(lon, 8), "lat_ut": round(la, 8), "lon_ut": round(lo, 8),
+                     "fix": gga["q"], "kurs": st["kurs"], "stamp": st["stamp"], "krenging": st["krenging"],
+                     "korrigert": st["korrigert"], "t": round(now if now is not None else time.time(), 2)}
         self._log(gga, lat, lon, la, lo, h2, n_geo, pitch, roll, hdg, d0, now)
         return out
 
