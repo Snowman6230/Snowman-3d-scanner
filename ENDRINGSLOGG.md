@@ -2,6 +2,11 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.8 – 6. november 2026
+- «Lag portpar no» unngår no portnamn som Windows har reservert (ComDB, «in use» i COM port database), til dømes
+  COM24 etter eit tidlegare com0com-par. Første køyring stoppa på dialogen «The port name COM24 is already logged as
+  in use». Geoscan vel då neste ledige par (COM35 ↔ COM25 osb.).
+
 ## 0.8.7 – 6. november 2026
 Etter første køyring på PC-en (skjermbilete 6.11 kl. 22.35):
 - **«Lag portpar no»:** com0com var installert, men utan portpar. Knappen i com0com-vindauget lagar no paret

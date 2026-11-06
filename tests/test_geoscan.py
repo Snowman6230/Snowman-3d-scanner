@@ -749,3 +749,11 @@ def test_com0com_lag_par_kommando_og_ledige_portar():
     import pytest
     with pytest.raises(ValueError):
         C.lag_par_kommando("setupc.exe", "COM34; rm", "COM24")
+
+
+def test_comdb_reserverte_namn_blir_unngatt():
+    import com0com as C
+    brukte = C.comdb_brukte(bytes([0b00000100, 0, 0, 0b10000000, 0b00000010]))   # COM3, COM32, COM34
+    assert brukte == {"COM3", "COM32", "COM34"}
+    assert C.ledig_par(["COM3"] + sorted(brukte)) == ("COM35", "COM25")
+    assert C.comdb_brukte(bytes([0, 0, 0b10000000])) == {"COM24"}                  # bit 23 = COM24

@@ -153,6 +153,28 @@ def lag_par_kommando(setupc, a, b):
     return ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps]
 
 
+def comdb_brukte(data):
+    """Tolkar ComDB-bitmappa frå registeret: bit n-1 sett = COMn reservert («in use» i COM port database).
+    Windows hugsar namn etter utstyr som er fjerna. Brukar vi eit slikt namn, spør com0com om lov (dialog)."""
+    ut = set()
+    for i, byte in enumerate(data or b""):
+        for j in range(8):
+            if byte & (1 << j):
+                ut.add(f"COM{i * 8 + j + 1}")
+    return ut
+
+
+def _comdb():
+    try:
+        import winreg
+        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\COM Name Arbiter")
+        data, _ = winreg.QueryValueEx(k, "ComDB")
+        winreg.CloseKey(k)
+        return comdb_brukte(data)
+    except Exception:
+        return set()
+
+
 def lag_par(a=None, b=None):
     """Lagar eit com0com-par (Windows spør om administratorløyve). Gir (a, b) tilbake, eller kastar RuntimeError."""
     if os.name != "nt":
@@ -161,7 +183,7 @@ def lag_par(a=None, b=None):
     if not exe:
         raise RuntimeError("fann ikkje setupc.exe – er com0com installert? (venta i Program Files\\com0com)")
     if not (a and b):
-        a, b = ledig_par([p[0] for p in _portar()])
+        a, b = ledig_par([p[0] for p in _portar()] + sorted(_comdb()))     # unngå òg namn Windows har reservert
     try:
         r = subprocess.run(lag_par_kommando(exe, a, b), capture_output=True, text=True, timeout=180,
                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
