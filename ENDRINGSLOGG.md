@@ -2,6 +2,11 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.4 – 6. november 2026
+- Brukarrettleiinga: korleis ein sjekkar om com0com finst, installerer den signerte versjonen og lagar paret
+  COM34 ↔ COM24, og korleis testen kan gjerast utan com0com (OneVision på Bluetooth, Geoscan loggar, retting etterpå).
+- Meldinga til Norman er oppdatert med det same.
+
 ## 0.8.3 – 6. november 2026
 - **Geoscan heng ikkje lenger om OneVision ikkje les com0com-porten.** Skrivinga til OneVision-porten hadde
   ingen tidsgrense. Var OneVision lukka, hekk eller ikkje kopla til COM24, kunne bufferen bli full og heile

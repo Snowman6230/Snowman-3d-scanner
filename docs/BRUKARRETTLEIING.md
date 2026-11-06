@@ -32,6 +32,23 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
      Berre GGA blir sendt dit (OneVision les berre GGA). **Stopp NMEA-splitteren (PowerShell) og Trimble Access**
      før Geoscan startar: berre eitt program kan ha COM23 og COM34 opne. Viser statussida «ingen les porten»,
      er ikkje OneVision kopla til COM24 – Geoscan held fram, men linjene til OneVision blir kasta.
+
+### com0com – virtuell kabel mellom Geoscan og OneVision
+
+Ein COM-port kan berre vere open i eitt program. Geoscan og OneVision treng difor eit **par** av portar som er
+kopla saman inne i PC-en (Geoscan skriv på den eine, OneVision les den andre).
+
+1. **Sjekk først om det finst:** Enhetsbehandling → *Porter (COM og LPT)*. Står det «com0com – serial port
+   emulator» der, er det installert. (Overleveringa nemner para COM34→COM24 og COM35→COM25.)
+2. **Installer:** last ned `com0com-2.2.2.0-x64-fre-signed.zip` (SourceForge, prosjektet «com0com»). Pakk ut og
+   køyr `setup.exe` som administrator. Bruk den *signerte* versjonen – andre blir stoppa av Windows 11 med
+   Secure Boot.
+3. **Lag paret:** opne «Setup for com0com». Gi dei to endane ledige namn, til dømes **COM34** og **COM24**
+   (Port Name). Kryss av for *use Ports class*. La *emulate baud rate* stå av. Trykk *Apply*.
+4. **Vel portane:** Geoscan → Innstillingar → *Til OneVision* = COM34. OneVision → GPS-port = COM24.
+
+**Utan com0com** kan testen likevel gjerast: OneVision les R12i direkte (Bluetooth port 1, som før), og Geoscan
+les USB (COM23) og loggar hellinga. Objekta blir då retta etterpå under Resultat i staden for i sanntid.
    - **Mastehøgd:** mål frå merket for antennehøgd ned til underkanten av radaren.
    - **NTRIP:** caster, port, mountpoint, brukarnamn og passord. Passordet blir berre lagra på PC-en.
    - **R12i rettar masta sjølv:** kryss av når tilt er på i R12i og stanghøgda er sett lik mastehøgda.
