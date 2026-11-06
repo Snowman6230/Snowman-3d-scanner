@@ -2,6 +2,21 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.5 – 6. november 2026
+- **com0com-sjekk ved oppstart (Windows).** Ny `pc/com0com.py` finn ut om com0com er installert og kva portpar som
+  finst (portlista frå Windows, `setupc list` og registeret).
+  - Ikkje installert: eit vindauge forklarar kva com0com er og korleis det blir installert (nedlastingslenke,
+    stegvis), og ein raud stripe står øvst til det er på plass. Vindauget kan lukkast.
+  - Installert: eit vindauge viser para (t.d. COM34 ↔ COM24), kva ende Geoscan og OneVision skal bruke, og ein
+    knapp «Bruk COM34 til OneVision». Åtvarar om feil port eller «emulate baud rate». Kan lukkast, med «Ikkje vis
+    igjen før noko endrar seg».
+  - Innstillingar → Portar viser com0com-status og «Vis forklaring». Ikkje i demo.
+- **Innstillingane blir lagra automatisk** medan ein skriv. Ei stripe øvst viser «✓ Lagra kl. 18:52:07 i
+  geoscan_config.json», og feltet lyser grønt. Er eitt felt ugyldig, blir resten lagra, og stripa seier kva som
+  ikkje vart lagra (den gamle verdien står att). Endringane gjeld etter «Start på nytt no – bruk endringane».
+  Sida les innstillingane frå fila, så autolagra verdiar blir viste og ikkje skrivne over.
+- **Svara under «Send inn» blir lagra automatisk** (knappen «Lagre svara» er borte). Sjekklista viser klokkeslett.
+
 ## 0.8.4 – 6. november 2026
 - Brukarrettleiinga: korleis ein sjekkar om com0com finst, installerer den signerte versjonen og lagar paret
   COM34 ↔ COM24, og korleis testen kan gjerast utan com0com (OneVision på Bluetooth, Geoscan loggar, retting etterpå).

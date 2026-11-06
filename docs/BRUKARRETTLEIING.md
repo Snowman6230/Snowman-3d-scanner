@@ -33,7 +33,17 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
      før Geoscan startar: berre eitt program kan ha COM23 og COM34 opne. Viser statussida «ingen les porten»,
      er ikkje OneVision kopla til COM24 – Geoscan held fram, men linjene til OneVision blir kasta.
 
+### Lagring av innstillingar
+
+Alt du endrar under **Innstillingar** blir lagra med ein gong. Stripa øvst viser *«✓ Lagra kl. … i
+geoscan_config.json»*. Er eit felt feil, blir det merkt raudt, resten blir lagra, og stripa seier kva som ikkje
+vart lagra. Endringane tek til å gjelde når du trykkjer **«Start på nytt no – bruk endringane»**. Svara under
+«Send inn» og sjekklista blir òg lagra automatisk.
+
 ### com0com – virtuell kabel mellom Geoscan og OneVision
+
+Snowman Geoscan sjekkar dette sjølv ved oppstart og opnar eit vindauge: anten med installasjonsrettleiing
+(om com0com manglar) eller med kva port Geoscan og OneVision skal bruke (om det er installert).
 
 Ein COM-port kan berre vere open i eitt program. Geoscan og OneVision treng difor eit **par** av portar som er
 kopla saman inne i PC-en (Geoscan skriv på den eine, OneVision les den andre).

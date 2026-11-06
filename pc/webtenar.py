@@ -82,7 +82,16 @@ def start(app, port=8088, lan=False):
                 if path == "/status":
                     return self._send(app.snapshot())
                 if path == "/api/innstillingar":
-                    return self._send(INN.hent(app.cfg_path, app.cfg))
+                    # Les fila, ikkje berre minnet: autolagra endringar gjeld først etter omstart, men skal synast
+                    # (og ikkje bli skrivne over) når sida blir opna på nytt.
+                    return self._send(INN.hent(app.cfg_path, dict(app.cfg, **INN._read(app.cfg_path))))
+                if path == "/api/com0com":
+                    import com0com as C0
+                    st = C0.status(json.loads(Path(app.cfg_path).read_text(encoding="utf-8"))
+                                   if Path(app.cfg_path).exists() else app.cfg)
+                    st["skjult"] = app.cfg.get("skjul_com0com", "")
+                    st["demo"] = bool(app.cfg.get("demo"))
+                    return self._send(st)
                 if path == "/api/okt":
                     return self._send(app.okt.status())
                 if path == "/api/okter":
@@ -151,9 +160,20 @@ def start(app, port=8088, lan=False):
                     return self._send({"ok": True})
                 if path == "/api/innstillingar":
                     d = json.loads(self._body() or b"{}")
-                    INN.lagre(app.cfg_path, d)
-                    app.oppd["omstart"] = True       # nye innstillingar gjeld etter omstart (START-GEOSCAN.bat)
-                    return self._send({"ok": True})
+                    t = INN.lagre(app.cfg_path, d, streng=bool(d.get("omstart", True)))
+                    # Autolagring frå sida sender omstart=false: berre lagre. Endringane gjeld etter neste omstart.
+                    if d.get("omstart", True):
+                        app.oppd["omstart"] = True       # nye innstillingar gjeld etter omstart (START-GEOSCAN.bat)
+                    return self._send({"ok": True, "lagra": t, "fil": Path(app.cfg_path).name, "feil": INN.lagre.feil,
+                                       "har_passord": bool(INN._read(INN.HER / "ntrip_lokal.json").get("passord")),
+                                       "har_token": bool(INN._read(INN.HER / "oppdatering_lokal.json").get("token"))})
+                if path == "/api/com0com/skjul":
+                    sig = str(json.loads(self._body() or b"{}").get("sig", ""))[:500]
+                    cfgf = json.loads(Path(app.cfg_path).read_text(encoding="utf-8")) if Path(app.cfg_path).exists() else {}
+                    cfgf["skjul_com0com"] = sig
+                    Path(app.cfg_path).write_text(json.dumps(cfgf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                    app.cfg["skjul_com0com"] = sig
+                    return self._send({"ok": True, "lagra": INN.lagra_tid(app.cfg_path)})
                 if path == "/api/melding-lest":
                     INS.melding_lest(json.loads(self._body() or b"{}").get("id", ""))
                     return self._send({"ok": True})

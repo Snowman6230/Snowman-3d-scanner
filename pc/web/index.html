@@ -70,6 +70,12 @@ svg{display:block;margin:6px auto 0}
 .modal{max-width:640px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid var(--linje)}
 .djl{background:#0f1418;color:#e8eef2;border:1px solid #4ea8ff;font-size:11px;font-weight:700;padding:1px 5px;box-shadow:none}
 .djl:before{display:none}
+.lagrestatus{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;margin-bottom:12px;border-radius:10px;border:1px solid var(--linje);background:var(--kort);font-weight:600}
+.lagrestatus.ok{border-color:var(--ok)}.lagrestatus.var{border-color:var(--var)}.lagrestatus.feil{border-color:var(--feil)}
+input.lagra-ok,select.lagra-ok{border-color:var(--ok)!important;box-shadow:0 0 0 2px rgba(60,200,120,.25)}
+input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
+.c0cpar{background:var(--kort2);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:15px}
+.c0cpar b{font-size:17px}
 </style>
 </head>
 <body>
@@ -88,6 +94,8 @@ svg{display:block;margin:6px auto 0}
   <div id="nokkel" class="banner oppd" style="display:none">Snowman Geoscan får ikkje sjekke om det finst nye versjonar:
     programmet ligg no i eit privat repo. Legg inn GitHub-nøkkelen du har fått av Hans Petter under
     <a href="#" onclick="visFane('innst');return false" style="color:var(--var)">Innstillingar → Oppdatering</a>.</div>
+  <div id="c0cbanner" class="banner oppd" style="display:none;border-color:var(--feil)">⚠ <span id="c0cbtekst"></span>
+    <button class="b" style="margin-left:8px" onclick="visCom0com(true)">Kva gjer eg?</button></div>
   <div id="meldingar"></div>
   <nav>
     <button data-f="status" class="aktiv">Status</button>
@@ -241,7 +249,7 @@ svg{display:block;margin:6px auto 0}
     <p class="hj">Svara trengst for å stille inn rettinga rett. Svar det du veit – resten kan du fylle ut seinare. Alt blir lagra på denne PC-en.</p>
     <div class="felt" style="margin-bottom:12px"><label><span>Namnet ditt</span><input id="snamn"></label></div>
     <div id="sporsmal"></div>
-    <button class="b" onclick="lagreSvar()">Lagre svara</button> <span class="melding" id="smeld"></span>
+    <p class="hj">Svara blir lagra automatisk medan du skriv.</p> <span class="melding" id="smeld"></span>
   </div>
   <div class="k">
     <h2>Legg ved filer</h2>
@@ -273,6 +281,9 @@ svg{display:block;margin:6px auto 0}
 <!-- ================= INNSTILLINGAR ================= -->
 <section id="f-innst" class="fane">
   <form id="iform" onsubmit="lagreInnst(event)">
+  <div id="lagrestatus" class="lagrestatus"><span id="lstekst">Innstillingane blir lagra automatisk.</span>
+    <span style="flex:1"></span>
+    <button type="button" class="b" id="lsomstart" style="display:none;background:var(--var)" onclick="startPaaNytt()">Start på nytt no – bruk endringane</button></div>
   <div class="k"><h2>Portar</h2>
     <p class="hj">Tilgjengelege portar på denne PC-en: <span id="iporter">–</span></p>
     <div class="felt">
@@ -280,7 +291,9 @@ svg{display:block;margin:6px auto 0}
       <label><span>Ekstra IMU på ramma (tom = ingen)</span><input name="imu" list="plist"></label>
       <label><span>Til OneVision (com0com, t.d. COM34 → COM24)</span><input name="onevision" list="plist"></label>
       <label><span>TCP-port for andre program</span><input name="tcp_port" type="number"></label>
-    </div><datalist id="plist"></datalist></div>
+    </div><datalist id="plist"></datalist>
+    <p class="hj" style="margin-top:10px">com0com (virtuell kabel til OneVision): <span id="ic0c">–</span>
+      <button type="button" class="b gra" style="margin-left:6px" onclick="visCom0com(true)">Vis forklaring</button></p></div>
   <div class="k"><h2>Vogn og mast</h2>
     <div class="felt">
       <label><span>Mastehøgd (m), frå antennemerket til underkant radar</span><input name="mast" inputmode="decimal"></label>
@@ -336,12 +349,21 @@ svg{display:block;margin:6px auto 0}
     <p class="hj" style="margin-top:8px">Trengst for å hente nye versjonar når programmet ligg i eit privat repo. I testperioden er
       repoet ope, og nøkkel trengst ikkje – men legg han gjerne inn alt no, så held oppdateringane fram når repoet blir lukka. Du får nøkkelen av Hans Petter.
       Han blir lagra berre på denne PC-en.</p></div>
-  <div class="k"><button class="b" type="submit">Lagre og start på nytt</button> <span class="melding" id="imeld"></span>
+  <div class="k"><button class="b" type="submit">Start på nytt no – bruk endringane</button> <span class="melding" id="imeld"></span>
     <p class="hj" id="ifil"></p></div>
   </form>
 </section>
 </main>
 
+<div id="c0c" class="overlay" style="display:none" onclick="if(event.target==this)lukkCom0com()"><div class="k modal">
+  <button class="b gra" style="float:right" onclick="lukkCom0com()" title="Lukk">✕</button>
+  <div id="c0cinnhald"></div>
+  <div class="verktoy" style="margin-top:14px">
+    <label class="hj" id="c0cskjulw"><input type="checkbox" id="c0cskjul" checked> Ikkje vis dette igjen før noko endrar seg</label>
+    <span style="flex:1"></span>
+    <button class="b gra" onclick="visCom0com(true)">Sjekk på nytt</button>
+    <button class="b" onclick="lukkCom0com()">Lukk</button></div>
+</div></div>
 <div id="oktval" class="overlay" style="display:none"><div class="k modal">
   <img src="vendor/geoscan-ikon.svg" alt="" width="56" height="56" style="border-radius:12px;float:right">
   <h2 style="font-size:20px">Velkomen tilbake</h2>
@@ -423,9 +445,9 @@ async function startOkt(){let s;try{s=await api("api/okt")}catch(e){setTimeout(s
     $("oktforrige").innerHTML=`<b>${esc(f.namn||"Førre økt")}</b><br><span class="hj">Starta ${esc(f.starta||"–")} · sist lagra ${esc(f.sist_lagra||"–")}</span>
       <br>${f.skanningar} skanning${f.skanningar==1?"":"ar"}${f.resultat?" · siste resultat: <b>"+esc(f.resultat)+"</b>":""}${f.fane?" · fane: "+esc(f.fane):""}`;
     $("oktval").style.display="flex";return}
-  OKT=s.noverande;visOktInfo();if(OKT)gjenopprett(OKT)}
+  OKT=s.noverande;visOktInfo();if(OKT)gjenopprett(OKT);visCom0com(false)}
 async function velOkt(val){try{const r=await post("api/okt/val",{val,namn:$("oktnamn").value});OKT=r.okt;$("oktval").style.display="none";visOktInfo();
-  if(val=="fortset")gjenopprett(OKT);else visFane("status")}catch(e){alert("Kunne ikkje velje økt: "+e.message)}}
+  if(val=="fortset")gjenopprett(OKT);else visFane("status");visCom0com(false)}catch(e){alert("Kunne ikkje velje økt: "+e.message)}}
 async function gjenopprett(o){const ui=o.ui||{};gjenopprettar=true;
   try{(ui.valde||[]).forEach(f=>valde.add(f));
     if(ui.fane&&$("f-"+ui.fane))visFane(ui.fane);
@@ -865,7 +887,7 @@ function oppdaterSjStat(){const s=[...document.querySelectorAll("[data-sj]")].ma
   $("sjstat").textContent=`${n("ok")} av ${s.length} godkjent`+(n("feil")?` · ${n("feil")} ikkje godkjent`:"")+(n("delvis")?` · ${n("delvis")} delvis`:"")}
 async function lagreSjekk(){const punkt={};document.querySelectorAll("[data-sj]").forEach(e=>{const id=e.dataset.sj;
     punkt[id]={status:e.value,kommentar:document.querySelector(`[data-sjk="${id}"]`).value}});oppdaterSjStat();
-  try{const r=await post("api/sjekkliste",{punkt});set("sjmeld","Lagra "+r.sjekk.lagra,"ok")}catch(e){set("sjmeld",e.message,"feil")}}
+  try{const r=await post("api/sjekkliste",{punkt});set("sjmeld","✓ Lagra kl. "+klokke(r.sjekk.lagra),"ok")}catch(e){set("sjmeld",e.message,"feil")}}
 async function lastInnsending(){let d;try{d=await api("api/innsending")}catch(e){return}
   visSjekk(d);
   $("snamn").value=d.svar.namn||"";
@@ -879,7 +901,10 @@ async function lastInnsending(){let d;try{d=await api("api/innsending")}catch(e)
     <td class=n>${f.kb}</td><td>${esc(f.tid)}</td><td><button class="b gra" style="padding:3px 9px">Slett</button></td>`;
     tr.querySelector("button").onclick=async()=>{if(confirm("Slette "+f.namn+"?")){await post("api/slett-fil",{fil:f.fil});lastInnsending()}};tb.appendChild(tr)})}
 async function lagreSvar(){const svar={};document.querySelectorAll("#sporsmal [data-id]").forEach(e=>svar[e.dataset.id]=e.value);
-  try{const r=await post("api/svar",{namn:$("snamn").value,svar});set("smeld","Lagra "+r.svar.lagra,"ok")}catch(e){set("smeld",e.message,"feil")}}
+  set("smeld","Lagrar …","var");
+  try{const r=await post("api/svar",{namn:$("snamn").value,svar});set("smeld","✓ Lagra kl. "+klokke(r.svar.lagra),"ok")}catch(e){set("smeld","✗ Ikkje lagra: "+e.message,"feil")}}
+let svTimer=null;
+$("f-send").addEventListener("input",e=>{if(e.target.id=="snamn"||e.target.closest("#sporsmal")){set("smeld","Endra – lagrar …","var");clearTimeout(svTimer);svTimer=setTimeout(lagreSvar,800)}});
 $("ffiler").onchange=async e=>{const fl=[...e.target.files];e.target.value="";let n=0;
   for(const f of fl){set("fmeld","Lastar opp "+f.name+" …");
     try{await api("api/last-opp?type="+$("ftype").value+"&namn="+encodeURIComponent(f.name),{method:"POST",body:f});n++}
@@ -897,8 +922,11 @@ function mailtoLenke(r){const sv=$("snamn").value||"",d=new Date().toLocaleDateS
   const tekst=`Hei Hans Petter,\n\nVedlagt er testpakka frå Snowman Geoscan (${r.fil}, ${F(r.mb,1)} MB).\n\nSjekkliste: ${$("sjstat").textContent}\n\nHelsing ${sv}`;
   return `mailto:${EPOST}?subject=${encodeURIComponent("Snowman Geoscan – testpakke "+d+(sv?" – "+sv:""))}&body=${encodeURIComponent(tekst)}`}
 
-// ---------- innstillingar ----------
-let innst=null;
+// ---------- innstillingar (blir lagra automatisk) ----------
+let innst=null,lsTimer=null,lsEndra=false,lsKoyrer=false,lsIgjen=false;
+const klokke=t=>t?String(t).slice(11,19):"";
+function lsVis(t,c){const e=$("lagrestatus");e.classList.remove("ok","var","feil");if(c)e.classList.add(c);$("lstekst").textContent=t;
+  $("lsomstart").style.display=lsEndra?"inline-block":"none"}
 async function lastInnst(){try{innst=await api("api/innstillingar")}catch(e){return}const f=$("iform");
   for(const [k,v] of Object.entries(innst)){const el=f.elements[k];if(!el)continue;
     if(el.type=="checkbox")el.checked=!!v;else el.value=(typeof v=="number"?String(v).replace(".",","):v)}
@@ -906,10 +934,68 @@ async function lastInnst(){try{innst=await api("api/innstillingar")}catch(e){ret
   f.elements.token.value="";$("itok").textContent=innst.har_token?"(lagra)":"(ikkje sett)";
   $("plist").innerHTML=innst.porter.map(p=>`<option value="${esc(p.port)}">${esc(p.skildring)}</option>`).join("");
   $("iporter").textContent=innst.porter.length?innst.porter.map(p=>p.port+" ("+p.skildring+")").join(", "):"ingen funne";
-  $("ifil").textContent="Lagra i "+innst.config_fil+(innst.demo?" (DEMO)":"")+". Etter lagring startar Snowman Geoscan på nytt (om det er starta med START-GEOSCAN.bat)."}
-async function lagreInnst(e){e.preventDefault();const f=$("iform"),d={};
-  for(const el of f.elements){if(!el.name)continue;d[el.name]=el.type=="checkbox"?el.checked:el.value}
-  try{await post("api/innstillingar",d);set("imeld","Lagra – startar på nytt …","ok")}catch(err){set("imeld",err.message,"feil")}}
+  $("ifil").textContent="Lagra i "+innst.config_fil+(innst.demo?" (DEMO)":"")+". Endringane gjeld etter omstart (knappen over).";
+  if(!lsEndra)lsVis(innst.lagra_tid?`✓ Alt er lagra · sist lagra ${innst.lagra_tid} i ${innst.config_fil}`:"Innstillingane blir lagra automatisk.","ok");
+  com0comLinje()}
+function lsData(){const f=$("iform"),d={};for(const el of f.elements){if(!el.name)continue;d[el.name]=el.type=="checkbox"?el.checked:el.value}return d}
+async function autoLagre(felt){if(lsKoyrer){lsIgjen=true;return}lsKoyrer=true;lsVis("Lagrar …","var");
+  const d=lsData();d.omstart=false;
+  try{const r=await post("api/innstillingar",d);lsEndra=true;const f=$("iform"),fe=r.feil||{};
+    document.querySelectorAll("#iform .lagra-feil").forEach(e=>{e.classList.remove("lagra-feil");e.title=""});
+    for(const [k,m] of Object.entries(fe)){const el=f.elements[k];if(el){el.classList.add("lagra-feil");el.title=m}}
+    const n=Object.keys(fe).length;
+    lsVis(n?`⚠ Lagra kl. ${klokke(r.lagra)} i ${r.fil} – men ikkje: ${Object.values(fe).join("; ")}`
+           :`✓ Lagra kl. ${klokke(r.lagra)} i ${r.fil} · gjeld etter omstart`,n?"var":"ok");
+    if(felt&&!fe[felt.name]){felt.classList.add("lagra-ok");setTimeout(()=>felt.classList.remove("lagra-ok"),1800)}
+    if(d.passord&&document.activeElement!=f.elements.passord){f.elements.passord.value=""}
+    if(d.token&&document.activeElement!=f.elements.token){f.elements.token.value=""}
+    $("ipw").textContent=r.har_passord?"(lagra)":"(ikkje sett)";$("itok").textContent=r.har_token?"(lagra)":"(ikkje sett)"}
+  catch(err){lsVis("✗ Ikkje lagra: "+err.message+" – rett feltet, så blir det lagra.","feil");if(felt)felt.classList.add("lagra-feil")}
+  lsKoyrer=false;if(lsIgjen){lsIgjen=false;autoLagre()}}
+(function(){const f=$("iform");
+  f.addEventListener("input",e=>{const el=e.target;if(!el.name||el.type=="password")return;
+    lsVis("Endra – lagrar …","var");clearTimeout(lsTimer);lsTimer=setTimeout(()=>autoLagre(el),700)});
+  f.addEventListener("change",e=>{const el=e.target;if(!el.name)return;clearTimeout(lsTimer);autoLagre(el)})})();
+async function startPaaNytt(){try{const d=lsData();d.omstart=true;await post("api/innstillingar",d);lsVis("Lagra – startar på nytt …","ok");set("imeld","Lagra – startar på nytt …","ok")}
+  catch(err){lsVis("✗ Ikkje lagra: "+err.message,"feil");set("imeld",err.message,"feil")}}
+async function lagreInnst(e){e.preventDefault();startPaaNytt()}
+
+// ---------- com0com ----------
+let C0=null;
+const c0cSig=c=>JSON.stringify([c.installert,(c.par||[]).map(p=>[p.geoscan,p.onevision])]);
+async function hentCom0com(){try{C0=await api("api/com0com")}catch(e){C0=null}return C0}
+function com0comLinje(){const e=$("ic0c");if(!e)return;const c=C0;
+  if(!c||!c.stotta){e.textContent="ikkje aktuelt på denne maskina";return}
+  e.innerHTML=!c.installert?'<b class="feil">ikkje installert</b>':c.par.length?'<b class="ok">installert</b> – '+c.par.map(p=>esc(p.geoscan)+" ↔ "+esc(p.onevision)).join(", "):'<b class="var">installert, men utan portpar</b>'}
+function c0cBanner(){const c=C0,vis=c&&c.stotta&&!c.demo&&(!c.installert||!c.par.length);$("c0cbanner").style.display=vis?"block":"none";
+  if(vis)$("c0cbtekst").textContent=!c.installert?"com0com er ikkje installert. Utan han får ikkje OneVision retta posisjon frå Snowman Geoscan.":"com0com er installert, men det finst ikkje noko portpar."}
+function c0cInnhald(){const c=C0;let h="";
+  if(!c.installert){h=`<h2 style="font-size:20px">Installer com0com</h2>
+    <p>Snowman Geoscan og OneVision kan ikkje bruke same COM-port. <b>com0com</b> lagar ein <b>virtuell kabel</b> – to portar som er kopla saman inne i PC-en:
+    Snowman Geoscan skriv på den eine (t.d. COM34), og OneVision les den andre (t.d. COM24). Han er ikkje installert på denne PC-en.</p>
+    <ol><li>Last ned <b>com0com-2.2.2.0-x64-fre-signed.zip</b> (den <b>signerte</b> – andre blir stoppa av Windows 11): <a href="${esc(c.nedlasting)}" target="_blank" rel="noopener">${esc(c.nedlasting)}</a></li>
+    <li>Pakk ut og køyr <b>setup.exe som administrator</b>. Svar «Ja» når Windows spør.</li>
+    <li>Opne «Setup for com0com». Gi endane namna <b>COM34</b> og <b>COM24</b>, kryss av for <i>use Ports class</i>, la <i>emulate baud rate</i> stå av, og trykk <i>Apply</i>.</li>
+    <li>Trykk «Sjekk på nytt» her. Snowman Geoscan foreslår då kva ende som skal brukast.</li></ol>
+    <p class="hj">Stoppar Windows drivaren (Kjerneisolering / Minneintegritet), seg ifrå til Hans Petter. Testen kan likevel gjerast: OneVision les R12i over Bluetooth som før,
+    og Snowman Geoscan loggar hellinga – objekta blir då retta etterpå under Resultat. <a href="${esc(c.rettleiing)}" target="_blank" rel="noopener">Heile rettleiinga</a></p>`}
+  else{const f=c.forslag;h=`<h2 style="font-size:20px">com0com er installert ✓</h2>
+    <p>com0com er ein <b>virtuell kabel</b>: det som blir skrive på den eine porten, kjem ut på den andre. Snowman Geoscan skriv den retta posisjonen på éin ende, og OneVision les den andre.</p>
+    ${c.par.length?c.par.map(p=>`<div class="c0cpar">Par ${p.n}: <b>${esc(p.geoscan)}</b> ↔ <b>${esc(p.onevision)}</b></div>`).join(""):'<p class="feil">Men det finst ikkje noko portpar. Opne «Setup for com0com» og lag eitt (t.d. COM34 ↔ COM24).</p>'}
+    ${f?`<p>Slik skal det vere:</p><ul><li><b>Snowman Geoscan</b> → Innstillingar → «Til OneVision»: <b>${esc(f.geoscan)}</b>${c.onevision_port==f.geoscan?' <span class="ok">✓ er valt</span>':' <span class="var">(ikkje valt enno)</span>'}</li>
+      <li><b>OneVision</b> → GPS-port: <b>${esc(f.onevision)}</b>, same oppsett som før.</li></ul>
+      ${c.onevision_port!=f.geoscan?`<button class="b" onclick="brukCom0com('${esc(f.geoscan)}')">Bruk ${esc(f.geoscan)} til OneVision</button>`:""}`:""}
+    <p class="hj" style="margin-top:10px">Stopp NMEA-splitteren og Trimble Access før start – berre eitt program kan ha ein port open. Viser Status «ingen les porten», er ikkje OneVision kopla til ${f?esc(f.onevision):"den andre enden"}.</p>`}
+  if((c.atvaringar||[]).length)h+=`<div class="k" style="border-color:var(--var);background:var(--kort2)">${c.atvaringar.map(a=>"⚠ "+esc(a)).join("<br>")}</div>`;
+  $("c0cinnhald").innerHTML=h}
+async function visCom0com(alltid){await hentCom0com();c0cBanner();com0comLinje();const c=C0;
+  if(!c||!c.stotta){if(alltid){$("c0cinnhald").innerHTML='<h2>com0com</h2><p>Gjeld berre Windows-PC-en der OneVision køyrer.</p>';$("c0c").style.display="flex"}return}
+  if(!alltid&&(c.demo||(c.installert&&c.skjult==c0cSig(c))))return;
+  c0cInnhald();$("c0cskjulw").style.display=c.installert?"":"none";$("c0c").style.display="flex"}
+async function lukkCom0com(){$("c0c").style.display="none";
+  if(C0&&C0.installert&&$("c0cskjul").checked){try{await post("api/com0com/skjul",{sig:c0cSig(C0)});C0.skjult=c0cSig(C0)}catch(e){}}}
+async function brukCom0com(port){await lastInnst();$("iform").elements.onevision.value=port;await autoLagre($("iform").elements.onevision);
+  await hentCom0com();c0cInnhald();com0comLinje()}
 
 startOkt();
 </script>

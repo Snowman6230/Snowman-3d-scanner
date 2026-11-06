@@ -621,3 +621,79 @@ def test_utgang_berre_valde_setningar(monkeypatch):
     for l in ("$GPGGA,1*00", "$GPRMC,1*00", "$INGGA,2*00", "$PTNL,AVR,1*00"):
         u.send(l)
     assert [d.decode()[:6] for d in p.d] == ["$GPGGA", "$INGGA"]
+
+
+def test_com0com_finn_par_og_forslag():
+    import com0com as C
+    portar = [("COM23", "Trimble USB", "USB VID:PID=1234:5678"),
+              ("COM34", "com0com - serial port emulator CNCA0 (COM34)", "COM0COM\\PORT\\CNCA0"),
+              ("COM24", "com0com - serial port emulator CNCB0 (COM24)", "COM0COM\\PORT\\CNCB0")]
+    st = C.status({"ut_seriell": [{"port": "COM34"}]}, portar=portar, setupc_tekst="", windows=True, teneste=True)
+    assert st["installert"] and st["par"] == [{"n": 0, "geoscan": "COM34", "onevision": "COM24", "emubr": False}]
+    assert st["forslag"] == {"geoscan": "COM34", "onevision": "COM24"} and not st["atvaringar"]
+    # brukaren har valt B-enden til Geoscan → OneVision skal lese A-enden
+    st = C.status({"ut_seriell": [{"port": "COM24"}]}, portar=portar, setupc_tekst="", windows=True, teneste=True)
+    assert st["forslag"] == {"geoscan": "COM24", "onevision": "COM34"}
+    # feil port valt, og setupc seier EmuBR=yes
+    st = C.status({"ut_seriell": [{"port": "COM5"}]}, portar=portar, windows=True, teneste=True,
+                  setupc_tekst="       CNCA0 PortName=COM34,EmuBR=yes\n       CNCB0 PortName=COM24\n")
+    assert any("ikkje ein com0com-port" in a for a in st["atvaringar"])
+    assert any("emulate baud rate" in a for a in st["atvaringar"])
+
+
+def test_com0com_ikkje_installert_og_utan_par():
+    import com0com as C
+    st = C.status({}, portar=[("COM23", "Trimble USB", "USB")], setupc_tekst="", windows=True, teneste=False)
+    assert st["stotta"] and st["installert"] is False and st["par"] == [] and "sourceforge" in st["nedlasting"]
+    st = C.status({}, portar=[], setupc_tekst="", windows=True, teneste=True)
+    assert st["installert"] and any("ikkje noko portpar" in a for a in st["atvaringar"])
+    assert C.status({}, windows=False)["stotta"] is False
+    par, emu = C.les_setupc("       CNCA1 PortName=COM40\n       CNCB1 PortName=-\n")
+    assert par == {1: {"A": "COM40", "B": "CNCB1"}} and emu == {}
+
+
+def test_innstillingar_autolagring_utan_omstart(tmp_path, monkeypatch):
+    """Autolagring skriv fila og gir tidspunkt tilbake, men startar ikkje Geoscan på nytt."""
+    import json as _json
+    import threading as _t
+    import urllib.request as _u
+    import innstillingar as INN
+    import webtenar as W
+    for mod in (INN, W):
+        monkeypatch.setattr(mod, "HER", tmp_path)
+    cfgp = tmp_path / "geoscan_config.json"
+    cfgp.write_text("{}")
+    app = G.App(dict(G.STANDARD, inn=[], ut_seriell=[], tcp_port=None, status_port=0,
+                     logg=str(tmp_path / "logg"), ntrip={"pa": False}), cfgp)
+    srv = W.start(app, 0)
+    port = srv.server_address[1]
+
+    def post(url, d):
+        r = _u.Request(f"http://127.0.0.1:{port}{url}", data=_json.dumps(d).encode(), headers={"Content-Type": "application/json"})
+        return _json.loads(_u.urlopen(r).read())
+    try:
+        d = dict(INN.hent(cfgp, {}), mottakar="COM23", onevision="COM34", mast="1,8", hogre="-0,6", omstart=False)
+        r = post("/api/innstillingar", d)
+        assert r["ok"] and r["lagra"] and r["fil"] == "geoscan_config.json"
+        assert app.oppd["omstart"] is False
+        c = _json.loads(cfgp.read_text())
+        assert c["spakarm"]["opp"] == 1.8 and c["spakarm"]["hogre"] == -0.6
+        assert c["ut_seriell"][0] == {"port": "COM34", "baud": 115200, "setningar": ["GGA"]}
+        assert INN.hent(cfgp, c)["lagra_tid"] == r["lagra"]
+        h = _json.loads(_u.urlopen(f"http://127.0.0.1:{port}/api/innstillingar").read())
+        assert h["onevision"] == "COM34" and h["mast"] == 1.8     # sida viser det lagra, ikkje det gamle i minnet
+        post("/api/com0com/skjul", {"sig": "[true,[]]"})
+        assert _json.loads(cfgp.read_text())["skjul_com0com"] == "[true,[]]"
+        assert _json.loads(cfgp.read_text())["spakarm"]["opp"] == 1.8      # andre innstillingar står urørt
+        st = _json.loads(_u.urlopen(f"http://127.0.0.1:{port}/api/com0com").read())
+        assert "stotta" in st and st["skjult"] == "[true,[]]"
+        # eitt ugyldig felt: resten blir lagra, det ugyldige beheld gammal verdi og blir meldt tilbake
+        r = post("/api/innstillingar", dict(d, mast="abc", fram="0,25", mottakar=""))
+        c = _json.loads(cfgp.read_text())
+        assert set(r["feil"]) == {"mast", "mottakar"} and "behalden" in r["feil"]["mast"]
+        assert c["spakarm"] == {"fram": 0.25, "hogre": -0.6, "opp": 1.8} and c["inn"][0]["port"] == "COM23"
+        d["omstart"] = True
+        post("/api/innstillingar", d)
+        assert app.oppd["omstart"] is True
+    finally:
+        srv.shutdown()

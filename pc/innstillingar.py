@@ -2,6 +2,7 @@
 """Innstillingar frå nettlesaren: les og skriv geoscan_config.json og ntrip_lokal.json (innlogging).
 Passordet blir aldri sendt til nettlesaren – berre om det finst. Tomt passordfelt = behald det gamle."""
 import json
+import time
 from pathlib import Path
 
 HER = Path(__file__).resolve().parent
@@ -51,8 +52,17 @@ def hent(cfg_path, cfg):
         "mountpoint": n.get("mountpoint", ""), "brukar": n.get("brukar", ""), "har_passord": bool(n.get("passord")),
         "rtcm_til": n.get("rtcm_til") or "", "ntrip_versjon": str(n.get("versjon", "auto")),
         "demo": bool(cfg.get("demo")), "porter": porter(), "config_fil": Path(cfg_path).name,
+        "lagra_tid": lagra_tid(cfg_path),
         "har_token": bool(_read(HER / "oppdatering_lokal.json").get("token")),
     }
+
+
+def lagra_tid(cfg_path):
+    """Når innstillingsfila sist vart skriven («2026-11-06 18:52:07»), så brukaren kan sjå at det er lagra."""
+    try:
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(Path(cfg_path).stat().st_mtime))
+    except OSError:
+        return None
 
 
 def _f(v, lo, hi, name):
@@ -65,35 +75,58 @@ def _f(v, lo, hi, name):
     return x
 
 
-def lagre(cfg_path, d):
-    """Skriv innstillingane. Kastar ValueError med ei forståeleg melding ved ugyldige verdiar."""
+def lagre(cfg_path, d, streng=True):
+    """Skriv innstillingane.
+    streng=True («Start på nytt»): kastar ValueError ved første ugyldige verdi, og ingenting blir lagra.
+    streng=False (autolagring): alt som er gyldig blir lagra. Ugyldige felt beheld den gamle verdien og kjem
+    tilbake i lagre.feil ({feltnamn: melding}), så sida kan vise kva som ikkje vart lagra."""
     cfg_path = Path(cfg_path)
     cfg = _read(cfg_path)
-    if not str(d.get("mottakar", "")).strip():
-        raise ValueError("vel porten til mottakaren")
-    inn = [{"port": str(d["mottakar"]).strip(), "baud": int(d.get("mottakar_baud") or 115200)}]
+    feil = {}
+    lagre.feil = feil
+
+    def tal(felt, lo, hi, namn, gammal):
+        try:
+            return _f(d.get(felt, gammal), lo, hi, namn)
+        except ValueError as e:
+            if streng:
+                raise
+            feil[felt] = f"{e} – den gamle verdien ({str(gammal).replace('.', ',')}) er behalden"
+            return gammal
+
+    mottakar = str(d.get("mottakar", "")).strip()
+    if not mottakar:
+        if streng:
+            raise ValueError("vel porten til mottakaren")
+        feil["mottakar"] = "vel porten til mottakaren (resten er lagra)"
+    inn = [{"port": mottakar, "baud": int(d.get("mottakar_baud") or 115200)}] if mottakar else []
     if str(d.get("imu", "")).strip():
         inn.append({"port": str(d["imu"]).strip(), "baud": int(d.get("imu_baud") or 115200)})
-    cfg["inn"] = inn
+    if inn or streng:
+        cfg["inn"] = inn
     ov = str(d.get("onevision", "")).strip()
     # OneVision les berre GGA (StringFilter GGA i .svy, Kagholvegen 2022), så berre GGA blir sendt dit.
     cfg["ut_seriell"] = [{"port": ov, "baud": 115200, "setningar": ["GGA"]}] if ov else []
-    cfg["tcp_port"] = int(_f(d.get("tcp_port", 5000), 1, 65535, "TCP-port"))
-    cfg["spakarm"] = {"fram": _f(d.get("fram", 0), -3, 3, "fram"), "hogre": _f(d.get("hogre", 0), -3, 3, "høgre"),
-                      "opp": _f(d.get("mast", 1.8), 0, 5, "mastehøgd")}
+    cfg["tcp_port"] = int(tal("tcp_port", 1, 65535, "TCP-port", cfg.get("tcp_port", 5000)))
+    gs = cfg.get("spakarm") or {}
+    cfg["spakarm"] = {"fram": tal("fram", -3, 3, "fram", gs.get("fram", 0.0)),
+                      "hogre": tal("hogre", -3, 3, "høgre", gs.get("hogre", 0.0)),
+                      "opp": tal("mast", 0, 5, "mastehøgd", gs.get("opp", 1.8))}
     cfg["mottakar_kompenserer"] = bool(d.get("mottakar_kompenserer"))
-    if d.get("utgang") not in ("rett_antenne", "referansepunkt"):
+    if d.get("utgang") in ("rett_antenne", "referansepunkt"):
+        cfg["utgang"] = d["utgang"]
+    elif streng:
         raise ValueError("ukjend utgang")
-    cfg["utgang"] = d["utgang"]
-    cfg["djupn_sanntid"] = _f(d.get("djupn_sanntid", 0), 0, 20, "djupn i sanntid")
-    cfg["radar_djupn"] = _f(d.get("radar_djupn", 2.5), 0.5, 30, "djupast georadaren skannar")
-    if str(d.get("sone")) not in ("32", "33", "35", "auto"):
+    cfg["djupn_sanntid"] = tal("djupn_sanntid", 0, 20, "djupn i sanntid", cfg.get("djupn_sanntid", 0.0))
+    cfg["radar_djupn"] = tal("radar_djupn", 0.5, 30, "djupast georadaren skannar", cfg.get("radar_djupn", 2.5))
+    if str(d.get("sone")) in ("32", "33", "35", "auto"):
+        cfg["sone"] = str(d["sone"])
+    elif streng:
         raise ValueError("UTM-sone må vere 32, 33, 35 eller auto")
-    cfg["sone"] = str(d["sone"])
     cfg["opptak"] = bool(d.get("opptak"))
     cfg["status_lan"] = bool(d.get("status_lan"))
-    cfg["stamp_null"] = _f(d.get("stamp_null", 0), -20, 20, "stamp null")
-    cfg["krenging_null"] = _f(d.get("krenging_null", 0), -20, 20, "krenging null")
+    cfg["stamp_null"] = tal("stamp_null", -20, 20, "stamp null", cfg.get("stamp_null", 0.0))
+    cfg["krenging_null"] = tal("krenging_null", -20, 20, "krenging null", cfg.get("krenging_null", 0.0))
     cfg["snu_stamp"], cfg["snu_krenging"] = bool(d.get("snu_stamp")), bool(d.get("snu_krenging"))
     n = dict(cfg.get("ntrip") or {})
     n["pa"] = bool(d.get("ntrip_pa"))
@@ -106,7 +139,7 @@ def lagre(cfg_path, d):
         lok = _read(lp)
         for k_ui, k in (("caster", "caster"), ("mountpoint", "mountpoint"), ("brukar", "brukar")):
             lok[k] = str(d.get(k_ui) or "").strip()
-        lok["port"] = int(_f(d.get("ntrip_port", 2101), 1, 65535, "NTRIP-port"))
+        lok["port"] = int(tal("ntrip_port", 1, 65535, "NTRIP-port", lok.get("port", 2101)))
         if d.get("passord"):
             lok["passord"] = str(d["passord"])
         lok.pop("pa", None)            # av/på ligg i geoscan_config.json
@@ -118,4 +151,5 @@ def lagre(cfg_path, d):
         t = _read(tp)
         t["token"] = str(d["token"]).strip()
         tp.write_text(json.dumps(t, indent=2) + "\n", encoding="utf-8")
+    return lagra_tid(cfg_path)
     return cfg
