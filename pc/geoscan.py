@@ -15,6 +15,7 @@ Køyr:  python geoscan.py                      (brukar geoscan_config.json ved s
 import argparse
 import json
 import math
+import re
 import socket
 import sys
 import threading
@@ -27,7 +28,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.8.6"
+VERSJON = "0.8.7"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -199,9 +200,19 @@ class Korrigerar:
 
 
 # ---------- inn og ut ----------
+def portnamn(p):
+    """«25» eller «com25» → «COM25». Andre namn (/dev/ttyUSB0, socket://…) står urørt."""
+    p = str(p or "").strip()
+    if re.fullmatch(r"\d{1,3}", p):
+        return "COM" + p
+    if re.fullmatch(r"(?i)com\d{1,3}", p):
+        return p.upper()
+    return p
+
+
 def open_port(spec, write_timeout=None):
     import serial  # pyserial
-    url = spec["port"]
+    url = portnamn(spec["port"])
     return serial.serial_for_url(url, baudrate=int(spec.get("baud", 115200)), timeout=1,
                                  write_timeout=write_timeout)
 

@@ -2,6 +2,15 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.7 – 6. november 2026
+Etter første køyring på PC-en (skjermbilete 6.11 kl. 22.35):
+- **«Lag portpar no»:** com0com var installert, men utan portpar. Knappen i com0com-vindauget lagar no paret
+  sjølv (COM34 ↔ COM24, eller neste ledige) med `setupc install` som administrator – Windows spør om løyve – og
+  set «Til OneVision» til Geoscan-enden.
+- **Portnamn blir retta:** «25» vart prøvd opna som fila «25». No blir «25» og «com25» til «COM25», både når
+  innstillingane blir lagra og når porten blir opna.
+- NTRIP 401: meldinga nemner no Trimble Access (same konto på to einingar) og kvar passordet blir sett.
+
 ## 0.8.6 – 6. november 2026
 - **Vel bakgrunnskart i Resultat:** ny meny med fargekart og gråtonekart (Kartverket), flyfoto (Esri World
   Imagery) og OpenStreetMap. Flyfoto viser kantsteinar, kummar og asfaltkantar, som hjelper når ein skal finne att

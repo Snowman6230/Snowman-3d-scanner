@@ -179,6 +179,15 @@ def start(app, port=8088, lan=False):
                     Path(app.cfg_path).write_text(json.dumps(cfgf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
                     app.cfg["kartlag"] = v
                     return self._send({"ok": True, "lagra": INN.lagra_tid(app.cfg_path)})
+                if path == "/api/com0com/lag":
+                    import com0com as C0
+                    pa, pb = C0.lag_par()
+                    # Geoscan skriv på A-enden: set «Til OneVision» med ein gong (lagra i fila, gjeld etter omstart)
+                    cfgf = INN._read(app.cfg_path)
+                    gml = (cfgf.get("ut_seriell") or [{}])[0] if cfgf.get("ut_seriell") else {}
+                    cfgf["ut_seriell"] = [dict(gml, port=pa, baud=gml.get("baud", 115200), setningar=["GGA"])]
+                    Path(app.cfg_path).write_text(json.dumps(cfgf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                    return self._send({"ok": True, "geoscan": pa, "onevision": pb, "lagra": INN.lagra_tid(app.cfg_path)})
                 if path == "/api/com0com/skjul":
                     sig = str(json.loads(self._body() or b"{}").get("sig", ""))[:500]
                     cfgf = json.loads(Path(app.cfg_path).read_text(encoding="utf-8")) if Path(app.cfg_path).exists() else {}
@@ -238,7 +247,7 @@ def start(app, port=8088, lan=False):
                                        int(dagar) if str(dagar or "").isdigit() else None, app.snapshot())
                     return self._send({"ok": True, "fil": zp.name, "mb": round(zp.stat().st_size / 1048576, 1)})
                 return self._err("finst ikkje", 404)
-            except ValueError as e:
+            except (ValueError, RuntimeError) as e:
                 return self._err(str(e))
             except Exception as e:
                 return self._err(f"{type(e).__name__}: {e}", 500)

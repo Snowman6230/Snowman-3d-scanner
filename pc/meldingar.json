@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-06-portpar",
+   "dato": "2026-11-06",
+   "versjon": "0.8.7",
+   "tittel": "Portpar med eitt klikk, og «25» blir COM25",
+   "tekst": "Eg såg skjermbiletet frå første køyring. Tre ting:\n\n1. com0com er installert, men utan portpar. Trykk «Kva gjer eg?» i den raude stripa og så «Lag portpar no». Windows spør om løyve – svar «Ja». Snowman Geoscan lagar då COM34 ↔ COM24 og vel COM34 til OneVision. Vel COM24 i OneVision.\n2. «Til OneVision» stod som «25». Det blir no automatisk til COM25, men etter punkt 1 skal det vere COM34.\n3. NTRIP svarar 401 (ikkje godkjent). Sjekk brukarnamn og passord under Innstillingar → NTRIP. Er Trimble Access kopla til casteren med same konto, må han lukkast – kontoen kan berre vere i bruk på éi eining om gongen. Utan NTRIP blir det berre GPS-fix, ikkje RTK.\n\nTrykk «Start på nytt no – bruk endringane» under Innstillingar etterpå.",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-06-onevision-svar-6",
    "dato": "2026-11-06",
    "versjon": "0.8.6",

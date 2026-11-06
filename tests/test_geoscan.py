@@ -730,3 +730,22 @@ def test_kartlag_blir_lagra(tmp_path, monkeypatch):
             pass
     finally:
         srv.shutdown()
+
+
+def test_portnamn_blir_retta():
+    import innstillingar as INN
+    assert G.portnamn("25") == "COM25" and G.portnamn(" com3 ") == "COM3" and G.portnamn("COM34") == "COM34"
+    assert G.portnamn("/dev/ttyUSB0") == "/dev/ttyUSB0" and G.portnamn("socket://x:1") == "socket://x:1"
+    assert INN._port("25") == "COM25" and INN._port("com24") == "COM24" and INN._port("") == ""
+
+
+def test_com0com_lag_par_kommando_og_ledige_portar():
+    import com0com as C
+    assert C.ledig_par(["COM3", "COM23"]) == ("COM34", "COM24")
+    assert C.ledig_par(["COM34"]) == ("COM35", "COM25")
+    k = C.lag_par_kommando(r"C:\Program Files (x86)\com0com\setupc.exe", "COM34", "COM24")
+    assert k[0] == "powershell" and "-Verb RunAs" in k[-1] and "install PortName=COM34 PortName=COM24" in k[-1]
+    assert "-WorkingDirectory 'C:\\Program Files (x86)\\com0com'" in k[-1]
+    import pytest
+    with pytest.raises(ValueError):
+        C.lag_par_kommando("setupc.exe", "COM34; rm", "COM24")

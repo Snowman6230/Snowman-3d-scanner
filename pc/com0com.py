@@ -125,3 +125,48 @@ def status(cfg=None, portar=None, setupc_tekst=None, windows=None, teneste=None)
         forslag = {"geoscan": g, "onevision": o}
     return {"stotta": True, "installert": installert, "par": liste, "forslag": forslag, "onevision_port": ut,
             "atvaringar": atv, "nedlasting": NEDLASTING, "rettleiing": RETTLEIING}
+
+
+def ledig_par(brukte, onske=(("COM34", "COM24"), ("COM35", "COM25"), ("COM36", "COM26"), ("COM44", "COM45"))):
+    """Første par der ingen av endane er i bruk. brukte: COM-namn som finst frå før."""
+    b = {x.upper() for x in brukte}
+    for a, c in onske:
+        if a not in b and c not in b:
+            return a, c
+    n = 50
+    while f"COM{n}" in b or f"COM{n + 1}" in b:
+        n += 2
+    return f"COM{n}", f"COM{n + 1}"
+
+
+def lag_par_kommando(setupc, a, b):
+    """PowerShell-kommando som køyrer «setupc install PortName=A PortName=B» som administrator.
+    Windows spør om løyve (UAC). setupc må køyrast frå si eiga mappe (der .inf-fila ligg)."""
+    for x in (a, b):
+        if not re.fullmatch(r"COM\d{1,3}", x):
+            raise ValueError(f"ugyldig portnamn: {x}")
+    exe = str(setupc).replace("'", "''")
+    import ntpath
+    mappe = ntpath.dirname(str(setupc)).replace("'", "''")        # Windows-sti, òg når testane køyrer på Linux
+    ps = (f"$p = Start-Process -FilePath '{exe}' -ArgumentList 'install PortName={a} PortName={b}' "
+          f"-WorkingDirectory '{mappe}' -Verb RunAs -Wait -PassThru; exit $p.ExitCode")
+    return ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps]
+
+
+def lag_par(a=None, b=None):
+    """Lagar eit com0com-par (Windows spør om administratorløyve). Gir (a, b) tilbake, eller kastar RuntimeError."""
+    if os.name != "nt":
+        raise RuntimeError("berre på Windows")
+    exe = _setupc()
+    if not exe:
+        raise RuntimeError("fann ikkje setupc.exe – er com0com installert? (venta i Program Files\\com0com)")
+    if not (a and b):
+        a, b = ledig_par([p[0] for p in _portar()])
+    try:
+        r = subprocess.run(lag_par_kommando(exe, a, b), capture_output=True, text=True, timeout=180,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("Windows-dialogen vart ikkje svara på innan 3 minutt")
+    if r.returncode != 0:
+        raise RuntimeError("paret vart ikkje laga (sa du nei i Windows-dialogen?) " + (r.stderr or "").strip()[:200])
+    return a, b

@@ -171,7 +171,8 @@ def _open(host, port, mp, user, pw, version, ver, gga):
             raise NtripError("Casteren svarte ikkje på førespurnaden", "proto")
         if "401" in first:
             raise NtripError(f"NTRIP svar: {first} – feil brukarnamn/passord, kontoen har ikkje tilgang til "
-                             f"mountpointet, eller kontoen er i bruk på ei anna eining", "auth")
+                             f"mountpointet, eller kontoen er i bruk på ei anna eining (t.d. Trimble Access). Sjekk "
+                             f"brukarnamn og passord under Innstillingar → NTRIP, og lukk Trimble Access", "auth")
         if "404" in first:
             raise NtripError(f"NTRIP svar: {first} – mountpointet finst ikkje (sjekk stavinga, store/små bokstavar)", "mount")
         if " 200" not in " " + first:

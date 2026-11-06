@@ -65,6 +65,15 @@ def lagra_tid(cfg_path):
         return None
 
 
+def _port(v):
+    """«25» → «COM25», «com3» → «COM3». Tom → ""."""
+    import re
+    p = str(v or "").strip()
+    if re.fullmatch(r"\d{1,3}", p):
+        return "COM" + p
+    return p.upper() if re.fullmatch(r"(?i)com\d{1,3}", p) else p
+
+
 def _f(v, lo, hi, name):
     try:
         x = float(str(v).replace(",", "."))
@@ -94,17 +103,17 @@ def lagre(cfg_path, d, streng=True):
             feil[felt] = f"{e} – den gamle verdien ({str(gammal).replace('.', ',')}) er behalden"
             return gammal
 
-    mottakar = str(d.get("mottakar", "")).strip()
+    mottakar = _port(d.get("mottakar"))
     if not mottakar:
         if streng:
             raise ValueError("vel porten til mottakaren")
         feil["mottakar"] = "vel porten til mottakaren (resten er lagra)"
     inn = [{"port": mottakar, "baud": int(d.get("mottakar_baud") or 115200)}] if mottakar else []
-    if str(d.get("imu", "")).strip():
-        inn.append({"port": str(d["imu"]).strip(), "baud": int(d.get("imu_baud") or 115200)})
+    if _port(d.get("imu")):
+        inn.append({"port": _port(d["imu"]), "baud": int(d.get("imu_baud") or 115200)})
     if inn or streng:
         cfg["inn"] = inn
-    ov = str(d.get("onevision", "")).strip()
+    ov = _port(d.get("onevision"))
     # OneVision les berre GGA (StringFilter GGA i .svy, Kagholvegen 2022), så berre GGA blir sendt dit.
     cfg["ut_seriell"] = [{"port": ov, "baud": 115200, "setningar": ["GGA"]}] if ov else []
     cfg["tcp_port"] = int(tal("tcp_port", 1, 65535, "TCP-port", cfg.get("tcp_port", 5000)))

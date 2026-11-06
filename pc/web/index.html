@@ -996,7 +996,10 @@ function c0cInnhald(){const c=C0;let h="";
     og Snowman Geoscan loggar hellinga – objekta blir då retta etterpå under Resultat. <a href="${esc(c.rettleiing)}" target="_blank" rel="noopener">Heile rettleiinga</a></p>`}
   else{const f=c.forslag;h=`<h2 style="font-size:20px">com0com er installert ✓</h2>
     <p>com0com er ein <b>virtuell kabel</b>: det som blir skrive på den eine porten, kjem ut på den andre. Snowman Geoscan skriv den retta posisjonen på éin ende, og OneVision les den andre.</p>
-    ${c.par.length?c.par.map(p=>`<div class="c0cpar">Par ${p.n}: <b>${esc(p.geoscan)}</b> ↔ <b>${esc(p.onevision)}</b></div>`).join(""):'<p class="feil">Men det finst ikkje noko portpar. Opne «Setup for com0com» og lag eitt (t.d. COM34 ↔ COM24).</p>'}
+    ${c.par.length?c.par.map(p=>`<div class="c0cpar">Par ${p.n}: <b>${esc(p.geoscan)}</b> ↔ <b>${esc(p.onevision)}</b></div>`).join(""):`<p class="feil">Men det finst ikkje noko portpar enno.</p>
+      <p>Trykk knappen, så lagar Snowman Geoscan paret (t.d. COM34 ↔ COM24) og vel det til OneVision. <b>Windows spør om løyve – svar «Ja».</b></p>
+      <button class="b" id="c0clag" onclick="lagCom0comPar()">Lag portpar no</button> <span class="melding" id="c0clagmeld"></span>
+      <p class="hj">Eller for hand: opne «Setup for com0com», lag eit par og gi endane namna COM34 og COM24.</p>`}
     ${f?`<p>Slik skal det vere:</p><ul><li><b>Snowman Geoscan</b> → Innstillingar → «Til OneVision»: <b>${esc(f.geoscan)}</b>${c.onevision_port==f.geoscan?' <span class="ok">✓ er valt</span>':' <span class="var">(ikkje valt enno)</span>'}</li>
       <li><b>OneVision</b> → GPS-port: <b>${esc(f.onevision)}</b>, same oppsett som før.</li></ul>
       ${c.onevision_port!=f.geoscan?`<button class="b" onclick="brukCom0com('${esc(f.geoscan)}')">Bruk ${esc(f.geoscan)} til OneVision</button>`:""}`:""}
@@ -1009,6 +1012,11 @@ async function visCom0com(alltid){await hentCom0com();c0cBanner();com0comLinje()
   c0cInnhald();$("c0cskjulw").style.display=c.installert?"":"none";$("c0c").style.display="flex"}
 async function lukkCom0com(){$("c0c").style.display="none";
   if(C0&&C0.installert&&$("c0cskjul").checked){try{await post("api/com0com/skjul",{sig:c0cSig(C0)});C0.skjult=c0cSig(C0)}catch(e){}}}
+async function lagCom0comPar(){$("c0clag").disabled=true;set("c0clagmeld","Ventar på Windows-dialogen – svar «Ja» …","var");
+  try{const r=await post("api/com0com/lag",{});await hentCom0com();c0cBanner();com0comLinje();c0cInnhald();
+    if(innst)await lastInnst();
+    $("c0cinnhald").insertAdjacentHTML("afterbegin",`<p class="ok"><b>✓ Paret ${esc(r.geoscan)} ↔ ${esc(r.onevision)} er laga.</b> «Til OneVision» er sett til ${esc(r.geoscan)} (lagra kl. ${klokke(r.lagra)}). Vel ${esc(r.onevision)} i OneVision, og trykk «Start på nytt no» under Innstillingar.</p>`)}
+  catch(e){set("c0clagmeld","✗ "+e.message,"feil");$("c0clag").disabled=false}}
 async function brukCom0com(port){await lastInnst();$("iform").elements.onevision.value=port;await autoLagre($("iform").elements.onevision);
   await hentCom0com();c0cInnhald();com0comLinje()}
 
