@@ -13,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 HER = Path(__file__).resolve().parent
+KARTLAG = ("topo", "graatone", "flyfoto", "osm")    # bakgrunnskart i Resultat-fana
 WEB = HER / "web"
 MAKS_OPPLASTING = 500 * 1024 * 1024
 
@@ -85,6 +86,8 @@ def start(app, port=8088, lan=False):
                     # Les fila, ikkje berre minnet: autolagra endringar gjeld først etter omstart, men skal synast
                     # (og ikkje bli skrivne over) når sida blir opna på nytt.
                     return self._send(INN.hent(app.cfg_path, dict(app.cfg, **INN._read(app.cfg_path))))
+                if path == "/api/kartlag":
+                    return self._send({"kartlag": INN._read(app.cfg_path).get("kartlag") or app.cfg.get("kartlag", "topo")})
                 if path == "/api/com0com":
                     import com0com as C0
                     st = C0.status(json.loads(Path(app.cfg_path).read_text(encoding="utf-8"))
@@ -167,6 +170,15 @@ def start(app, port=8088, lan=False):
                     return self._send({"ok": True, "lagra": t, "fil": Path(app.cfg_path).name, "feil": INN.lagre.feil,
                                        "har_passord": bool(INN._read(INN.HER / "ntrip_lokal.json").get("passord")),
                                        "har_token": bool(INN._read(INN.HER / "oppdatering_lokal.json").get("token"))})
+                if path == "/api/kartlag":
+                    v = str(json.loads(self._body() or b"{}").get("kartlag", ""))
+                    if v not in KARTLAG:
+                        raise ValueError("ukjent kart")
+                    cfgf = INN._read(app.cfg_path)
+                    cfgf["kartlag"] = v
+                    Path(app.cfg_path).write_text(json.dumps(cfgf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                    app.cfg["kartlag"] = v
+                    return self._send({"ok": True, "lagra": INN.lagra_tid(app.cfg_path)})
                 if path == "/api/com0com/skjul":
                     sig = str(json.loads(self._body() or b"{}").get("sig", ""))[:500]
                     cfgf = json.loads(Path(app.cfg_path).read_text(encoding="utf-8")) if Path(app.cfg_path).exists() else {}

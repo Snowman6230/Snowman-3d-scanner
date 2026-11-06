@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.6 – 6. november 2026
+- **Vel bakgrunnskart i Resultat:** ny meny med fargekart og gråtonekart (Kartverket), flyfoto (Esri World
+  Imagery) og OpenStreetMap. Flyfoto viser kantsteinar, kummar og asfaltkantar, som hjelper når ein skal finne att
+  røyr. Valet blir lagra i `geoscan_config.json` («kartlag»), og «✓ lagra» blir vist ved menyen. Same kart kjem
+  opp neste gong. Knappen «Gråtonekart/Fargekart» er erstatta av menyen.
+
 ## 0.8.5 – 6. november 2026
 - **com0com-sjekk ved oppstart (Windows).** Ny `pc/com0com.py` finn ut om com0com er installert og kva portpar som
   finst (portlista frå Windows, `setupc list` og registeret).

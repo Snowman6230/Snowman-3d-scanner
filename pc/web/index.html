@@ -151,7 +151,13 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
       <span><button class="b gra" id="tbtn" onclick="startTverr()" style="display:none">✚ Tverrsnitt</button>
       <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
-      <button class="b gra" id="kbtn" onclick="bytKart()">Gråtonekart</button></span></div>
+      <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Kart:
+        <select id="kartlag" onchange="velKartlag(this.value)" style="width:auto">
+          <option value="topo">Fargekart (Kartverket)</option>
+          <option value="graatone">Gråtonekart (Kartverket)</option>
+          <option value="flyfoto">Flyfoto (Esri)</option>
+          <option value="osm">OpenStreetMap</option></select>
+        <span id="kartlagmeld" class="ok"></span></label></span></div>
     <div id="grav" class="k" style="display:none;background:var(--kort2);margin:0 0 10px;padding:10px 12px">
       <div class="verktoy" style="gap:12px">
         <b>Grav nedover:</b>
@@ -164,7 +170,7 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
         lyser opp, det som ligg grunnare blir blekt, og det som ligg djupare er enno skjult.</div>
     </div>
     <div id="kart"></div>
-    <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet frå Kartverket kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel.</div>
+    <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel. Prøv eit anna kart i menyen.</div>
     <div class="forkl">
       <span><i style="background:#3ecf74"></i>helling under 1°</span><span><i style="background:#c6d83a"></i>1–3°</span>
       <span><i style="background:#f2b33d"></i>3–6°</span><span><i style="background:#ef5b5b"></i>over 6°</span>
@@ -488,16 +494,25 @@ async function lestMelding(id){try{await post("api/melding-lest",{id})}catch(e){
 lastMeldingar();
 
 // ---------- resultat: kart ----------
-let kart=null,grunn=null,grunnGra=false,lagSpor=null,lagObj=null;
+let kart=null,grunn=null,kartlag="topo",lagSpor=null,lagObj=null;
 const KV="https://cache.kartverket.no/v1/wmts/1.0.0/";
+// Bakgrunnskart. Valet blir lagra i geoscan_config.json («kartlag») og gjeld neste gong òg.
+const KARTLAG={
+  topo:{url:KV+"topo/default/webmercator/{z}/{y}/{x}.png",nat:18,att:"© Kartverket"},
+  graatone:{url:KV+"topograatone/default/webmercator/{z}/{y}/{x}.png",nat:18,att:"© Kartverket"},
+  flyfoto:{url:"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",nat:19,
+    att:"Flyfoto © Esri, Maxar, Earthstar Geographics og GIS User Community"},
+  osm:{url:"https://tile.openstreetmap.org/{z}/{x}/{y}.png",nat:19,att:"© OpenStreetMap-bidragsytarar"}};
 function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView([62.39,6.58],12);
   setGrunn();lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
-  L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt())}
-function setGrunn(){if(grunn)kart.removeLayer(grunn);
-  grunn=L.tileLayer(KV+(grunnGra?"topograatone":"topo")+"/default/webmercator/{z}/{y}/{x}.png",
-   {maxZoom:22,maxNativeZoom:18,attribution:"© Kartverket"}).addTo(kart);
-  let feil=0;grunn.on("tileerror",()=>{if(++feil>3)$("kartfeil").style.display="block"});grunn.on("tileload",()=>{feil=0;$("kartfeil").style.display="none"});$("kbtn").textContent=grunnGra?"Fargekart":"Gråtonekart"}
-function bytKart(){grunnGra=!grunnGra;setGrunn()}
+  L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt());
+  api("api/kartlag").then(r=>{if(KARTLAG[r.kartlag]&&r.kartlag!=kartlag){kartlag=r.kartlag;setGrunn()}$("kartlag").value=kartlag}).catch(()=>{})}
+function setGrunn(){if(grunn)kart.removeLayer(grunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
+  grunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(kart);grunn.bringToBack();
+  let feil=0;grunn.on("tileerror",()=>{if(++feil>3)$("kartfeil").style.display="block"});grunn.on("tileload",()=>{feil=0;$("kartfeil").style.display="none"})}
+async function velKartlag(v){if(!KARTLAG[v])return;kartlag=v;if(kart)setGrunn();set("kartlagmeld","Lagrar …","var");
+  try{const r=await post("api/kartlag",{kartlag:v});set("kartlagmeld","✓ lagra","ok");setTimeout(()=>set("kartlagmeld",""),4000)}
+  catch(e){set("kartlagmeld","✗ ikkje lagra","feil")}}
 const farge=(t,k)=>!k?"#6b7780":t<1?"#3ecf74":t<3?"#c6d83a":t<6?"#f2b33d":"#ef5b5b";
 let visteSpor=null;
 async function visSpor(fil){initKart();lagSpor.clearLayers();visteSpor=fil;lagreOkt();let p;try{p=await api("api/spor?fil="+encodeURIComponent(fil))}catch(e){return}

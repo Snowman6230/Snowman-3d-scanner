@@ -697,3 +697,36 @@ def test_innstillingar_autolagring_utan_omstart(tmp_path, monkeypatch):
         assert app.oppd["omstart"] is True
     finally:
         srv.shutdown()
+
+
+def test_kartlag_blir_lagra(tmp_path, monkeypatch):
+    import json as _json
+    import urllib.error as _ue
+    import urllib.request as _u
+    import innstillingar as INN
+    import webtenar as W
+    for mod in (INN, W):
+        monkeypatch.setattr(mod, "HER", tmp_path)
+    cfgp = tmp_path / "geoscan_config.json"
+    cfgp.write_text(_json.dumps({"spakarm": {"opp": 1.8}}))
+    app = G.App(dict(G.STANDARD, inn=[], ut_seriell=[], tcp_port=None, status_port=0,
+                     logg=str(tmp_path / "logg"), ntrip={"pa": False}), cfgp)
+    srv = W.start(app, 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def post(d):
+        r = _u.Request(base + "/api/kartlag", data=_json.dumps(d).encode(), headers={"Content-Type": "application/json"})
+        return _json.loads(_u.urlopen(r).read())
+    try:
+        assert _json.loads(_u.urlopen(base + "/api/kartlag").read())["kartlag"] == "topo"
+        assert post({"kartlag": "flyfoto"})["ok"]
+        assert _json.loads(_u.urlopen(base + "/api/kartlag").read())["kartlag"] == "flyfoto"
+        c = _json.loads(cfgp.read_text())
+        assert c["kartlag"] == "flyfoto" and c["spakarm"]["opp"] == 1.8       # andre innstillingar står urørt
+        try:
+            post({"kartlag": "tull"})
+            assert False
+        except _ue.HTTPError:
+            pass
+    finally:
+        srv.shutdown()
