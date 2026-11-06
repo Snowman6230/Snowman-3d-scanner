@@ -29,6 +29,9 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
 2. Start **Snowman Geoscan** frå skrivebordet og gå til fana **Innstillingar**:
    - **Mottakar:** porten til R12i, til dømes COM23 (USB). Lista viser portane PC-en finn.
    - **Til OneVision:** com0com-porten, til dømes COM34. OneVision les den andre enden, COM24.
+     Berre GGA blir sendt dit (OneVision les berre GGA). **Stopp NMEA-splitteren (PowerShell) og Trimble Access**
+     før Geoscan startar: berre eitt program kan ha COM23 og COM34 opne. Viser statussida «ingen les porten»,
+     er ikkje OneVision kopla til COM24 – Geoscan held fram, men linjene til OneVision blir kasta.
    - **Mastehøgd:** mål frå merket for antennehøgd ned til underkanten av radaren.
    - **NTRIP:** caster, port, mountpoint, brukarnamn og passord. Passordet blir berre lagra på PC-en.
    - **R12i rettar masta sjølv:** kryss av når tilt er på i R12i og stanghøgda er sett lik mastehøgda.

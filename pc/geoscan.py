@@ -27,11 +27,11 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.8.2"
+VERSJON = "0.8.3"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
-    "ut_seriell": [{"port": "COM34", "baud": 115200}],
+    "ut_seriell": [{"port": "COM34", "baud": 115200, "setningar": ["GGA"]}],
     "tcp_port": 5000,
     "spakarm": {"fram": 0.0, "hogre": -0.60, "opp": 1.80},   # målt på vogna 6.11.2026 (Norman): GPS 0,6 m til venstre, 1,8 m opp
     "utgang": "rett_antenne",
@@ -198,15 +198,19 @@ class Korrigerar:
 
 
 # ---------- inn og ut ----------
-def open_port(spec):
+def open_port(spec, write_timeout=None):
     import serial  # pyserial
     url = spec["port"]
-    return serial.serial_for_url(url, baudrate=int(spec.get("baud", 115200)), timeout=1)
+    return serial.serial_for_url(url, baudrate=int(spec.get("baud", 115200)), timeout=1,
+                                 write_timeout=write_timeout)
+
+
+UT_SKRIVETID = 0.2    # s. Les ikkje OneVision (lukka, heng), blir linja kasta i staden for at alt stoppar.
 
 
 class Utgangar:
     def __init__(self, cfg):
-        self.ports = [{"spec": s, "p": None, "feil": ""} for s in cfg.get("ut_seriell") or []]
+        self.ports = [{"spec": s, "p": None, "feil": "", "kasta": 0} for s in cfg.get("ut_seriell") or []]
         self.clients, self.lock = [], threading.Lock()
         if cfg.get("tcp_port"):
             threading.Thread(target=self._tcp, args=(int(cfg["tcp_port"]),), daemon=True).start()
@@ -225,12 +229,25 @@ class Utgangar:
     def send(self, line):
         data = (line + "\r\n").encode("ascii", "replace")
         for o in self.ports:
+            # «setningar»: send berre desse til porten, t.d. ["GGA"] til OneVision (les berre GGA). Tom = alt.
+            berre = o["spec"].get("setningar")
+            if berre and not (line.startswith("$") and line[3:6] in berre):
+                continue
             try:
                 if o["p"] is None:
-                    o["p"] = open_port(o["spec"])
+                    o["p"] = open_port(o["spec"], UT_SKRIVETID)
                     o["feil"] = ""
                 o["p"].write(data)
-            except Exception as e:  # porten forsvann (com0com, USB) – prøv på nytt ved neste linje
+                if o["kasta"] and o["feil"]:
+                    o["feil"] = ""
+            except Exception as e:
+                if type(e).__name__ == "SerialTimeoutException":
+                    # Porten er open, men ingen les (OneVision lukka eller heng). Kast linja og hald fram –
+                    # elles stoppar heile Geoscan (logg, NTRIP-GGA, status) medan vi ventar.
+                    o["kasta"] += 1
+                    o["feil"] = f"ingen les porten – {o['kasta']} linjer kasta (er OneVision opna på andre enden?)"
+                    continue
+                # porten forsvann (com0com, USB) – prøv på nytt ved neste linje
                 o["feil"] = str(e)
                 try:
                     o["p"] and o["p"].close()
@@ -385,7 +402,7 @@ class App:
             d25 = round(rd * math.sin(t) * 100, 1)
         return {"korr": k, "ntrip": n, "inn": dict(self.state),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
-                "ut": [{"port": o["spec"]["port"], "feil": o["feil"]} for o in self.ut.ports],
+                "ut": [{"port": o["spec"]["port"], "feil": o["feil"], "kasta": o["kasta"]} for o in self.ut.ports],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25, "radar_djupn": rd,
                 "namn": NAMN, "produsent": PRODUSENT, "signatur": SIGNATUR,
                 "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}

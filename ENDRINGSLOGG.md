@@ -2,6 +2,16 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.3 – 6. november 2026
+- **Geoscan heng ikkje lenger om OneVision ikkje les com0com-porten.** Skrivinga til OneVision-porten hadde
+  ingen tidsgrense. Var OneVision lukka, hekk eller ikkje kopla til COM24, kunne bufferen bli full og heile
+  Geoscan stoppe (logg, GGA til NTRIP, status). No er grensa 0,2 s: linja blir kasta, teljaren «kasta» aukar, og
+  statussida viser «ingen les porten».
+- **Berre GGA til OneVision** (`"setningar": ["GGA"]` på utgangen). OneVision les berre GGA (StringFilter GGA),
+  så mindre trafikk og ingen køyring av RMC/GLL/GGK/GSV gjennom porten. Gjeld når OneVision-porten blir lagra
+  under Innstillingar.
+- Brukarrettleiinga: stopp NMEA-splitteren og Trimble Access før start.
+
 ## 0.8.2 – 6. november 2026
 - **«Send inn» oppdatert til testen:** spørsmåla viser no det som er avklart (mast 1,80, GPS 0,6 m til venstre)
   så Norman kan stadfeste det, og nye spørsmål om kompasset i radaren og om radardata er lagde ved.

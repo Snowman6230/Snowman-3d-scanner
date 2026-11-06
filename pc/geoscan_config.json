@@ -8,7 +8,10 @@
   "ut_seriell": [
     {
       "port": "COM34",
-      "baud": 115200
+      "baud": 115200,
+      "setningar": [
+        "GGA"
+      ]
     }
   ],
   "tcp_port": 5000,

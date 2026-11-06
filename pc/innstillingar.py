@@ -76,7 +76,8 @@ def lagre(cfg_path, d):
         inn.append({"port": str(d["imu"]).strip(), "baud": int(d.get("imu_baud") or 115200)})
     cfg["inn"] = inn
     ov = str(d.get("onevision", "")).strip()
-    cfg["ut_seriell"] = [{"port": ov, "baud": 115200}] if ov else []
+    # OneVision les berre GGA (StringFilter GGA i .svy, Kagholvegen 2022), så berre GGA blir sendt dit.
+    cfg["ut_seriell"] = [{"port": ov, "baud": 115200, "setningar": ["GGA"]}] if ov else []
     cfg["tcp_port"] = int(_f(d.get("tcp_port", 5000), 1, 65535, "TCP-port"))
     cfg["spakarm"] = {"fram": _f(d.get("fram", 0), -3, 3, "fram"), "hogre": _f(d.get("hogre", 0), -3, 3, "høgre"),
                       "opp": _f(d.get("mast", 1.8), 0, 5, "mastehøgd")}

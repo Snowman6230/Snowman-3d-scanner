@@ -586,3 +586,38 @@ def test_svy_objekt_les_onevision_targets(tmp_path):
     ut = tmp_path / "o.geojson"
     S.main([str(p), str(ut)])
     assert len(json.loads(ut.read_text(encoding="utf-8"))["features"]) == 2
+
+
+def test_utgang_heng_ikkje_naar_onevision_ikkje_les(monkeypatch):
+    """Les ingen den andre enden av com0com-paret, skal linja kastast, ikkje stoppe Geoscan."""
+    import serial
+    import time as _t
+
+    class Full:
+        def __init__(self): self.n = 0
+        def write(self, d):
+            self.n += 1
+            raise serial.SerialTimeoutException("Write timeout")
+        def close(self): pass
+    full, opna = Full(), []
+    monkeypatch.setattr(G, "open_port", lambda spec, wt=None: (opna.append(wt), full)[1])
+    u = G.Utgangar({"ut_seriell": [{"port": "COM34"}]})
+    t0 = _t.time()
+    for _ in range(5):
+        u.send("$GPGGA,094016.70,6223.8710022,N,00634.9919464,E,4,20,0.60,14.594,M,45.01,M,01,2769*52")
+    assert _t.time() - t0 < 1 and full.n == 5 and u.ports[0]["kasta"] == 5
+    assert opna == [G.UT_SKRIVETID]                  # opna éin gong, med skrivetidsgrense, ikkje lukka/opna på nytt
+    assert "ingen les" in u.ports[0]["feil"]
+
+
+def test_utgang_berre_valde_setningar(monkeypatch):
+    class P:
+        def __init__(self): self.d = []
+        def write(self, d): self.d.append(d)
+        def close(self): pass
+    p = P()
+    monkeypatch.setattr(G, "open_port", lambda spec, wt=None: p)
+    u = G.Utgangar({"ut_seriell": [{"port": "COM34", "setningar": ["GGA"]}]})
+    for l in ("$GPGGA,1*00", "$GPRMC,1*00", "$INGGA,2*00", "$PTNL,AVR,1*00"):
+        u.send(l)
+    assert [d.decode()[:6] for d in p.d] == ["$GPGGA", "$INGGA"]
