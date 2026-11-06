@@ -11,6 +11,7 @@ rekne RTK (og tilt) sjølv, så han må få korreksjonane.
 Innlogginga ligg i pc/ntrip_lokal.json, som aldri blir lagt i git (sjå .gitignore).
 """
 import json
+import socket
 import threading
 import time
 from pathlib import Path
@@ -90,7 +91,12 @@ class NtripTeneste:
                 self._wait(60 if e.code in ("auth", "mount") else 10)   # feil passord: ikkje hamre på casteren
                 continue
             except OSError as e:
-                st.update(tilstand="feil", melding=f"casteren svarar ikkje ({e})")
+                if isinstance(e, socket.gaierror) or "getaddrinfo" in str(e):
+                    m = (f"fann ikkje casteren «{c['caster']}» ({e}). Sjekk adressa under Innstillingar → NTRIP "
+                         "(berre namn eller IP-adresse, utan http:// og utan :port), og at PC-en har internett")
+                else:
+                    m = f"casteren svarar ikkje ({e})"
+                st.update(tilstand="feil", melding=m)
                 self._wait(10)
                 continue
             st.update(tilstand="tilkopla", melding="", protokoll=s.proto, tilkoplingar=st["tilkoplingar"] + 1)

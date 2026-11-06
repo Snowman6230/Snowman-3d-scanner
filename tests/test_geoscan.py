@@ -768,3 +768,16 @@ def test_com0com_finn_par_i_registeret_utan_ports_klasse():
                   windows=True, teneste=True, register=[C.par_fra_serialcomm(sc)])
     assert st["par"] == [{"n": 0, "geoscan": "COM44", "onevision": "COM45", "emubr": False}]
     assert st["forslag"] == {"geoscan": "COM44", "onevision": "COM45"} and not st["atvaringar"]
+
+
+def test_casteradresse_blir_reinska(tmp_path, monkeypatch):
+    import json as _json
+    import innstillingar as INN
+    monkeypatch.setattr(INN, "HER", tmp_path)
+    cfgp = tmp_path / "geoscan_config.json"
+    cfgp.write_text("{}")
+    d = dict(INN.hent(cfgp, {}), mottakar="COM3", ntrip_pa=True, caster=" http://caster.eksempel.no:2102/TH ",
+             mountpoint="", brukar="x", passord="y")
+    INN.lagre(cfgp, d)
+    lok = _json.loads((tmp_path / "ntrip_lokal.json").read_text())
+    assert lok["caster"] == "caster.eksempel.no" and lok["port"] == 2102 and lok["mountpoint"] == "TH"

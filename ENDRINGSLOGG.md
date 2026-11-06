@@ -2,6 +2,13 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.10 – 6. november 2026
+- **NTRIP-adressa blir reinska:** «http://caster.no:2101/TH» blir lagra som caster «caster.no», port 2101 og
+  mountpoint TH. Køyring 6.11 kl. 23.04 gav «getaddrinfo failed» (namnet på casteren vart ikkje funne).
+- Meldinga ved slik feil seier no kva som skal sjekkast: adressa (berre namn eller IP, utan http:// og port) og
+  internett.
+- Køyringa stadfesta òg at Geoscan ikkje heng når OneVision ikkje les COM34 («ingen les porten – 287 linjer kasta»).
+
 ## 0.8.9 – 6. november 2026
 - **com0com-para blir funne i registeret.** På PC-en vart paret COM44 ↔ COM45 laga, men Geoscan sa framleis
   «ikkje noko portpar»: com0com-portar utan «use Ports class» er ikkje med i portlista frå pyserial. Geoscan les no

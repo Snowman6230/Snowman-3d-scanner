@@ -148,6 +148,15 @@ def lagre(cfg_path, d, streng=True):
         lok = _read(lp)
         for k_ui, k in (("caster", "caster"), ("mountpoint", "mountpoint"), ("brukar", "brukar")):
             lok[k] = str(d.get(k_ui) or "").strip()
+        # Casteradressa: «http://caster.no:2101/TH» → «caster.no» (port og mountpoint blir tekne ut om dei står der)
+        import re
+        m = re.match(r"^(?:[a-z]+://)?([^/:\s]+)(?::(\d+))?(?:/([^\s]*))?$", lok["caster"], re.I)
+        if m:
+            lok["caster"] = m.group(1)
+            if m.group(2):
+                d["ntrip_port"] = m.group(2)
+            if m.group(3) and not lok["mountpoint"]:
+                lok["mountpoint"] = m.group(3).strip("/")
         lok["port"] = int(tal("ntrip_port", 1, 65535, "NTRIP-port", lok.get("port", 2101)))
         if d.get("passord"):
             lok["passord"] = str(d["passord"])
