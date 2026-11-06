@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.9 – 6. november 2026
+- **com0com-para blir funne i registeret.** På PC-en vart paret COM44 ↔ COM45 laga, men Geoscan sa framleis
+  «ikkje noko portpar»: com0com-portar utan «use Ports class» er ikkje med i portlista frå pyserial. Geoscan les no
+  òg `HARDWARE\DEVICEMAP\SERIALCOMM` (\Device\com0com1n = A-enden, com0com2n = B-enden) og
+  `Enum\COM0COM\PORT\…\PortName`. «Lag portpar» unngår òg namn som alt er i SERIALCOMM.
+
 ## 0.8.8 – 6. november 2026
 - «Lag portpar no» unngår no portnamn som Windows har reservert (ComDB, «in use» i COM port database), til dømes
   COM24 etter eit tidlegare com0com-par. Første køyring stoppa på dialogen «The port name COM24 is already logged as

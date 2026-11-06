@@ -628,14 +628,14 @@ def test_com0com_finn_par_og_forslag():
     portar = [("COM23", "Trimble USB", "USB VID:PID=1234:5678"),
               ("COM34", "com0com - serial port emulator CNCA0 (COM34)", "COM0COM\\PORT\\CNCA0"),
               ("COM24", "com0com - serial port emulator CNCB0 (COM24)", "COM0COM\\PORT\\CNCB0")]
-    st = C.status({"ut_seriell": [{"port": "COM34"}]}, portar=portar, setupc_tekst="", windows=True, teneste=True)
+    st = C.status({"ut_seriell": [{"port": "COM34"}]}, portar=portar, setupc_tekst="", windows=True, teneste=True, register=[])
     assert st["installert"] and st["par"] == [{"n": 0, "geoscan": "COM34", "onevision": "COM24", "emubr": False}]
     assert st["forslag"] == {"geoscan": "COM34", "onevision": "COM24"} and not st["atvaringar"]
     # brukaren har valt B-enden til Geoscan → OneVision skal lese A-enden
-    st = C.status({"ut_seriell": [{"port": "COM24"}]}, portar=portar, setupc_tekst="", windows=True, teneste=True)
+    st = C.status({"ut_seriell": [{"port": "COM24"}]}, portar=portar, setupc_tekst="", windows=True, teneste=True, register=[])
     assert st["forslag"] == {"geoscan": "COM24", "onevision": "COM34"}
     # feil port valt, og setupc seier EmuBR=yes
-    st = C.status({"ut_seriell": [{"port": "COM5"}]}, portar=portar, windows=True, teneste=True,
+    st = C.status({"ut_seriell": [{"port": "COM5"}]}, portar=portar, windows=True, teneste=True, register=[],
                   setupc_tekst="       CNCA0 PortName=COM34,EmuBR=yes\n       CNCB0 PortName=COM24\n")
     assert any("ikkje ein com0com-port" in a for a in st["atvaringar"])
     assert any("emulate baud rate" in a for a in st["atvaringar"])
@@ -643,9 +643,9 @@ def test_com0com_finn_par_og_forslag():
 
 def test_com0com_ikkje_installert_og_utan_par():
     import com0com as C
-    st = C.status({}, portar=[("COM23", "Trimble USB", "USB")], setupc_tekst="", windows=True, teneste=False)
+    st = C.status({}, portar=[("COM23", "Trimble USB", "USB")], setupc_tekst="", windows=True, teneste=False, register=[])
     assert st["stotta"] and st["installert"] is False and st["par"] == [] and "sourceforge" in st["nedlasting"]
-    st = C.status({}, portar=[], setupc_tekst="", windows=True, teneste=True)
+    st = C.status({}, portar=[], setupc_tekst="", windows=True, teneste=True, register=[])
     assert st["installert"] and any("ikkje noko portpar" in a for a in st["atvaringar"])
     assert C.status({}, windows=False)["stotta"] is False
     par, emu = C.les_setupc("       CNCA1 PortName=COM40\n       CNCB1 PortName=-\n")
@@ -757,3 +757,14 @@ def test_comdb_reserverte_namn_blir_unngatt():
     assert brukte == {"COM3", "COM32", "COM34"}
     assert C.ledig_par(["COM3"] + sorted(brukte)) == ("COM35", "COM25")
     assert C.comdb_brukte(bytes([0, 0, 0b10000000])) == {"COM24"}                  # bit 23 = COM24
+
+
+def test_com0com_finn_par_i_registeret_utan_ports_klasse():
+    """Første køyring 6.11: paret COM44 ↔ COM45 fanst, men var ikkje i portlista frå pyserial."""
+    import com0com as C
+    sc = {r"\Device\BthModem0": "COM4", r"\Device\com0com10": "COM44", r"\Device\com0com20": "COM45"}
+    assert C.par_fra_serialcomm(sc) == {0: {"A": "COM44", "B": "COM45"}}
+    st = C.status({"ut_seriell": [{"port": "COM44"}]}, portar=[("COM3", "Seriell USB-enhet", "USB")], setupc_tekst="",
+                  windows=True, teneste=True, register=[C.par_fra_serialcomm(sc)])
+    assert st["par"] == [{"n": 0, "geoscan": "COM44", "onevision": "COM45", "emubr": False}]
+    assert st["forslag"] == {"geoscan": "COM44", "onevision": "COM45"} and not st["atvaringar"]

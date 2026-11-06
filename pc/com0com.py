@@ -70,6 +70,67 @@ def _teneste_finst():
         return False
 
 
+def par_fra_serialcomm(verdiar):
+    """HARDWARE\\DEVICEMAP\\SERIALCOMM: {"\\Device\\com0com10": "COM44", "\\Device\\com0com20": "COM45"}.
+    com0com-einingane heiter com0com1<n> (A-enden, CNCA<n>) og com0com2<n> (B-enden, CNCB<n>)."""
+    par = {}
+    for namn, port in (verdiar or {}).items():
+        m = re.search(r"com0com([12])(\d+)$", str(namn), re.I)
+        if m and port:
+            par.setdefault(int(m.group(2)), {})["A" if m.group(1) == "1" else "B"] = str(port)
+    return par
+
+
+def _serialcomm():
+    """Aktive serieportar frå registeret. Treng ikkje administrator, og tek med com0com-portar som ikkje ligg i
+    Ports-klassen (då viser ikkje pyserial dei)."""
+    try:
+        import winreg
+        k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DEVICEMAP\SERIALCOMM")
+        ut, i = {}, 0
+        while True:
+            try:
+                n, v, _ = winreg.EnumValue(k, i)
+            except OSError:
+                break
+            ut[n] = v
+            i += 1
+        winreg.CloseKey(k)
+        return ut
+    except Exception:
+        return {}
+
+
+def _enum_par():
+    """Fallback: SYSTEM\\CurrentControlSet\\Enum\\COM0COM\\PORT\\CNCA0\\Device Parameters\\PortName."""
+    par = {}
+    try:
+        import winreg
+        rot = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Enum\COM0COM\PORT")
+        i = 0
+        while True:
+            try:
+                inst = winreg.EnumKey(rot, i)
+            except OSError:
+                break
+            i += 1
+            m = _ENDE.search(inst)
+            if not m:
+                continue
+            try:
+                k = winreg.OpenKey(rot, inst + r"\Device Parameters")
+                namn, _ = winreg.QueryValueEx(k, "PortName")
+                winreg.CloseKey(k)
+            except OSError:
+                continue
+            if namn and namn != "-":
+                par.setdefault(int(m.group(2)), {})[m.group(1).upper()] = namn
+        winreg.CloseKey(rot)
+    except Exception:
+        pass
+    return par
+
+
 def _portar():
     try:
         from serial.tools import list_ports
@@ -78,7 +139,7 @@ def _portar():
         return []
 
 
-def status(cfg=None, portar=None, setupc_tekst=None, windows=None, teneste=None):
+def status(cfg=None, portar=None, setupc_tekst=None, windows=None, teneste=None, register=None):
     """Kva statussida treng: installert, para, kva ende Geoscan og OneVision bør bruke, og åtvaringar.
     Argumenta etter cfg er berre for testar."""
     cfg = cfg or {}
@@ -88,6 +149,12 @@ def status(cfg=None, portar=None, setupc_tekst=None, windows=None, teneste=None)
         return {"stotta": False, "installert": None, "par": [], "onevision_port": ut,
                 "nedlasting": NEDLASTING, "rettleiing": RETTLEIING}
     par = par_fra_portar(_portar() if portar is None else portar)
+    # Registeret (SERIALCOMM og Enum) finn com0com-portar som pyserial ikkje viser (utan «use Ports class»).
+    reg = register if register is not None else [par_fra_serialcomm(_serialcomm()), _enum_par()]
+    for kjelde in reg:
+        for n, ender in kjelde.items():
+            for e, namn in ender.items():
+                par.setdefault(n, {}).setdefault(e, namn)
     emubr = {}
     if setupc_tekst is None:
         exe = _setupc()
@@ -183,7 +250,7 @@ def lag_par(a=None, b=None):
     if not exe:
         raise RuntimeError("fann ikkje setupc.exe – er com0com installert? (venta i Program Files\\com0com)")
     if not (a and b):
-        a, b = ledig_par([p[0] for p in _portar()] + sorted(_comdb()))     # unngå òg namn Windows har reservert
+        a, b = ledig_par([p[0] for p in _portar()] + list(_serialcomm().values()) + sorted(_comdb()))
     try:
         r = subprocess.run(lag_par_kommando(exe, a, b), capture_output=True, text=True, timeout=180,
                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
