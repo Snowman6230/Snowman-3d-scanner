@@ -48,7 +48,8 @@ Fana **Resultat**:
 - **Skanningar:** ei line per gong programmet har vore i gang, med kor mykje vogna hallar. Trykk på ei line for å
   sjå sporet på kartet. Fargen viser hellinga: grøn under 1°, gul 1–3°, oransje 3–6° og raud over 6°.
 - **Rett røyr og kablar:**
-  1. Eksporter objekta frå GRED HD eller OneVision som **GeoJSON** (eller CSV med austing, nording og djupn).
+  1. Eksporter objekta frå GRED HD eller OneVision som **GeoJSON** (eller CSV med austing, nording og djupn),
+     eller vel **målefila frå OneVision (`Survey_….svy`)** direkte – objekta ligg inne i ho.
   2. Trykk **Vel eksportfil …**.
   3. Kartet viser objekta **før** (grå stipla) og **etter** retting (blå). Tabellen viser kor mykje kvart objekt
      er flytta.

@@ -2,6 +2,17 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.1 – 6. november 2026
+- **Objekt rett frå OneVision-målefila (.svy).** OneVision lagrar dei automatisk funne objekta inne i
+  `Survey_….svy` (`<Targets>`), ikkje i ei eksportfil. Nytt `pc/svy_objekt.py` les dei (namn, linje/punkt, E, N,
+  djupn, EPSG) og gjer dei om til GeoJSON. Resultat-fana og `korriger_objekt.py` tek no `.svy` direkte.
+  Formatet er tolka frå Kagholvegen-målinga 29.11.2022 (81 objekt).
+- **Spakarm etter mål på vogna (Norman 6.11):** mastehøgd 1,80 m og GPS-mottakaren 0,6 m til venstre
+  (`spakarm.hogre = −0,60`). Gjeld nye oppsett. Eksisterande `geoscan_config.json` blir ikkje rørt, så set
+  verdiane under Innstillingar.
+- Opne spørsmål oppdaterte: mastehøgd, referansepunkt, eksport, kurs (HDT) og PPS er avklarte. Nye punkt:
+  rette sjølve radarbiletet (plan i `docs/DJUPNESNITT.md`) og kompasset i radaren.
+
 ## 0.8.0 – 5. november 2026
 - **Økter: halde fram der ein slapp.** Alt blir lagra fortløpande i logg/okt.json:
   - fane og kartutsnitt

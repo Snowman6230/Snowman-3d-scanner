@@ -17,6 +17,7 @@ from pathlib import Path
 
 import koordinat as K
 import korriger_objekt as KO
+import svy_objekt as SVY
 import opphav
 
 HER = Path(__file__).resolve().parent
@@ -72,10 +73,12 @@ def spor(path, maks=6000):
 
 # ---------- innlesing av eksport ----------
 def les_objekt(path):
-    """GeoJSON direkte, eller CSV (austing/nording/djupn) gjort om til GeoJSON-punkt med alle kolonnane som eigenskapar."""
+    """GeoJSON direkte, OneVision .svy (objekta i <Targets>), eller CSV (austing/nording/djupn) gjort om til GeoJSON-punkt med alle kolonnane som eigenskapar."""
     path = Path(path)
     if path.suffix.lower() in (".geojson", ".json"):
         return json.loads(path.read_text(encoding="utf-8-sig"))
+    if path.suffix.lower() == ".svy":          # OneVision-målefil: objekta ligg i <Targets>
+        return SVY.svy_til_geojson(path)
     head, rows, _ = KO.read_csv(path)
     ce, cn, cd = (KO.find_col(head, k) for k in "END")
     if None in (ce, cn, cd):

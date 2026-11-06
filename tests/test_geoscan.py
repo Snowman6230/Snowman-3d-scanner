@@ -372,7 +372,8 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         assert len(pr["utm_e"]) == len(pr["djupn_retta_m"]) and abs(pr["utm_e"][0] - pts[0][0]) < 0.5
         hb, ho, d1 = pr["bakke_nn2000_m"][0], pr["hoegd_nn2000_m"][0], pr["djupn_retta_m"][0]
         assert hb is not None and abs(ho - (hb - d1)) < 0.002
-        assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - 1.4)) < 0.05      # simulert antenne − mast
+        # simulert antenne − mast. Toleransen dekkjer sidearmen (0,6 m) i ±6° krenging: 0,6 · sin 6° ≈ 6 cm
+        assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - G.STANDARD["spakarm"]["opp"])) < 0.1
         csvraw = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read()
         assert csvraw.startswith(b"\xef\xbb\xbf")            # BOM, så Excel les æøå og – rett
         csvtxt = csvraw.decode("utf-8-sig")
@@ -546,3 +547,42 @@ def test_avslutt_og_okt_via_api(tmp_path, monkeypatch):
     assert not app.oppd["avslutt"]
     post("api/avslutt")
     assert app.oppd["avslutt"] and app.ntrip.stop.is_set()
+
+
+def _lag_svy(path, epsg=32632):
+    """Ei lita, syntetisk OneVision .svy-fil i same format som Kagholvegen-fila (ingen ekte måledata)."""
+    import base64
+    import struct
+
+    def target(namn, typ, punkt):
+        nb = namn.encode("utf-16le")
+        b = b"<Target>" + struct.pack("<III", 0, typ, len(nb)) + nb + bytes(25)
+        for tvers, langs, e, n, d in punkt:
+            b += struct.pack("<5dII", tvers, langs, e, n, d, 1, 1) + struct.pack("<d", 1e8)
+        return b
+    data = (target("L10032", 2, [(0.4785, 2.2, 375090.15, 6920839.74, 0.811), (0.4785, 2.3, 375090.18, 6920839.83, 0.811)])
+            + target("T10047", 1, [(-0.383, 12.35, 375098.36, 6920846.53, 0.116), (0.383, 12.35, 375097.98, 6920847.21, 0.116)]))
+    xml = (f'<Project SVY="3"><Survey><SpatialReferenceSystem><Projection Name="UTM Zone 32N"><EPSGCode>{epsg}'
+           f'</EPSGCode></Projection></SpatialReferenceSystem><Targets><PropagationVelocity>100000000.00'
+           f'</PropagationVelocity><Data>{base64.b64encode(data).decode()}</Data></Targets></Survey></Project>')
+    path.write_text(xml, encoding="utf-8")
+    return path
+
+
+def test_svy_objekt_les_onevision_targets(tmp_path):
+    import json
+    import svy_objekt as S
+    import korriger_objekt as KO
+    import resultat as R
+    p = _lag_svy(tmp_path / "maaling.svy")
+    gj = S.svy_til_geojson(p)
+    f = gj["features"]
+    assert [x["properties"]["namn"] for x in f] == ["L10032", "T10047"]
+    assert f[0]["properties"]["type"] == "linje" and f[1]["properties"]["type"] == "punkt"
+    assert f[0]["geometry"]["coordinates"][0] == [375090.15, 6920839.74, 0.811]
+    assert f[1]["properties"]["djupn_maks_m"] == 0.116 and f[0]["properties"]["fart_m_ns"] == 0.1
+    assert KO.geojson_zone(gj) == 32                       # sona blir lesen frå crs (EPSG:32632)
+    assert R.les_objekt(p)["features"][0]["properties"]["namn"] == "L10032"   # Resultat-fana tek .svy direkte
+    ut = tmp_path / "o.geojson"
+    S.main([str(p), str(ut)])
+    assert len(json.loads(ut.read_text(encoding="utf-8"))["features"]) == 2

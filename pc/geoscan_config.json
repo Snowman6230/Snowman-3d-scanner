@@ -14,8 +14,8 @@
   "tcp_port": 5000,
   "spakarm": {
     "fram": 0.0,
-    "hogre": 0.0,
-    "opp": 1.4
+    "hogre": -0.6,
+    "opp": 1.8
   },
   "utgang": "rett_antenne",
   "mottakar_kompenserer": true,

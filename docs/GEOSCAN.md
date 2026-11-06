@@ -32,7 +32,7 @@ R12i (tilt på) ─NMEA─► geoscan.py ─► NMEA ─► com0com ─► OneVi
                            ├─► TCP 5000 (andre program)   ├─► statusside http://localhost:8088
                            └─► logg/geoscan_*.csv (posisjon, helling, kurs) + logg/raa_*.nmea (opptak)
                                      │
-GRED HD/OneVision: objekt (GeoJSON/CSV) ─┴─► korriger_objekt.py ─► objekt retta for djupn
+OneVision .svy / GRED HD: objekt (GeoJSON/CSV) ─┴─► korriger_objekt.py ─► objekt retta for djupn
 ```
 
 **Del 1, sanntid (masta):** retta posisjon går til OneVision, éin posisjon per skann.
@@ -145,10 +145,18 @@ python oppdater.py --sjekk               (finst det ein nyare versjon?)
 python geoscan.py --fil opptak.nmea     (spel av eit opptak, skriv retta NMEA til skjermen)
 ```
 
+## Objekt frå OneVision (.svy)
+
+OneVision lagrar dei automatisk funne objekta inne i målefila (`Survey_….svy`, `<Targets>`), ikkje i ei eiga
+eksportfil. `svy_objekt.py` les dei og gjer dei om til GeoJSON (namn, linje/punkt, E, N, djupn, EPSG frå fila).
+Resultat-fana og `korriger_objekt.py` tek `.svy` direkte. Formatet er tolka frå Kagholvegen-målinga 29.11.2022
+(81 objekt) og står i toppen av `svy_objekt.py`.
+
 ## Ikkje avklart
 
-Sjå [OPNE-SPORSMAL.md](OPNE-SPORSMAL.md) for den fullstendige lista.
+Sjå [OPNE-SPORSMAL.md](OPNE-SPORSMAL.md) for den fullstendige lista, og [DJUPNESNITT.md](DJUPNESNITT.md) for
+planen om å rette sjølve radarbiletet.
 
-- Ei ekte eksportfil frå GRED HD/OneVision (GeoJSON er støtta, men berre testa mot eit oppdikta eksempel).
-- Om OneVision brukar heading frå NMEA (HDT) til å leggje skannebeltet, eller berre sporet.
-- Mastehøgda (1,40 eller 1,50 m) og kor langt fram referansepunktet ligg frå masta.
+- RTK FIX (4) ute med R12i og mountpoint TH.
+- Om R12i-IMU-en held justeringa på ei vogn som blir trekt.
+- Ekstra IMU på ramma (for djupnfeilen).

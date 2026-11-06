@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-06-onevision-svar",
+   "dato": "2026-11-06",
+   "versjon": "0.8.1",
+   "tittel": "Takk for svara – objekt rett frå OneVision, ny mastehøgd",
+   "tekst": "Takk for svara og filene frå Kagholvegen. Dette er nytt i 0.8.1:\n\n1. Under Resultat kan du no velje målefila frå OneVision (Survey_….svy) direkte. Objekta ligg inne i ho, så du treng ikkje eksportere noko.\n2. Standard mastehøgd er 1,80 m og GPS-forskyvinga 0,6 m til venstre (høgre = −0,60). Ditt oppsett blir ikkje endra av oppdateringa: gå til Innstillingar og set mast 1,80 og høgre −0,60. Set same stanghøgd (1,80) i R12i.\n3. I OneVision-malen (Stream C.xml) står GPS-høgda som «1,6» med komma, og sideforskyvinga som 0,42. Rett dei til 1.8 og 0,6 m i OneVision.\n\nRette sjølve radarbiletet (djupnesnitta) er neste store steg. Til det treng eg: .data-filene til Swath001 delte i bitar under 5 MB, antennefilene i OneVision\\config\\antennas, eit skjermbilete av eit djupnesnitt frå IQMaps, og kvar kompasset i radaren blir lagra.",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-05-velkomen",
    "dato": "2026-11-05",
    "versjon": "0.7.0",

@@ -127,10 +127,10 @@ svg{display:block;margin:6px auto 0}
   </div>
   <div class="k">
     <h2>2. Rett røyr og kablar frå GRED HD / OneVision</h2>
-    <p class="hj">Eksporter objekta frå GRED HD eller OneVision som <b>GeoJSON</b> (eller CSV med austing, nording og djupn), og
-    vel fila her. Ho blir retta for hellinga og lagra, så utviklaren òg kan sjå henne.</p>
+    <p class="hj">Eksporter objekta frå GRED HD eller OneVision som <b>GeoJSON</b> (eller CSV med austing, nording og djupn), eller
+    vel <b>målefila frå OneVision (.svy)</b> direkte – objekta ligg inne i ho. Vel fila her. Ho blir retta for hellinga og lagra, så utviklaren òg kan sjå henne.</p>
     <div class="verktoy">
-      <label class="b">Vel eksportfil …<input type="file" id="eksport" accept=".geojson,.json,.csv,.txt" style="display:none"></label>
+      <label class="b">Vel eksportfil …<input type="file" id="eksport" accept=".geojson,.json,.svy,.csv,.txt" style="display:none"></label>
       <button class="b gra" id="demoeks" style="display:none" onclick="provEksempel()">Prøv med eksempelfil (DEMO)</button>
       <label style="font-size:13px;color:var(--svak)">z er
         <select id="zmode"><option value="auto">finn ut sjølv</option><option value="djupn">djupn (m under bakken)</option><option value="hoegd">høgd (NN2000)</option></select></label>

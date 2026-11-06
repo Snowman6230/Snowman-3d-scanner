@@ -37,7 +37,7 @@ def hent(cfg_path, cfg):
         "imu_baud": inn[1].get("baud", 115200) if len(inn) > 1 else 115200,
         "onevision": (cfg.get("ut_seriell") or [{}])[0].get("port", "") if cfg.get("ut_seriell") else "",
         "tcp_port": cfg.get("tcp_port", 5000),
-        "mast": s.get("opp", 1.4), "fram": s.get("fram", 0.0), "hogre": s.get("hogre", 0.0),
+        "mast": s.get("opp", 1.8), "fram": s.get("fram", 0.0), "hogre": s.get("hogre", 0.0),
         "mottakar_kompenserer": bool(cfg.get("mottakar_kompenserer")),
         "utgang": cfg.get("utgang", "rett_antenne"),
         "djupn_sanntid": cfg.get("djupn_sanntid", 0.0),
@@ -79,7 +79,7 @@ def lagre(cfg_path, d):
     cfg["ut_seriell"] = [{"port": ov, "baud": 115200}] if ov else []
     cfg["tcp_port"] = int(_f(d.get("tcp_port", 5000), 1, 65535, "TCP-port"))
     cfg["spakarm"] = {"fram": _f(d.get("fram", 0), -3, 3, "fram"), "hogre": _f(d.get("hogre", 0), -3, 3, "høgre"),
-                      "opp": _f(d.get("mast", 1.4), 0, 5, "mastehøgd")}
+                      "opp": _f(d.get("mast", 1.8), 0, 5, "mastehøgd")}
     cfg["mottakar_kompenserer"] = bool(d.get("mottakar_kompenserer"))
     if d.get("utgang") not in ("rett_antenne", "referansepunkt"):
         raise ValueError("ukjend utgang")

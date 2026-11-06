@@ -27,13 +27,13 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.8.0"
+VERSJON = "0.8.1"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
     "ut_seriell": [{"port": "COM34", "baud": 115200}],
     "tcp_port": 5000,
-    "spakarm": {"fram": 0.0, "hogre": 0.0, "opp": 1.40},
+    "spakarm": {"fram": 0.0, "hogre": -0.60, "opp": 1.80},   # målt på vogna 6.11.2026 (Norman): GPS 0,6 m til venstre, 1,8 m opp
     "utgang": "rett_antenne",
     "mottakar_kompenserer": False,
     "djupn_sanntid": 0.0,

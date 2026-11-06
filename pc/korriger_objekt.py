@@ -16,6 +16,9 @@ GeoJSON (eksport frå GRED HD/OneVision, Point/LineString o.l.) blir òg lese: [
 (positiv nedover) eller høgd (NN2000). Sona blir lesen frå «crs» (EPSG 25832/25833/5972/5973 …). Resultatet er same
 GeoJSON med retta koordinatar og eigenskapane «helling_retta» og «helling_maks_endring_cm».
     python korriger_objekt.py --objekt eksport.geojson --logg logg/geoscan_*.csv --ut eksport_retta.geojson
+
+OneVision-målefila (.svy) blir òg lesen: objekta i <Targets> blir gjort om til GeoJSON (sjå svy_objekt.py).
+    python korriger_objekt.py --objekt maaling.svy --logg logg/geoscan_*.csv --ut maaling_retta.geojson
 """
 import argparse
 import csv
@@ -198,8 +201,12 @@ def main(argv=None):
                     help="GeoJSON: er z djupn (positiv nedover) eller høgd (NN2000)? auto: høgd om alle z > 20")
     ap.add_argument("--sone", type=int, help="UTM-sona til objekta (elles frå crs i GeoJSON, eller loggen)")
     a = ap.parse_args(argv)
-    if Path(a.objekt).suffix.lower() in (".geojson", ".json"):
-        gj = json.loads(Path(a.objekt).read_text(encoding="utf-8-sig"))
+    if Path(a.objekt).suffix.lower() in (".geojson", ".json", ".svy"):
+        if Path(a.objekt).suffix.lower() == ".svy":     # OneVision-målefil: objekta ligg i <Targets>
+            import svy_objekt
+            gj = svy_objekt.svy_til_geojson(a.objekt)
+        else:
+            gj = json.loads(Path(a.objekt).read_text(encoding="utf-8-sig"))
         zone = a.sone or geojson_zone(gj)
         logg = Logg(a.logg, zone)
         if not logg.rows:
