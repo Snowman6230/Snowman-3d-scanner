@@ -2,6 +2,11 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.1 – 7. november 2026
+- Vogna på live-kartet følgjer zoomen: omtrent verkeleg storleik (1,6 m frå front til handtak, overslag til
+  vogna er målt), men aldri under 44 eller over 130 pikslar, så ho alltid synest og aldri fyller kartet.
+  I praksis 44 px fram til zoom 21 og ca. 93 px ved største zoom.
+
 ## 0.9.0 – 7. november 2026
 - **Live-kart på Status.** Kartet viser kvar vogna er medan ein skannar, og blir oppdatert kvart sekund.
   - Vogna er teikna som på logoen, sett ovanfrå: raud radarkasse, hjul, handtak bak og GNSS-antenna 0,6 m til
