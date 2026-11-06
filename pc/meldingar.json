@@ -2,11 +2,11 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
-   "id": "2026-11-06-onevision-svar",
+   "id": "2026-11-06-onevision-svar-2",
    "dato": "2026-11-06",
-   "versjon": "0.8.1",
-   "tittel": "Takk for svara – objekt rett frå OneVision, ny mastehøgd",
-   "tekst": "Takk for svara og filene frå Kagholvegen. Dette er nytt i 0.8.1:\n\n1. Under Resultat kan du no velje målefila frå OneVision (Survey_….svy) direkte. Objekta ligg inne i ho, så du treng ikkje eksportere noko.\n2. Standard mastehøgd er 1,80 m og GPS-forskyvinga 0,6 m til venstre (høgre = −0,60). Ditt oppsett blir ikkje endra av oppdateringa: gå til Innstillingar og set mast 1,80 og høgre −0,60. Set same stanghøgd (1,80) i R12i.\n3. I OneVision-malen (Stream C.xml) står GPS-høgda som «1,6» med komma, og sideforskyvinga som 0,42. Rett dei til 1.8 og 0,6 m i OneVision.\n\nRette sjølve radarbiletet (djupnesnitta) er neste store steg. Til det treng eg: .data-filene til Swath001 delte i bitar under 5 MB, antennefilene i OneVision\\config\\antennas, eit skjermbilete av eit djupnesnitt frå IQMaps, og kvar kompasset i radaren blir lagra.",
+   "versjon": "0.8.2",
+   "tittel": "Takk for svara – .svy rett inn, ny mastehøgd og nye spørsmål under «Send inn»",
+   "tekst": "Takk for svara og filene frå Kagholvegen. Dette er nytt:\n\n1. Under Resultat kan du velje målefila frå OneVision (Survey_….svy) direkte. Objekta ligg inne i ho, så du treng ikkje eksportere noko (sjekkpunkt f6).\n2. Standard mastehøgd er 1,80 m og GPS-forskyvinga 0,6 m til venstre (høgre = −0,60). Ditt oppsett blir ikkje endra av oppdateringa: gå til Innstillingar og set mast 1,80 og høgre −0,60, og stanghøgd 1,80 i R12i (sjekkpunkt r4).\n3. I OneVision-malen står GPS-høgda som «1,6» med komma, og sideforskyvinga som 0,42. Rett dei til 1.8 og 0,6 m til venstre i OneVision.\n\nUnder «Send inn» er spørsmåla oppdaterte: stadfest mast og forskyving, og svar på kvar kompasset i radaren blir lagra. Rette sjølve radarbiletet (djupnesnitta) er neste store steg. Legg ved radardata frå éin swath (SwathNNN.path, .index og .data frå IQMaps-mappa), antennefilene i OneVision\\config\\antennas og eit skjermbilete av eit djupnesnitt i IQMaps – vel typen «Radardata». Lag så pakka og send ho til hansps@alpindata.no.",
    "sjekk": {}
   },
   {

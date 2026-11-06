@@ -2,6 +2,14 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.8.2 – 6. november 2026
+- **«Send inn» oppdatert til testen:** spørsmåla viser no det som er avklart (mast 1,80, GPS 0,6 m til venstre)
+  så Norman kan stadfeste det, og nye spørsmål om kompasset i radaren og om radardata er lagde ved.
+  Gamle spørsmål om kurs (HDT) og eksportformat er tekne bort eller endra, sidan dei er avklarte.
+- Ny filtype «Radardata» (.svy, .path, .index, .data, antennefiler) for planen om å rette djupnesnitta.
+- Nye sjekkpunkt: r4 (mast og forskyving lagra i Innstillingar og R12i) og f6 (.svy blir lesen under Resultat).
+- Meldinga til Norman forklarer det nye og kva han skal leggje ved.
+
 ## 0.8.1 – 6. november 2026
 - **Objekt rett frå OneVision-målefila (.svy).** OneVision lagrar dei automatisk funne objekta inne i
   `Survey_….svy` (`<Targets>`), ikkje i ei eksportfil. Nytt `pc/svy_objekt.py` les dei (namn, linje/punkt, E, N,

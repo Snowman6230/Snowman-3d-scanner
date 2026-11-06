@@ -17,26 +17,29 @@ HER = Path(__file__).resolve().parent
 MAKS_FIL = 500 * 1024 * 1024
 
 SPORSMAL = [
-    {"id": "mast", "tekst": "Mastehøgd: frå merket for antennehøgd ned til underkanten av radaren (m)", "type": "tal",
-     "hjelp": "Mål med tommestokk. Forventa ca. 1,40 eller 1,50 m."},
+    # Avklarte 6.11.2026 (sjå docs/OPNE-SPORSMAL.md) – står att så operatøren kan stadfeste eller rette
+    {"id": "mast", "tekst": "Mastehøgd (m). Avklart 6.11: 1,80 m – stemmer det?", "type": "tal",
+     "hjelp": "Skriv 1,80 om det stemmer, elles det rette talet."},
     {"id": "fram", "tekst": "Kor langt framfor masta ligg midten av antennerekkja (m)? Negativt om han ligg bak.",
-     "type": "tal", "hjelp": "Mål langs vogna frå masta til midten av radaren."},
-    {"id": "sida", "tekst": "Står masta midt på vogna sidelengs? Elles: kor mykje til høgre (m, negativt = venstre)",
-     "type": "tal", "hjelp": "0 om ho står midt på."},
-    {"id": "onevision_oppsett", "tekst": "Kva antenneoppsett står i OneVision no (høgd, forskyving fram/side)?",
-     "type": "tekst", "hjelp": "Skriv av tala, eller legg ved eit skjermbilete under."},
+     "type": "tal", "hjelp": "Mål langs vogna frå masta til midten av radaren. 0 om dei står på linje."},
+    {"id": "sida", "tekst": "GPS-mottakaren sidelengs (m, negativt = venstre). Avklart 6.11: −0,60 (0,6 m til venstre sett bakfrå)",
+     "type": "tal", "hjelp": "Skriv −0,60 om det stemmer."},
+    {"id": "onevision_oppsett", "tekst": "Kva GPS-oppsett står i OneVision no (høgd, forskyving fram/side)? Har du retta til 1.8 m og 0,6 m til venstre?",
+     "type": "tekst", "hjelp": "Malen hadde «0.13;0.42;1,6» (komma i 1,6 er feil). Skriv av tala, eller legg ved eit skjermbilete."},
+    # Opne
+    {"id": "kompass", "tekst": "Nordsensoren (kompasset) i radaren: kvar blir kursen lagra, og viser han magnetisk eller sann nord?",
+     "type": "tekst", "hjelp": "Trengst for å rette radarbiletet. Sjå om OneVision viser kurs eller kompass nokon stad."},
     {"id": "imu", "tekst": "Blir det sett på ein ekstra IMU (hellingsmålar) på ramma? Kva modell?", "type": "tekst",
      "hjelp": "Utan han blir masta retta, men ikkje djupna."},
-    {"id": "eksport", "tekst": "Kva eksportformat brukar du frå GRED HD / OneVision (GeoJSON, DXF, SHP, CSV)? Vel du djupn eller høgd?",
-     "type": "tekst", "hjelp": "Legg ved ei ekte eksportfil under."},
-    {"id": "kurs", "tekst": "Brukar OneVision kurs (heading) frå GNSS til å leggje skannebeltet, eller berre sporet?",
-     "type": "tekst", "hjelp": "Står gjerne i GPS-oppsettet i OneVision."},
+    {"id": "eksport", "tekst": "Objekt frå OneVision: les Resultat målefila (Survey_….svy) rett? Brukar du anna eksport (GeoJSON, DXF, SHP, CSV)?",
+     "type": "tekst", "hjelp": "Vel .svy-fila under Resultat. Legg ved .svy-fila under (type «Radardata»)."},
     {"id": "r12i_imu", "tekst": "Held R12i tilt-kompensasjonen seg når vogna blir trekt (støyt, snuing)?", "type": "tekst",
      "hjelp": "Sjå om posisjonen hoppar etter fortauskantar."},
     {"id": "rtk", "tekst": "Fekk du RTK FIX ute? Gjekk RTCM over USB, eller måtte du bruke Bluetooth port 2?", "type": "tekst",
      "hjelp": "Statussida viser fix og NTRIP."},
-    {"id": "djupnesnitt", "tekst": "Kan GRED HD / OneVision eksportere djupnesnitt (time/depth slices) som bilete (GeoTIFF/KMZ) eller rådata?",
-     "type": "tekst", "hjelp": "Då kan Snowman Geoscan vise radarbiletet cm for cm og rette det. Legg gjerne ved ei eksempelfil."},
+    {"id": "djupnesnitt", "tekst": "Radarbiletet (djupnesnitt): har du lagt ved radardata frå ein swath?",
+     "type": "tekst", "hjelp": "Legg ved under (type «Radardata»): SwathNNN.path, .index og .data frå IQMaps-mappa, "
+     "antennefilene i OneVision\\config\\antennas, og eit skjermbilete av eit djupnesnitt frå IQMaps."},
     {"id": "anna", "tekst": "Anna du vil fortelje (feil, ønske, observasjonar)", "type": "langtekst", "hjelp": ""},
 ]
 
@@ -51,7 +54,8 @@ SJEKKLISTE = [
     {"steg": "Steg 2 – R12i innandørs", "punkt": [
         {"id": "r1", "tekst": "Trimble Access er lukka, og mottakarporten (t.d. COM23) står som «open»"},
         {"id": "r2", "tekst": "Fix og satellittar blir viste (DGPS er greitt innandørs)"},
-        {"id": "r3", "tekst": "Posisjonen er fornuftig – rett stad på kartet"}]},
+        {"id": "r3", "tekst": "Posisjonen er fornuftig – rett stad på kartet"},
+        {"id": "r4", "tekst": "Innstillingar: mast 1,80 og høgre −0,60 er lagra, og stanghøgda i R12i er 1,80"}]},
     {"steg": "Steg 3 – NTRIP og RTK ute", "punkt": [
         {"id": "n1", "tekst": "NTRIP står som «tilkopla», og kB-teljaren går"},
         {"id": "n2", "tekst": "RTK FIX ute – skriv om RTCM gjekk over USB eller Bluetooth port 2"},
@@ -61,7 +65,8 @@ SJEKKLISTE = [
         {"id": "f2", "tekst": "OneVision viser «GNSS connection OK» med RTK gjennom com0com (COM24)"},
         {"id": "f3", "tekst": "R12i held tilt-kompensasjonen når vogna blir trekt (ingen hopp etter fortauskantar)"},
         {"id": "f4", "tekst": "Djupn: røyr skanna begge vegar i sidebakke fell saman etter retting (krev ekstra IMU)"},
-        {"id": "f5", "tekst": "Ei ekte eksportfil frå GRED HD/OneVision blir lesen og retta under Resultat"}]},
+        {"id": "f5", "tekst": "Ei ekte eksportfil frå GRED HD/OneVision blir lesen og retta under Resultat"},
+        {"id": "f6", "tekst": "Målefila frå OneVision (Survey_….svy) blir lesen under Resultat, og objekta kjem rett på kartet"}]},
 ]
 STATUS = {"": "ikkje testa", "ok": "godkjent", "delvis": "delvis", "feil": "ikkje godkjent", "irrelevant": "ikkje relevant"}
 
@@ -136,6 +141,7 @@ def melding_lest(mid):
 
 FILTYPAR = {"eksport": "Eksport frå GRED HD / OneVision (GeoJSON, CSV, DXF, SHP-zip)",
             "oppsett": "Oppsettfiler (t.d. SCANNH.xml frå R12i, OneVision-oppsett)",
+            "radardata": "Radardata frå OneVision/IQMaps (.svy, .path, .index, .data, antennefiler)",
             "bilete": "Bilete (vogna, masta, skjermbilete)", "anna": "Anna"}
 
 

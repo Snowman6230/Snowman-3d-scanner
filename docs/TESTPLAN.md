@@ -40,8 +40,8 @@ Skriv ned kva som verka, i `docs/OPNE-SPORSMAL.md` (punkt 7).
 ## Steg 4 – Hellingskorreksjon og OneVision i felt
 
 **4a. Masta, statisk:**
-1. Set stanghøgda i R12i lik mastehøgda (mål ho), og slå på tilt.
-2. Set `"mottakar_kompenserer": true` og `"spakarm": {"opp": <mastehøgda>}`.
+1. Set stanghøgda i R12i lik mastehøgda (1,80 m, målt 6.11.2026), og slå på tilt.
+2. Set `"mottakar_kompenserer": true` og spakarmen under **Innstillingar**: mast 1,80, høgre −0,60 (GPS 0,6 m til venstre).
 3. Still vogna over eit innmålt punkt (spikar). Vipp ho 5–10° til kvar side og framover/bakover.
 
 Godkjent: posisjonen ut skal liggje i ro innan 1–2 cm. Utan tilt i R12i flyttar han seg ca. 2,4 cm per grad.
@@ -54,8 +54,8 @@ Godkjent: OneVision viser «GNSS connection OK» med RTK.
 
 **4c. Djupna (krev ekstra IMU på ramma):**
 1. Skann eit røyr med kjent trasé i ein sidebakke, éin gong i kvar retning.
-2. Eksporter objekta.
-3. Vel eksportfila under **Resultat**.
+2. Eksporter objekta, eller bruk målefila frå OneVision (`Survey_….svy`) direkte.
+3. Vel eksportfila eller `.svy`-fila under **Resultat**.
 
 Godkjent: utan retting ligg dei to sporane 2·(h + d)·sin(helling) frå kvarandre, med retting skal dei falle saman.
 Ta vare på eksportfila: ho er den ekte eksempelfila som manglar (punkt 4).
