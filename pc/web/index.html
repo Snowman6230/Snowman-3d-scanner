@@ -76,6 +76,22 @@ input.lagra-ok,select.lagra-ok{border-color:var(--ok)!important;box-shadow:0 0 0
 input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
 .c0cpar{background:var(--kort2);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:15px}
 .c0cpar b{font-size:17px}
+/* Dagslys: høg kontrast for skjerm ute i sollys. Valet blir lagra i geoscan_config.json («tema»). */
+body.dagslys{--bg:#ffffff;--kort:#f2f4f6;--kort2:#e2e6ea;--linje:#4b5560;--tekst:#000000;--svak:#1b252e;--ok:#006b2b;--var:#8a4600;--feil:#c00000;--blaa:#0043a8;--for:#3b4650;font-size:17px}
+body.dagslys .k{border:2px solid #39434c}
+body.dagslys .v{font-size:40px;font-weight:800}
+body.dagslys .l{font-size:13px;font-weight:800}
+body.dagslys .s,body.dagslys .hj,body.dagslys pre,body.dagslys .forkl,body.dagslys .felt label{font-size:15px;font-weight:600}
+body.dagslys nav button{font-weight:800}body.dagslys nav button.aktiv{border-bottom-width:5px}
+body.dagslys button.b,body.dagslys label.b,body.dagslys a.b{color:#ffffff;border:2px solid #000}
+body.dagslys button.b.gra,body.dagslys label.b.gra,body.dagslys a.b.gra{background:#ffffff;color:#000000;border:2px solid #000}
+body.dagslys input,body.dagslys select,body.dagslys textarea{border:2px solid #39434c;background:#fff;color:#000}
+body.dagslys .demo{background:#c00000;color:#fff}
+body.dagslys .overlay{background:rgba(230,233,236,.9)}
+body.dagslys #kart{background:#e6e9ec}
+body.dagslys .djl{background:#fff;color:#000;border:2px solid #0043a8}
+body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2px}
+#temaknapp{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -86,6 +102,7 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
     <div class="prod" style="margin:0">Alpindata HP Brunstad Sørensen</div></div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
       <span class="hj" id="oktinfo" style="text-align:right"></span>
+      <button class="b gra" id="temaknapp" onclick="bytTema()" title="Byt mellom mørk skjerm og høg kontrast for sollys">☀ Dagslys</button>
       <button class="b gra" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button></div></div>
   <div id="demo" class="banner demo" style="display:none">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
@@ -113,8 +130,8 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
   <div class="rad">
     <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div></div>
     <div class="k"><div class="l">Helling</div><div class="v" id="hell">–</div><div class="s" id="hsrc"></div>
-      <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="#2c3a44" stroke-width="2"/>
-      <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="#3b4b57"/><line x1="0" y1="10" x2="0" y2="-28" stroke="#8a9aa6" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="#e8eef2"/></g></svg></div>
+      <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="var(--linje)" stroke-width="2"/>
+      <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="var(--for)"/><line x1="0" y1="10" x2="0" y2="-28" stroke="var(--svak)" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="var(--tekst)"/></g></svg></div>
     <div class="k"><div class="l">Retting no</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
     <div class="k"><div class="l">NTRIP</div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div></div>
   </div>
@@ -215,7 +232,7 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
     <svg id="tsvg" width="100%" height="280" style="margin-top:8px;background:var(--bg);border-radius:8px"></svg>
     <div class="forkl"><span><i style="background:#8a6a4a"></i>bakken</span>
       <span><i style="background:#4ea8ff;border-radius:50%;width:10px;height:10px"></i>objekt etter retting (storleik = diameter når han er kjend)</span>
-      <span><i style="border:1.5px dashed #e8eef2;background:none;border-radius:50%;width:10px;height:10px"></i>der GRED HD/OneVision la det (før retting)</span></div>
+      <span><i style="border:1.5px dashed var(--tekst);background:none;border-radius:50%;width:10px;height:10px"></i>der GRED HD/OneVision la det (før retting)</span></div>
     <div class="tabell" style="margin-top:8px"><table id="ttab"><thead><tr><th>Objekt</th><th class="n">Frå A (m)</th><th class="n">Djupn etter (m)</th>
       <th class="n">Djupn før (m)</th><th class="n">Flytta langs snittet</th><th class="n">Diameter</th>
       <th class="n">Austing (E)</th><th class="n">Nording (N)</th><th class="n">Høgd NN2000</th></tr></thead><tbody></tbody></table></div>
@@ -247,7 +264,7 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
       <div class="hj" id="pinfo"></div>
       <svg id="psvg" width="100%" height="240" style="margin-top:6px;background:var(--bg);border-radius:8px"></svg>
       <div class="forkl"><span><i style="background:#8a6a4a"></i>bakken</span>
-        <span><i style="background:repeating-linear-gradient(90deg,#e8eef2 0 4px,transparent 4px 8px);height:2px"></i>djupn før retting</span>
+        <span><i style="background:repeating-linear-gradient(90deg,var(--tekst) 0 4px,transparent 4px 8px);height:2px"></i>djupn før retting</span>
         <span><i style="background:#4ea8ff;height:5px"></i>djupn etter retting</span></div>
       <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Koordinatar for alle punkt (til utsetting)</summary>
         <div class="tabell" style="margin-top:6px"><table id="pkt"><thead><tr><th>Punkt</th><th class="n">Austing (E)</th><th class="n">Nording (N)</th>
@@ -530,6 +547,14 @@ let kartlagHenta=null;
 function hentKartlag(){if(!kartlagHenta)kartlagHenta=api("api/kartlag").then(r=>{if(KARTLAG[r.kartlag])kartlag=r.kartlag}).catch(()=>{});
   kartlagHenta.then(()=>{if(kart)setGrunn();setLiveGrunn();document.querySelectorAll(".kartlagval").forEach(e=>e.value=kartlag)})}
 
+// ---------- tema (mørk / dagslys) ----------
+function setTema(t){const d=t=="dagslys";document.body.classList.toggle("dagslys",d);
+  $("temaknapp").textContent=d?"🌙 Mørk":"☀ Dagslys";try{localStorage.setItem("geoscan_tema",t)}catch(e){}}
+async function bytTema(){const t=document.body.classList.contains("dagslys")?"mork":"dagslys";setTema(t);
+  try{await post("api/tema",{tema:t})}catch(e){}}
+try{const t=localStorage.getItem("geoscan_tema");if(t)setTema(t)}catch(e){}
+api("api/tema").then(r=>{if(r.tema)setTema(r.tema)}).catch(()=>{});
+
 // ---------- live-kart på Status ----------
 let lkart=null,lgrunn=null,lspor=null,lmerke=null,lraa=null,lpil=null,lfolg=true,lsist=null,lforr=null,lnseg=0,lforsteZoom=true;
 const FIXFARGE=q=>q==4?"#19e07a":(q==5||q==2||q==9||q==6)?"#f2b33d":"#ef5b5b";
@@ -570,7 +595,8 @@ function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
       L.polyline([lforr,ut],{color:farge(Math.hypot(p.stamp||0,p.krenging||0),p.korrigert),weight:4,opacity:.9,interactive:false}).addTo(lspor);
       if(++lnseg>4000){const f=lspor.getLayers()[0];lspor.removeLayer(f);lnseg--}}
     lforr=ut}
-  if(!lraa)lraa=L.circleMarker(inn,{radius:7,color:"#cfd8dc",weight:2,fill:false,interactive:false}).addTo(lkart);else lraa.setLatLng(inn);
+  const ringF=document.body.classList.contains("dagslys")?"#000000":"#cfd8dc";
+  if(!lraa)lraa=L.circleMarker(inn,{radius:7,color:ringF,weight:2,fill:false,interactive:false}).addTo(lkart);else{lraa.setLatLng(inn);lraa.setStyle({color:ringF})}
   lvogn={kurs:p.kurs,farge:c};
   if(!lmerke){lmerke=L.marker(ut,{interactive:false,zIndexOffset:1000,icon:vognIkon()}).addTo(lkart)}
   else lmerke.setLatLng(ut);
@@ -909,18 +935,18 @@ function teiknTverr(Ag,Bg){const til=lokal(Ag),A=[0,0],B=til(Bg),Lg=Math.hypot(B
     "Ingen objekt kryssar denne lina. Teikn ei line som går på tvers av røyra eller kablane.";
   const W=$("tsvg").clientWidth||900,H=280,ml=52,mr=16,mt=20,mb=30,ds=[...etter,...for_].map(x=>x.d);
   const dmax=Math.max(0.6,...ds)*1.2,X=v=>ml+(W-ml-mr)*v/Math.max(Lg,0.5),Y=v=>mt+(H-mt-mb)*v/dmax;let g="";
-  const st=dmax>2.4?0.5:0.25;for(let d=0;d<=dmax+1e-9;d+=st)g+=`<line x1=${ml} x2=${W-mr} y1=${Y(d)} y2=${Y(d)} stroke="#2c3a44"/><text x=${ml-6} y=${Y(d)+4} fill="#8a9aa6" font-size=11 text-anchor=end>${F(d,2)}</text>`;
-  const xs=Lg>40?10:Lg>15?5:Lg>6?2:Lg>2?0.5:0.25;for(let v=0;v<=Lg+1e-9;v+=xs)g+=`<text x=${X(v)} y=${H-10} fill="#8a9aa6" font-size=11 text-anchor=middle>${F(v,xs<1?2:0)} m</text>`;
+  const st=dmax>2.4?0.5:0.25;for(let d=0;d<=dmax+1e-9;d+=st)g+=`<line x1=${ml} x2=${W-mr} y1=${Y(d)} y2=${Y(d)} stroke="var(--linje)"/><text x=${ml-6} y=${Y(d)+4} fill="var(--svak)" font-size=11 text-anchor=end>${F(d,2)}</text>`;
+  const xs=Lg>40?10:Lg>15?5:Lg>6?2:Lg>2?0.5:0.25;for(let v=0;v<=Lg+1e-9;v+=xs)g+=`<text x=${X(v)} y=${H-10} fill="var(--svak)" font-size=11 text-anchor=middle>${F(v,xs<1?2:0)} m</text>`;
   g+=`<rect x=${ml} y=${mt-6} width=${W-ml-mr} height=6 fill="#8a6a4a"/><text x=${ml} y=${mt-9} fill="#fff" font-size=12 font-weight=700>A</text><text x=${W-mr} y=${mt-9} fill="#fff" font-size=12 font-weight=700 text-anchor=end>B</text>`;
-  g+=`<text x=12 y=${mt+(H-mt-mb)/2} fill="#8a9aa6" font-size=11 transform="rotate(-90 12 ${mt+(H-mt-mb)/2})" text-anchor=middle>djupn (m)</text>`;
+  g+=`<text x=12 y=${mt+(H-mt-mb)/2} fill="var(--svak)" font-size=11 transform="rotate(-90 12 ${mt+(H-mt-mb)/2})" text-anchor=middle>djupn (m)</text>`;
   const px=(Y(1)-Y(0));   // pikslar per meter loddrett
-  for_.forEach(x=>{const dm=diam(x.fi),rr=Math.max(5,dm?dm/2*px:5);g+=`<circle cx=${X(x.s)} cy=${Y(x.d)} r=${rr} fill=none stroke="#e8eef2" stroke-width=1.5 stroke-dasharray="3 3"/>`});
-  g+=`<defs><marker id="pil" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#e8eef2"/></marker></defs>`;
+  for_.forEach(x=>{const dm=diam(x.fi),rr=Math.max(5,dm?dm/2*px:5);g+=`<circle cx=${X(x.s)} cy=${Y(x.d)} r=${rr} fill=none stroke="var(--tekst)" stroke-width=1.5 stroke-dasharray="3 3"/>`});
+  g+=`<defs><marker id="pil" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--tekst)"/></marker></defs>`;
   etter.forEach(x=>{const f0=for_.filter(y=>y.fi==x.fi).sort((a,b)=>Math.abs(a.s-x.s)-Math.abs(b.s-x.s))[0];
-    if(f0&&Math.hypot(X(f0.s)-X(x.s),Y(f0.d)-Y(x.d))>10)g+=`<line x1=${X(f0.s)} y1=${Y(f0.d)} x2=${X(x.s)} y2=${Y(x.d)} stroke="#e8eef2" stroke-width=1.2 marker-end="url(#pil)" opacity=".8"/>`});
+    if(f0&&Math.hypot(X(f0.s)-X(x.s),Y(f0.d)-Y(x.d))>10)g+=`<line x1=${X(f0.s)} y1=${Y(f0.d)} x2=${X(x.s)} y2=${Y(x.d)} stroke="var(--tekst)" stroke-width=1.2 marker-end="url(#pil)" opacity=".8"/>`});
   etter.forEach(x=>{const dm=diam(x.fi),rr=Math.max(6,dm?dm/2*px:6);
     g+=`<circle cx=${X(x.s)} cy=${Y(x.d)} r=${rr} fill="${djFarge(x.d)}" stroke="#0f1418" stroke-width=1.5><title>${esc(namn(x.fi))}: ${fm(x.d)} m</title></circle>
-      <text x=${X(x.s)} y=${Y(x.d)-rr-6} fill="#e8eef2" font-size=12 font-weight=700 text-anchor=middle>${fm(x.d)} m</text>`});
+      <text x=${X(x.s)} y=${Y(x.d)-rr-6} fill="var(--tekst)" font-size=12 font-weight=700 text-anchor=middle>${fm(x.d)} m</text>`});
   $("tsvg").innerHTML=g;
   const tb=$("ttab").tBodies[0];tb.innerHTML="";etter.sort((a,b)=>a.s-b.s).forEach(x=>{
     const f0=for_.filter(y=>y.fi==x.fi).sort((a,b)=>Math.abs(a.s-x.s)-Math.abs(b.s-x.s))[0];const dm=diam(x.fi);
@@ -943,12 +969,12 @@ function visProfil(fi){if(!siste||!siste.etter)return;profilFi=fi;profilVist=tru
   const W=$("psvg").clientWidth||800,H=240,ml=52,mr=14,mt=18,mb=30;
   const dmax=Math.max(0.5,...d0.filter(x=>x!=null),...d1.filter(x=>x!=null))*1.15,smax=Math.max(s,1);
   const X=v=>ml+(W-ml-mr)*v/smax,Y=v=>mt+(H-mt-mb)*v/dmax;let g="";
-  const steg=dmax>2?0.5:0.25;for(let d=0;d<=dmax+1e-9;d+=steg)g+=`<line x1=${ml} x2=${W-mr} y1=${Y(d)} y2=${Y(d)} stroke="#2c3a44"/><text x=${ml-6} y=${Y(d)+4} fill="#8a9aa6" font-size=11 text-anchor=end>${F(d,2)}</text>`;
-  const xs=smax>40?10:smax>15?5:smax>6?2:1;for(let v=0;v<=smax+1e-9;v+=xs)g+=`<text x=${X(v)} y=${H-10} fill="#8a9aa6" font-size=11 text-anchor=middle>${F(v,0)} m</text>`;
-  g+=`<text x=12 y=${mt+(H-mt-mb)/2} fill="#8a9aa6" font-size=11 transform="rotate(-90 12 ${mt+(H-mt-mb)/2})" text-anchor=middle>djupn (m)</text>`;
+  const steg=dmax>2?0.5:0.25;for(let d=0;d<=dmax+1e-9;d+=steg)g+=`<line x1=${ml} x2=${W-mr} y1=${Y(d)} y2=${Y(d)} stroke="var(--linje)"/><text x=${ml-6} y=${Y(d)+4} fill="var(--svak)" font-size=11 text-anchor=end>${F(d,2)}</text>`;
+  const xs=smax>40?10:smax>15?5:smax>6?2:1;for(let v=0;v<=smax+1e-9;v+=xs)g+=`<text x=${X(v)} y=${H-10} fill="var(--svak)" font-size=11 text-anchor=middle>${F(v,0)} m</text>`;
+  g+=`<text x=12 y=${mt+(H-mt-mb)/2} fill="var(--svak)" font-size=11 transform="rotate(-90 12 ${mt+(H-mt-mb)/2})" text-anchor=middle>djupn (m)</text>`;
   g+=`<rect x=${ml} y=${mt-6} width=${W-ml-mr} height=6 fill="#8a6a4a"/>`;
   const sti=arr=>{let o="",ny=true;pts.forEach(p=>{const d=arr[p.i];if(d==null){ny=true;return}o+=(ny?"M":"L")+X(p.s).toFixed(1)+","+Y(d).toFixed(1);ny=false});return o};
-  g+=`<path d="${sti(d1)}" fill=none stroke="#4ea8ff" stroke-width="4"/><path d="${sti(d0)}" fill=none stroke="#e8eef2" stroke-width=1.5 stroke-dasharray="4 4"/>`;
+  g+=`<path d="${sti(d1)}" fill=none stroke="#4ea8ff" stroke-width="4"/><path d="${sti(d0)}" fill=none stroke="var(--tekst)" stroke-width=1.5 stroke-dasharray="4 4"/>`;
   pts.forEach(p=>{if(d1[p.i]!=null)g+=`<circle cx=${X(p.s)} cy=${Y(d1[p.i])} r=3.5 fill="${djFarge(d1[p.i])}"><title>${F(p.s,1)} m: ${fm(d1[p.i])} m djupt</title></circle>`});
   const ptb=$("pkt").tBodies[0];ptb.innerHTML="";const ue=pr.utm_e||[],un=pr.utm_n||[],ho=pr.hoegd_nn2000_m||[],hb=pr.bakke_nn2000_m||[],fl=pr.flytta_cm||[];
   pts.forEach((p,j)=>{const tr=document.createElement("tr");tr.style.cursor="pointer";tr.innerHTML=`<td>${j+1}</td><td class=n>${ue[p.i]==null?"–":F(ue[p.i],3)}</td>

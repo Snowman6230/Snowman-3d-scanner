@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-07-dagslys",
+   "dato": "2026-11-07",
+   "versjon": "0.9.3",
+   "tittel": "Nytt: dagslysmodus for skjermen ute",
+   "tekst": "Er skjermen vanskeleg å lese i sollys? Trykk «☀ Dagslys» oppe til høgre. Då får du kvit bakgrunn, svart tekst, sterkare fargar og større tal. «🌙 Mørk» byter tilbake, og valet blir hugsa.\n\nSkru gjerne opp lysstyrken på PC-en òg.",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-07-livekart",
    "dato": "2026-11-07",
    "versjon": "0.9.0",

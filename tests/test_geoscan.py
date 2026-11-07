@@ -720,6 +720,9 @@ def test_kartlag_blir_lagra(tmp_path, monkeypatch):
     try:
         assert _json.loads(_u.urlopen(base + "/api/kartlag").read())["kartlag"] == "topo"
         assert post({"kartlag": "flyfoto"})["ok"]
+        r = _u.Request(base + "/api/tema", data=_json.dumps({"tema": "dagslys"}).encode(), headers={"Content-Type": "application/json"})
+        assert _json.loads(_u.urlopen(r).read())["ok"]
+        assert _json.loads(_u.urlopen(base + "/api/tema").read())["tema"] == "dagslys"
         assert _json.loads(_u.urlopen(base + "/api/kartlag").read())["kartlag"] == "flyfoto"
         c = _json.loads(cfgp.read_text())
         assert c["kartlag"] == "flyfoto" and c["spakarm"]["opp"] == 1.8       # andre innstillingar står urørt

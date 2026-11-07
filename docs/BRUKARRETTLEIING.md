@@ -33,6 +33,11 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
      før Geoscan startar: berre eitt program kan ha COM23 og COM34 opne. Viser statussida «ingen les porten»,
      er ikkje OneVision kopla til COM24 – Geoscan held fram, men linjene til OneVision blir kasta.
 
+### Skjerm i sollys
+
+Trykk **«☀ Dagslys»** oppe til høgre. Skjermen får kvit bakgrunn, svart tekst og sterkare fargar, som er
+lettare å lese ute. **«🌙 Mørk»** byter tilbake. Valet blir hugsa. Skru gjerne opp lysstyrken på PC-en òg.
+
 ### Live-kart på Status
 
 Under skanninga viser Status eit kart med vogna, teikna som på logoen og snudd i køyreretninga. GPS-prikken på

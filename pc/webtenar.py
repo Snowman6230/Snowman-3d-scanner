@@ -86,6 +86,8 @@ def start(app, port=8088, lan=False):
                     # Les fila, ikkje berre minnet: autolagra endringar gjeld først etter omstart, men skal synast
                     # (og ikkje bli skrivne over) når sida blir opna på nytt.
                     return self._send(INN.hent(app.cfg_path, dict(app.cfg, **INN._read(app.cfg_path))))
+                if path == "/api/tema":
+                    return self._send({"tema": INN._read(app.cfg_path).get("tema") or app.cfg.get("tema", "mork")})
                 if path == "/api/kartlag":
                     return self._send({"kartlag": INN._read(app.cfg_path).get("kartlag") or app.cfg.get("kartlag", "topo")})
                 if path == "/api/com0com":
@@ -170,6 +172,15 @@ def start(app, port=8088, lan=False):
                     return self._send({"ok": True, "lagra": t, "fil": Path(app.cfg_path).name, "feil": INN.lagre.feil,
                                        "har_passord": bool(INN._read(INN.HER / "ntrip_lokal.json").get("passord")),
                                        "har_token": bool(INN._read(INN.HER / "oppdatering_lokal.json").get("token"))})
+                if path == "/api/tema":
+                    v = str(json.loads(self._body() or b"{}").get("tema", ""))
+                    if v not in ("mork", "dagslys"):
+                        raise ValueError("ukjent tema")
+                    cfgf = INN._read(app.cfg_path)
+                    cfgf["tema"] = v
+                    Path(app.cfg_path).write_text(json.dumps(cfgf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                    app.cfg["tema"] = v
+                    return self._send({"ok": True, "lagra": INN.lagra_tid(app.cfg_path)})
                 if path == "/api/kartlag":
                     v = str(json.loads(self._body() or b"{}").get("kartlag", ""))
                     if v not in KARTLAG:

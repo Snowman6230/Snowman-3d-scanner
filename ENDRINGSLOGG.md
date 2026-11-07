@@ -2,6 +2,13 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.3 – 7. november 2026
+- **Dagslysmodus for skjerm ute i sollys.** Knappen «☀ Dagslys» oppe til høgre byter til kvit bakgrunn,
+  svart tekst, mørkare og sterkare statusfargar, tjukkare kantar, større skrift og større tal på Status.
+  «🌙 Mørk» byter tilbake. Valet blir lagra i `geoscan_config.json` («tema») og gjeld neste gong.
+- Teikningane (vogna sett bakfrå, tverrsnitt, djupneprofil, forklaringar og mottakarringen på live-kartet)
+  brukar no fargane til temaet, så dei synest i begge modusane.
+
 ## 0.9.2 – 7. november 2026
 - **Ugyldig GitHub-nøkkel stoppar ikkje lenger oppdateringa.** På PC-en til Norman stod det «repoet er privat og
   nøkkel manglar» sjølv om repoet er ope: den lagra nøkkelen vart avvist (401), og då vart det ikkje prøvd utan.
