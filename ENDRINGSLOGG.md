@@ -2,6 +2,21 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.4 – 7. november 2026
+Etter felttest hos Norman 7.11 (pakke SnowmanGeoscan_pakke_20261107_165722):
+- **Feil retta: spora i OneVision låg feil og bytte side når ein snudde.** Med R12i-tilt
+  (`mottakar_kompenserer`) og `rett_antenne` vart stangspissen rekna som referansepunktet midt på radaren, og
+  kvar posisjon vart flytta 0,60 m til venstre for køyreretninga ein gong for mykje. Stadfest på alle 3 887
+  punkt i loggen (alltid 270° frå kursen). No: rett antenne = rett over stangspissen (ingen sideflytting).
+  Referansepunkt = stangspissen minus den vassrette spakarmen. Rådata frå testen gir 0,1 mm (avrunding).
+  Ny test med sidearm (den gamle hadde berre loddrett arm og fanga ikkje feilen).
+- **Mountpoint frå casteren:** knappen «Hent liste frå casteren» hentar kjeldetabellen (nærmaste først når
+  posisjonen er kjend) og fyller ei nedtrekksliste. Brukar lagra brukar/passord om felta er tomme.
+- **«⏸ Pause sporet»** på live-kartet: stoppar teikninga når ein snur og rangerer. Loggen held fram.
+- Simulatoren sin caster har no to mountpoints i kjeldetabellen.
+- OPNE-SPORSMAL: RTK FIX ute avklart (under 1 min, 92 % FIX). Nye opne punkt: mastehøgd 1,80/1,86/1,9,
+  sideforskyving 0,42 i `Stream C.xml` mot 0,6 målt, og 1 Hz frå R12i.
+
 ## 0.9.3 – 7. november 2026
 - **Dagslysmodus for skjerm ute i sollys.** Knappen «☀ Dagslys» oppe til høgre byter til kvit bakgrunn,
   svart tekst, mørkare og sterkare statusfargar, tjukkare kantar, større skrift og større tal på Status.

@@ -2,6 +2,43 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-07-felttest-svar",
+   "dato": "2026-11-07",
+   "versjon": "0.9.4",
+   "tittel": "Takk for felttesten – feilen med spora i OneVision er funnen og retta",
+   "tekst": "Takk for pakka! Eg har gått gjennom loggane og eksporten frå OneVision.\n\n1. SPORA SOM KOM FEIL: Det var ein feil i Snowman Geoscan, ikkje i OneVision. Når R12i rettar masta sjølv (tilt på), vart kvar posisjon flytta 0,60 m til venstre for køyreretninga ein gong for mykje. Feilen byter side når du snur, så to spor over same linje kom ca. 1,2 m frå kvarandre. Retta i 0.9.4 – eg har køyrt dine eigne rådata gjennom på nytt, og no blir ingenting flytta sidelengs.\n\n2. MASTEHØGD: Same tal må stå tre stader – stanghøgd i R12i, «Mastehøgd» under Innstillingar, og GPS-høgda (z) i Stream C.xml for OneVision (der står 1.9 no). Mål frå antennemerket ned til bakken og bruk det målte talet alle tre stader (t.d. 1,86). Ikkje set lågare for å minske avvik – det gir feil.\n\n3. ONEVISION-FILA: GPS-oppsettet står i Stream C.xml (config-mappa ved OneVision.exe): «0.13;0.42;1.9». Sideforskyvinga der er 0,42, men du målte 0,6 m. Ta kopi av fila før du endrar, og rett 0.42 til 0.60 og 1.9 til den målte høgda. Kontroller etterpå: køyr same linje fram og tilbake – spora skal ligge oppå kvarandre.\n\n4. NYTT: «Hent liste frå casteren» ved Mountpoint (Innstillingar → NTRIP), og «⏸ Pause sporet» på live-kartet når du snur og rangerer.\n\n5. R12i sender berre 1 posisjon i sekundet. Set GGA til 5 Hz (eller 10 Hz) på USB-porten i R12i – då blir spora jamnare.\n\nBakgrunnsfiler (DXF, KOF o.a.) på kartet er eit godt forslag – eg ser på det.",
+   "sjekk": {
+    "r1": {
+     "tekst": "Status viser no portane under «Portar». Mottakaren skal stå som «inn COM3: open». Eg ser på å gjere portoversikta tydelegare.",
+     "prov_att": false
+    },
+    "r2": {
+     "tekst": "Innandørs får R12i ofte ingen posisjon i det heile. Det er normalt – testen ute er den som tel.",
+     "prov_att": false
+    },
+    "r4": {
+     "tekst": "Feilen var i Geoscan (0,6 m ekstra til venstre, byter side når du snur). Retta i 0.9.4. Rett òg Stream C.xml: 0.42 → 0.60, og same mastehøgd alle tre stader.",
+     "prov_att": true
+    },
+    "n2": {
+     "tekst": "Ny knapp «Hent liste frå casteren» ved Mountpoint. RTCM gjekk over USB (COM3) i testen din – fint.",
+     "prov_att": true
+    },
+    "n3": {
+     "tekst": "Under eitt minutt til RTK FIX, og 92 % FIX over ein time. Bra!",
+     "prov_att": false
+    },
+    "f1": {
+     "tekst": "Ny knapp «⏸ Pause sporet» på live-kartet. Vogna blir framleis vist, og loggen held fram.",
+     "prov_att": true
+    },
+    "f6": {
+     "tekst": "Prøv å velje Survey_….svy under Resultat neste gong.",
+     "prov_att": true
+    }
+   }
+  },
+  {
    "id": "2026-11-07-dagslys",
    "dato": "2026-11-07",
    "versjon": "0.9.3",

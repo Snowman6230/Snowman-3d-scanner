@@ -114,7 +114,9 @@ class FalskCaster:
         try:
             req = c.recv(4096).decode("latin1")
             if f"GET /{self.mp} " not in req:
-                c.sendall(b"SOURCETABLE 200 OK\r\n\r\nENDSOURCETABLE\r\n")
+                tab = (f"STR;{self.mp};Simulert base;RTCM 3.2;1004(1),1012(1);2;GPS+GLO;SIM;NOR;62.39;6.58;1;0;sim;none;N;N;0;\r\n"
+                       "STR;SIM2;Simulert base 2;RTCM 3.2;1074(1);2;GPS+GAL;SIM;NOR;62.50;6.80;1;0;sim;none;N;N;0;\r\n")
+                c.sendall(b"SOURCETABLE 200 OK\r\n\r\n" + tab.encode() + b"ENDSOURCETABLE\r\n")
                 return
             c.sendall(b"ICY 200 OK\r\n")
             c.settimeout(0.05)

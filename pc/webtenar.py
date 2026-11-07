@@ -172,6 +172,23 @@ def start(app, port=8088, lan=False):
                     return self._send({"ok": True, "lagra": t, "fil": Path(app.cfg_path).name, "feil": INN.lagre.feil,
                                        "har_passord": bool(INN._read(INN.HER / "ntrip_lokal.json").get("passord")),
                                        "har_token": bool(INN._read(INN.HER / "oppdatering_lokal.json").get("token"))})
+                if path == "/api/kjeldetabell":
+                    # Mountpoints frå casteren til nedtrekkslista. Tomt passord i skjemaet = bruk det lagra.
+                    import ntripklient as NK
+                    d = json.loads(self._body() or b"{}")
+                    lok = INN._read(INN.HER / "ntrip_lokal.json")
+                    caster = INN._caster_reinsk(str(d.get("caster") or lok.get("caster") or ""))
+                    if not caster[0]:
+                        raise ValueError("skriv inn casteradressa først")
+                    pos = (app.k.status.get("pos") or {}) if hasattr(app, "k") else {}
+                    try:
+                        r = NK.fetch_sourcetable(caster[0], int(d.get("ntrip_port") or caster[1] or lok.get("port") or 2101),
+                                                 str(d.get("brukar") or lok.get("brukar") or ""),
+                                                 str(d.get("passord") or lok.get("passord") or ""),
+                                                 lat=pos.get("lat"), lon=pos.get("lon"), timeout=10)
+                    except NK.NtripError as e:
+                        raise RuntimeError(str(e))
+                    return self._send({"ok": True, "mounts": r["mounts"][:300], "caster": r["caster"]})
                 if path == "/api/tema":
                     v = str(json.loads(self._body() or b"{}").get("tema", ""))
                     if v not in ("mork", "dagslys"):

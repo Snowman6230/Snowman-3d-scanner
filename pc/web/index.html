@@ -140,6 +140,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <span class="verktoy" style="gap:10px">
         <label class="hj"><input type="checkbox" id="lfolg" checked onchange="lfolg=this.checked;if(lfolg&&lsist)lkart.panTo(lsist)"> Følg vogna</label>
         <label class="hj"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
+        <button class="b gra" id="lpause" onclick="pauseLive()" title="Stopp teikninga når du snur og rangerer – vogna blir framleis vist, og loggen held fram">⏸ Pause sporet</button>
         <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
         <select class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
           <option value="topo">Fargekart</option><option value="graatone">Gråtonekart</option>
@@ -358,7 +359,9 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div class="felt">
       <label><span>Caster (adresse)</span><input name="caster" autocomplete="off"></label>
       <label><span>Port</span><input name="ntrip_port" type="number"></label>
-      <label><span>Mountpoint</span><input name="mountpoint" autocomplete="off"></label>
+      <label><span>Mountpoint <button type="button" class="b gra" style="padding:2px 10px;margin-left:6px" onclick="hentMounts()">Hent liste frå casteren</button></span>
+        <input name="mountpoint" autocomplete="off" list="mlist" placeholder="vel frå lista eller skriv"><datalist id="mlist"></datalist>
+        <span class="hj" id="mmeld" style="display:block;margin-top:3px"></span></label>
       <label><span>Brukarnamn</span><input name="brukar" autocomplete="off"></label>
       <label><span>Passord <span id="ipw" style="display:inline"></span></span><input name="passord" type="password" autocomplete="new-password" placeholder="(uendra)"></label>
       <label><span>RTCM til port (tom = same som mottakaren/USB, t.d. COM20 = Bluetooth port 2)</span><input name="rtcm_til" list="plist"></label>
@@ -588,10 +591,21 @@ function initLive(){if(lkart||typeof L=="undefined")return;lkart=L.map("livekart
 function setLiveGrunn(){if(!lkart)return;if(lgrunn)lkart.removeLayer(lgrunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
   lgrunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(lkart);lgrunn.bringToBack()}
 function nullstillLive(){if(lspor)lspor.clearLayers();lforr=null;lnseg=0}
+let lteikn=true;
+function pauseLive(){lteikn=!lteikn;lforr=null;const b=$("lpause");b.textContent=lteikn?"⏸ Pause sporet":"▶ Teikn sporet";
+  b.style.background=lteikn?"":"var(--var)";b.style.color=lteikn?"":"#000"}
+async function hentMounts(){const f=$("iform");set("mmeld","Hentar liste frå casteren …","var");
+  try{const r=await post("api/kjeldetabell",{caster:f.elements.caster.value,ntrip_port:f.elements.ntrip_port.value,
+      brukar:f.elements.brukar.value,passord:f.elements.passord.value});
+    $("mlist").innerHTML=r.mounts.map(m=>`<option value="${esc(m.mountpoint)}">${esc([m.name,m.format,m.systems,m.km!=null?m.km+" km":""].filter(Boolean).join(" · "))}</option>`).join("");
+    set("mmeld",`✓ ${r.mounts.length} mountpoints frå ${r.caster}. Klikk i feltet og vel frå lista${r.mounts.length&&r.mounts[0].km!=null?" (nærmaste øvst)":""}.`,"ok");
+    f.elements.mountpoint.focus()}
+  catch(e){set("mmeld","✗ "+e.message,"feil")}}
 const avst=(a,b)=>{const dy=(b[0]-a[0])*111320,dx=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);return Math.hypot(dx,dy)};
 function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
   const ut=[p.lat_ut,p.lon_ut],inn=[p.lat,p.lon],c=FIXFARGE(p.fix);
-  if(!lforr||avst(lforr,ut)>0.15){if(lforr&&avst(lforr,ut)<50){
+  if(!lteikn){lforr=null}
+  else if(!lforr||avst(lforr,ut)>0.15){if(lforr&&avst(lforr,ut)<50){
       L.polyline([lforr,ut],{color:farge(Math.hypot(p.stamp||0,p.krenging||0),p.korrigert),weight:4,opacity:.9,interactive:false}).addTo(lspor);
       if(++lnseg>4000){const f=lspor.getLayers()[0];lspor.removeLayer(f);lnseg--}}
     lforr=ut}

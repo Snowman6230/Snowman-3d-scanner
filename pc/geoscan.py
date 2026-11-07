@@ -28,7 +28,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.3"
+VERSJON = "0.9.4"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -166,12 +166,18 @@ class Korrigerar:
         """Punktet som blir sendt ut: masta retta (referansepunkt eller rett antenne), og om djupn_sanntid er sett,
         flytta vidare dit eit objekt på den djupna eigentleg ligg (berre sidelengs – høgda er framleis overflata)."""
         if self.komp:
-            # Mottakaren (R12i med tilt på, stanghøgd = antenne → referansepunkt) sender alt referansepunktet P.
-            la, lo, h2, off = lat, lon, h, 0.0
+            # R12i med tilt på og stanghøgd = mastehøgda sender STANGSPISSEN: foten av masta, rett under antenna
+            # når vogna står vatrett. Han ligg ikkje midt på radaren, men forskyvd (fram, høgre) frå han.
+            # (Retta 7.11.2026: før vart spissen rekna som referansepunktet, og «rett antenne» flytta punktet
+            #  ein ekstra gong sidelengs – 0,6 m til venstre for køyreretninga, som byter side når ein snur.)
             if self.cfg.get("utgang") == "rett_antenne":
-                dE, dN, dU = H.offset_enu(lever, hdg, 0.0, 0.0)
+                # Antenna om vogna var vatrett: rett over stangspissen. Ingen sideflytting.
+                la, lo, h2, off = lat, lon, (None if h is None else h + lever[2]), 0.0
+            else:
+                # Referansepunktet på radaren: stangspissen minus den vassrette delen av spakarmen.
+                dE, dN, _ = H.offset_enu((lever[0], lever[1], 0.0), hdg, 0.0, 0.0)
                 my, mx = H.meter_per_grad(lat)
-                la, lo, h2 = lat + dN / my, lon + dE / mx, h + dU
+                la, lo, h2, off = lat - dN / my, lon - dE / mx, h, (dE * dE + dN * dN) ** 0.5
         else:
             fn = H.correct_level if self.cfg.get("utgang") == "rett_antenne" else H.correct
             la, lo, h2, off = fn(lat, lon, h, lever, hdg, pitch, roll)

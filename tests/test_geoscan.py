@@ -816,3 +816,59 @@ def test_oppdatering_ugyldig_nokkel_prover_utan(tmp_path, monkeypatch):
     lok, rem, nyare = O.check()
     assert (lok, rem, nyare) == ("0.9.0", "0.9.2", True) and O.SISTE_FEIL[0] is None
     assert O.NOKKEL_UGYLDIG[0] is True and sende == ["Bearer gammal", None]
+
+
+def test_r12i_stangspiss_med_sidearm_blir_ikkje_flytta():
+    """Felttest Norman 7.11: R12i (tilt på) sender stangspissen. Med GPS 0,6 m til venstre vart punktet flytta
+    0,6 m til venstre for køyreretninga ein gong for mykje (spor køyrde motsett veg låg ca. 1,2 m frå kvarandre)."""
+    import math
+    cfg = dict(G.STANDARD, logg=None, hoegd="mottakar", utgang="rett_antenne", mottakar_kompenserer=True,
+               spakarm={"fram": 0.4, "hogre": -0.6, "opp": 1.8})
+    k = G.Korrigerar(cfg)
+    ut = None
+    for i, lon in enumerate(("00634.0000000", "00634.0010000", "00634.0020000", "00634.0030000")):  # austover
+        ut = k.handle(_gga(lon=lon, alt="148.200"), now=1.0 + i)[0]
+    g = N.parse_gga(N.split(ut))
+    assert abs(g["lat"] - N.coord_in("6223.4000000", "N")) < 1e-9          # ingen sideflytting
+    assert abs(g["lon"] - N.coord_in("00634.0030000", "E")) < 1e-9
+    assert abs(g["alt"] - 150.0) < 1e-6                                       # antenna = spiss + 1,8 m
+    # Referansepunktet ligg 0,6 m til HØGRE for masta (sør når ein køyrer aust) og 0,4 m bak spissen
+    cfg["utgang"] = "referansepunkt"
+    k = G.Korrigerar(cfg)
+    for i, lon in enumerate(("00634.0000000", "00634.0010000", "00634.0020000", "00634.0030000")):
+        ut = k.handle(_gga(lon=lon, alt="148.200"), now=1.0 + i)[0]
+    g = N.parse_gga(N.split(ut))
+    dn = (g["lat"] - N.coord_in("6223.4000000", "N")) * 111320
+    de = (g["lon"] - N.coord_in("00634.0030000", "E")) * 111320 * math.cos(math.radians(62.39))
+    assert abs(dn + 0.6) < 0.02 and abs(de + 0.4) < 0.02
+
+
+def test_mountpoint_liste_fraa_casteren(tmp_path, monkeypatch):
+    """Norman 7.11: «på mountpoint må du leggje inn rullefelt som hentar mountpoint»."""
+    import json as _json
+    import socket
+    import threading
+    import urllib.request as _u
+    import innstillingar as INN
+    import webtenar as W
+    import simuler as S
+    for mod in (INN, W):
+        monkeypatch.setattr(mod, "HER", tmp_path)
+    s0 = socket.socket(); s0.bind(("127.0.0.1", 0)); cport = s0.getsockname()[1]; s0.close()
+    stop = threading.Event()
+    threading.Thread(target=S.FalskCaster("TH").serve, args=(cport, stop), daemon=True).start()
+    cfgp = tmp_path / "geoscan_config.json"
+    cfgp.write_text("{}")
+    app = G.App(dict(G.STANDARD, inn=[], ut_seriell=[], tcp_port=None, status_port=0,
+                     logg=str(tmp_path / "logg"), ntrip={"pa": False}), cfgp)
+    srv = W.start(app, 0)
+    try:
+        import time as _time
+        _time.sleep(0.3)
+        r = _u.Request(f"http://127.0.0.1:{srv.server_address[1]}/api/kjeldetabell",
+                       data=_json.dumps({"caster": f"http://127.0.0.1:{cport}/", "brukar": "", "passord": ""}).encode(),
+                       headers={"Content-Type": "application/json"})
+        d = _json.loads(_u.urlopen(r).read())
+        assert d["ok"] and sorted(m["mountpoint"] for m in d["mounts"]) == ["SIM2", "TH"]   # nærmaste først når posisjonen er kjend
+    finally:
+        srv.shutdown(); stop.set()

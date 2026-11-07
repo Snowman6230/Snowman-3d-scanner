@@ -65,6 +65,16 @@ def lagra_tid(cfg_path):
         return None
 
 
+def _caster_reinsk(v):
+    """«http://caster.no:2101/TH» → ("caster.no", "2101", "TH"). Ugjenkjenneleg → (v, None, None)."""
+    import re
+    v = str(v or "").strip()
+    m = re.match(r"^(?:[a-z]+://)?([^/:\s]+)(?::(\d+))?(?:/([^\s]*))?$", v, re.I)
+    if not m:
+        return v, None, None
+    return m.group(1), m.group(2), (m.group(3) or "").strip("/") or None
+
+
 def _port(v):
     """«25» → «COM25», «com3» → «COM3». Tom → ""."""
     import re
@@ -149,14 +159,13 @@ def lagre(cfg_path, d, streng=True):
         for k_ui, k in (("caster", "caster"), ("mountpoint", "mountpoint"), ("brukar", "brukar")):
             lok[k] = str(d.get(k_ui) or "").strip()
         # Casteradressa: «http://caster.no:2101/TH» → «caster.no» (port og mountpoint blir tekne ut om dei står der)
-        import re
-        m = re.match(r"^(?:[a-z]+://)?([^/:\s]+)(?::(\d+))?(?:/([^\s]*))?$", lok["caster"], re.I)
-        if m:
-            lok["caster"] = m.group(1)
-            if m.group(2):
-                d["ntrip_port"] = m.group(2)
-            if m.group(3) and not lok["mountpoint"]:
-                lok["mountpoint"] = m.group(3).strip("/")
+        host, port_c, mp_c = _caster_reinsk(lok["caster"])
+        if host:
+            lok["caster"] = host
+            if port_c:
+                d["ntrip_port"] = port_c
+            if mp_c and not lok["mountpoint"]:
+                lok["mountpoint"] = mp_c
         lok["port"] = int(tal("ntrip_port", 1, 65535, "NTRIP-port", lok.get("port", 2101)))
         if d.get("passord"):
             lok["passord"] = str(d["passord"])

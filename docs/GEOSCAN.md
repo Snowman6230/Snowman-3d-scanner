@@ -46,9 +46,15 @@ R12i har innebygd IMU. Han gir ikkje ut stamp og krenging som tal: Trimble skriv
 dataformat for heading frå R12i. Han reknar dei om internt og sender ut posisjonen til *stangspissen*. Det blir
 brukt slik:
 
-- **Masta:** set stanghøgda i R12i lik høgda frå antennefestet ned til referansepunktet på radaren. Ta målet frå
-  merket for antennehøgd. Då sender R12i sjølv punktet på bakken, og masta blir retta i mottakaren
-  (`"mottakar_kompenserer": true`). Norman har alt sett at dette verkar: hoppet på 2,2 m når IMU blir slått av og på.
+- **Masta:** set stanghøgda i R12i lik høgda frå antennefestet ned til bakken (mastefoten). Ta målet frå
+  merket for antennehøgd. Då sender R12i sjølv **stangspissen** – foten av masta, rett under antenna når vogna
+  står vatrett – og masta blir retta i mottakaren (`"mottakar_kompenserer": true`). Norman har alt sett at dette
+  verkar: hoppet på 2,2 m når IMU blir slått av og på.
+- **Stangspissen er ikkje midt på radaren.** Han ligg der masta står (GPS 0,6 m til venstre). Med `rett_antenne`
+  sender Geoscan antenna som om vogna var vatrett: rett over stangspissen, utan sideflytting, og OneVision legg
+  til forskyvinga si sjølv. Med `referansepunkt` blir den vassrette delen av spakarmen trekt frå.
+  *(Retta 7.11.2026 i 0.9.4: før vart spissen rekna som referansepunktet, og punktet vart flytta 0,6 m ein gong
+  for mykje til venstre – spor køyrde motsett veg kom då ca. 1,2 m frå kvarandre.)*
 - **Djupna:** krev stamp og krenging som tal. Det gir ikkje R12i. Alternativ:
   1. Ein liten IMU på ramma som sender NMEA ($PASHR, $xxHPR, $PSAT,HPR eller $PTNL,AVR). Han blir lagd til som ein
      ekstra inngang i `inn`, og programmet les han utan endringar. Dette er den sikraste løysinga.
