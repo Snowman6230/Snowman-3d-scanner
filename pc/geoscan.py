@@ -28,7 +28,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.1"
+VERSJON = "0.9.2"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -367,7 +367,8 @@ class App:
         import oppdater
         lok, rem, nyare = oppdater.check()
         self.oppd.update(github=rem, nyare=nyare, melding=oppdater.remote_melding() if nyare else None,
-                         feil=oppdater.SISTE_FEIL[0], sjekka=time.strftime("%Y-%m-%d %H:%M"))
+                         feil=oppdater.SISTE_FEIL[0], nokkel_ugyldig=oppdater.NOKKEL_UGYLDIG[0],
+                         sjekka=time.strftime("%Y-%m-%d %H:%M"))
 
     def update_loop(self, timar=3):
         """Sjå etter ny versjon ved oppstart og så kvar 3. time, så ein ny versjon (med melding) synest

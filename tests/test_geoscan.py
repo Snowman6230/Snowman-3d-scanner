@@ -790,3 +790,26 @@ def test_live_posisjon_i_status():
     p = k.status["pos"]
     assert p["fix"] == 4 and abs(p["lat"] - 62.39785) < 1e-4 and abs(p["lon"] - 6.58320) < 1e-4
     assert {"lat_ut", "lon_ut", "kurs", "krenging", "stamp", "korrigert", "t"} <= set(p)
+
+
+def test_oppdatering_ugyldig_nokkel_prover_utan(tmp_path, monkeypatch):
+    """6.11: nøkkelen på PC-en var ugyldig, og sjekken sa «repoet er privat» sjølv om repoet var ope."""
+    import io
+    import json as _json
+    import urllib.error
+    import oppdater as O
+    monkeypatch.setattr(O, "HER", tmp_path)
+    (tmp_path / "oppdatering_lokal.json").write_text(_json.dumps({"token": "gammal"}))
+    (tmp_path / "geoscan.py").write_text('VERSJON = "0.9.0"\n')
+    sende = []
+
+    def urlopen(req, timeout=0):
+        auth = req.get_header("Authorization")
+        sende.append(auth)
+        if auth:
+            raise urllib.error.HTTPError(req.full_url, 401, "Bad credentials", {}, io.BytesIO())
+        return io.BytesIO(b'VERSJON = "0.9.2"\n')
+    monkeypatch.setattr(O.urllib.request, "urlopen", urlopen)
+    lok, rem, nyare = O.check()
+    assert (lok, rem, nyare) == ("0.9.0", "0.9.2", True) and O.SISTE_FEIL[0] is None
+    assert O.NOKKEL_UGYLDIG[0] is True and sende == ["Bearer gammal", None]

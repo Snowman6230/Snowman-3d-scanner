@@ -46,14 +46,34 @@ def _token():
         return None
 
 
+NOKKEL_UGYLDIG = [False]   # sett når GitHub avviste den lagra nøkkelen, men repoet var ope utan nøkkel
+
+
 def _get(url, accept=None, timeout=60):
-    req = urllib.request.Request(url, headers={"User-Agent": "Snowman-Geoscan-oppdatering"})
-    if accept:
-        req.add_header("Accept", accept)
-    t = _token()
-    if t:
-        req.add_header("Authorization", f"Bearer {t}")
-    return urllib.request.urlopen(req, timeout=timeout).read()
+    """Hentar frå GitHub. Avviser GitHub den lagra nøkkelen (401/403, t.d. utgått), blir det prøvd utan nøkkel –
+    repoet er ope i testperioden, og ein dårleg nøkkel skal ikkje stoppe oppdateringa."""
+    import urllib.error
+
+    def hent(med_nokkel):
+        req = urllib.request.Request(url, headers={"User-Agent": "Snowman-Geoscan-oppdatering"})
+        if accept:
+            req.add_header("Accept", accept)
+        t = _token() if med_nokkel else None
+        if t:
+            req.add_header("Authorization", f"Bearer {t}")
+        return urllib.request.urlopen(req, timeout=timeout).read()
+    if not _token():
+        return hent(False)
+    try:
+        data = hent(True)
+        NOKKEL_UGYLDIG[0] = False
+        return data
+    except urllib.error.HTTPError as e:
+        if e.code not in (401, 403):
+            raise
+        data = hent(False)              # kastar vidare om repoet faktisk er privat
+        NOKKEL_UGYLDIG[0] = True
+        return data
 
 
 def version_of(text):

@@ -91,6 +91,8 @@ input.lagra-feil,select.lagra-feil{border-color:var(--feil)!important}
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
     <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
     <pre id="ologg" style="margin-top:6px"></pre></div>
+  <div id="nokkelug" class="banner oppd" style="display:none">GitHub-nøkkelen som er lagra på denne PC-en, er ugyldig eller gått ut.
+    Oppdateringane går likevel så lenge repoet er ope. Be Hans Petter om ein ny nøkkel og legg han inn under Innstillingar → Oppdatering.</div>
   <div id="nokkel" class="banner oppd" style="display:none">Snowman Geoscan får ikkje sjekke om det finst nye versjonar:
     programmet ligg no i eit privat repo. Legg inn GitHub-nøkkelen du har fått av Hans Petter under
     <a href="#" onclick="visFane('innst');return false" style="color:var(--var)">Innstillingar → Oppdatering</a>.</div>
@@ -444,6 +446,7 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
     .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n")}
 function visOppd(o){const nk=o.feil=="nokkel"&&!o.nyare&&!o.koyrer;
   $("nokkel").style.display=nk?"block":"none";
+  const ug=$("nokkelug");if(ug)ug.style.display=o.nokkel_ugyldig?"block":"none";
   const vis=o.nyare||o.koyrer||o.logg.length||o.omstart;$("oppd").style.display=vis?"block":"none";
   $("otekst").textContent=o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?"Ny versjon v"+o.github+" finst"+(o.melding?": «"+o.melding+"»":".")+" ":"";
   $("obtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none";$("ologg").textContent=o.logg.join("\n");
@@ -492,7 +495,7 @@ async function avslutt(){if(!confirm("Avslutte Snowman Geoscan?\n\nAlt blir lagr
 function visUst(o){if(!$("ust"))return;
   $("ust").innerHTML=`Installert: <b>v${esc(o.lokal)}</b>`+(o.github?` · på GitHub: <b>v${esc(o.github)}</b>`:"")+
     (o.sjekka?` · sist sjekka ${esc(o.sjekka)}`:"")+"<br>"+(o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?`<b class="var">Ny versjon finst${o.melding?": «"+esc(o.melding)+"»":""}</b>`:
-    o.feil=="nokkel"?'<b class="var">Får ikkje sjekke: repoet er privat og nøkkel manglar (sjå under).</b>':o.feil=="nett"?'<span class="var">Fekk ikkje kontakt med GitHub (sjekk nettet).</span>':
+    o.feil=="nokkel"?'<b class="var">Får ikkje sjekke: repoet er privat, og nøkkelen manglar eller er ugyldig (sjå under).</b>':o.feil=="nett"?'<span class="var">Fekk ikkje kontakt med GitHub (sjekk nettet).</span>':
     o.github?'<span class="ok">Du har siste versjon.</span>':"");
   $("ubtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none"}
 async function sjekkNo(){set("umeld","Sjekkar …");try{const r=await post("api/sjekk-oppdatering");visUst(r.oppdatering);set("umeld","")}catch(e){set("umeld",e.message,"feil")}}

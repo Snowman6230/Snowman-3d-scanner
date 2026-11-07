@@ -2,6 +2,14 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.2 – 7. november 2026
+- **Ugyldig GitHub-nøkkel stoppar ikkje lenger oppdateringa.** På PC-en til Norman stod det «repoet er privat og
+  nøkkel manglar» sjølv om repoet er ope: den lagra nøkkelen vart avvist (401), og då vart det ikkje prøvd utan.
+  No blir det prøvd utan nøkkel når GitHub avviser han. Ei gul stripe seier at nøkkelen er ugyldig.
+  Meldinga ved privat repo seier no «nøkkelen manglar eller er ugyldig».
+- Merk: PC-ar på 0.8.10 eller eldre med ugyldig nøkkel må slette `pc/oppdatering_lokal.json` éin gong for å nå
+  denne versjonen.
+
 ## 0.9.1 – 7. november 2026
 - Vogna på live-kartet følgjer zoomen: omtrent verkeleg storleik (1,6 m frå front til handtak, overslag til
   vogna er målt), men aldri under 44 eller over 130 pikslar, så ho alltid synest og aldri fyller kartet.
