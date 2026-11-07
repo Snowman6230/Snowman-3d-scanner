@@ -113,6 +113,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div id="nokkel" class="banner oppd" style="display:none">Snowman Geoscan får ikkje sjekke om det finst nye versjonar:
     programmet ligg no i eit privat repo. Legg inn GitHub-nøkkelen du har fått av Hans Petter under
     <a href="#" onclick="visFane('innst');return false" style="color:var(--var)">Innstillingar → Oppdatering</a>.</div>
+  <div id="fubanner" class="banner oppd" style="display:none;border-color:var(--var)">⚠ <span id="fubtekst">Får ingen posisjon frå mottakaren.</span>
+    <button class="b" style="margin-left:8px" onclick="opneFu()">🔍 Finn utstyr automatisk</button></div>
   <div id="c0cbanner" class="banner oppd" style="display:none;border-color:var(--feil)">⚠ <span id="c0cbtekst"></span>
     <button class="b" style="margin-left:8px" onclick="visCom0com(true)">Kva gjer eg?</button></div>
   <div id="meldingar"></div>
@@ -150,7 +152,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div class="hj">Vogna står på den retta posisjonen (det som blir sendt til OneVision) og snur seg etter køyreretninga.
       GPS-prikken på vogna har farge etter fix: <span class="ok">grøn = RTK FIX</span> · <span class="var">gul = FLOAT/DGPS</span> · <span class="feil">raud = GPS</span>.
       ○ Open ring = posisjonen frå mottakaren. Sporet har farge etter hellinga.</div></div>
-  <div class="k"><div class="l">Portar</div><pre id="portar"></pre></div>
+  <div class="k"><div class="verktoy" style="justify-content:space-between"><div class="l" style="margin:0">Portar</div>
+    <button class="b gra" onclick="opneFu()">🔍 Finn utstyr automatisk</button></div><pre id="portar" style="margin-top:6px"></pre></div>
   <div class="k"><div class="l">Kva skjer</div>
     <p class="hj" style="margin-bottom:0">Snowman Geoscan les posisjonen frå mottakaren, rettar han for hellinga til vogna og sender han
     vidare til OneVision. Under skanninga ser du resultatet i OneVision som vanleg. Etterpå: gå til <b>Resultat</b> for
@@ -333,7 +336,9 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <label><span>TCP-port for andre program</span><input name="tcp_port" type="number"></label>
     </div><datalist id="plist"></datalist>
     <p class="hj" style="margin-top:10px">com0com (virtuell kabel til OneVision): <span id="ic0c">–</span>
-      <button type="button" class="b gra" style="margin-left:6px" onclick="visCom0com(true)">Vis forklaring</button></p></div>
+      <button type="button" class="b gra" style="margin-left:6px" onclick="visCom0com(true)">Vis forklaring</button></p>
+    <p style="margin-top:10px"><button type="button" class="b" onclick="opneFu()">🔍 Finn utstyr automatisk</button>
+      <span class="hj">Skannar alle portane, finn mottakaren, hellingsmålaren og porten til OneVision, og føreslår oppsettet.</span></p></div>
   <div class="k"><h2>Vogn og mast</h2>
     <div class="felt">
       <label><span>Mastehøgd (m), frå antennemerket til underkant radar</span><input name="mast" inputmode="decimal"></label>
@@ -397,6 +402,15 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 </section>
 </main>
 
+<div id="fu" class="overlay" style="display:none" onclick="if(event.target==this)lukkFu()"><div class="k modal" style="max-width:860px">
+  <button class="b gra" style="float:right" onclick="lukkFu()" title="Lukk">✕</button>
+  <h2 style="font-size:20px">🔍 Finn utstyr automatisk</h2>
+  <div id="fuinnhald"></div>
+  <div class="verktoy" style="margin-top:14px"><span style="flex:1"></span>
+    <button class="b gra" id="fuskann" onclick="finnUtstyr()">Skann på nytt</button>
+    <button class="b" id="fubruk" style="display:none" onclick="brukOppsett()">Bruk dette og start på nytt</button>
+    <button class="b gra" onclick="lukkFu()">Lukk</button></div>
+</div></div>
 <div id="c0c" class="overlay" style="display:none" onclick="if(event.target==this)lukkCom0com()"><div class="k modal">
   <button class="b gra" style="float:right" onclick="lukkCom0com()" title="Lukk">✕</button>
   <div id="c0cinnhald"></div>
@@ -462,8 +476,13 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
   set("djup",s.djupnfeil_25==null?"":"objekt på "+F(radarDjupn,1)+" m: "+F(s.djupnfeil_25,0)+" cm (blir retta under Resultat)");
   const n=s.ntrip;set("ntrip",n.tilstand,n.tilstand=="tilkopla"?"ok":n.tilstand=="av"?"":"feil");
   set("nmeld",n.tilstand=="tilkopla"?(n.protokoll+" · "+F(n.byte/1024,0)+" kB · alder "+(n.alder==null?"–":F(n.alder,0)+" s")):n.melding);
-  $("portar").textContent=Object.entries(s.inn).map(([p,v])=>"inn "+p+": "+v)
-    .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n")}
+  const ist=s.innstat||{};
+  $("portar").textContent=Object.entries(s.inn).map(([p,v])=>{const a=ist[p];let t="inn "+p+": "+v;
+      if(a&&a.kva=="gnss")t+=` · $${a.talker||"??"}GGA (${a.talker=="IN"?"stangspiss, IMU":"antenne"}) · ${a.hz==null?"–":F(a.hz,a.hz<2?1:0)} Hz · fix ${a.fix} · ${a.sats} sat`;
+      else if(a&&a.kva=="helling")t+=" · hellingsdata ("+Object.keys(a.typar).join(", ")+")";
+      else if(a)t+=" · "+(a.kva=="stille"?"ingen data":a.kva);return t})
+    .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n");
+  fuSjekk(s)}
 function visOppd(o){const nk=o.feil=="nokkel"&&!o.nyare&&!o.koyrer;
   $("nokkel").style.display=nk?"block":"none";
   const ug=$("nokkelug");if(ug)ug.style.display=o.nokkel_ugyldig?"block":"none";
@@ -549,6 +568,43 @@ function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView
 let kartlagHenta=null;
 function hentKartlag(){if(!kartlagHenta)kartlagHenta=api("api/kartlag").then(r=>{if(KARTLAG[r.kartlag])kartlag=r.kartlag}).catch(()=>{});
   kartlagHenta.then(()=>{if(kart)setGrunn();setLiveGrunn();document.querySelectorAll(".kartlagval").forEach(e=>e.value=kartlag)})}
+
+// ---------- finn utstyr automatisk (oppstartssjekk) ----------
+let FU=null,fuStart=Date.now(),fuAutoKoyrd=false;
+function fuSjekk(s){if(s.demo){$("fubanner").style.display="none";return}
+  const harData=s.gnss_alder!=null&&s.gnss_alder<10;
+  const vis=!harData&&Date.now()-fuStart>10000;$("fubanner").style.display=vis?"block":"none";
+  if(vis){const feil=Object.entries(s.inn).filter(([p,v])=>v!="open");
+    $("fubtekst").textContent=feil.length?`Får ikkje opna mottakarporten (${feil.map(([p])=>p).join(", ")}).`:"Får ingen posisjon frå mottakaren.";
+    // Heilautomatisk: første gong utan data blir skanninga starta av seg sjølv.
+    if(!fuAutoKoyrd&&$("oktval").style.display=="none"&&$("c0c").style.display=="none"){fuAutoKoyrd=true;opneFu()}}}
+function lukkFu(){$("fu").style.display="none"}
+function opneFu(){$("fu").style.display="flex";finnUtstyr()}
+const FUKVA={gnss:"GNSS-mottakar",helling:"Hellingsmålar",binaer:"binærdata (RTCM/UBX)",ukjend:"ukjende data",stille:"ingen data",com0com:"com0com (OneVision)"};
+async function finnUtstyr(){$("fubruk").style.display="none";$("fuskann").disabled=true;
+  $("fuinnhald").innerHTML='<p class="var"><b>Skannar portane …</b> Lyttar på kvar port i nokre sekund (ca. 10–15 s). Bluetooth-portar kan bruke litt tid.</p>';
+  try{FU=await post("api/finn_utstyr",{})}catch(e){$("fuinnhald").innerHTML='<p class="feil">✗ '+esc(e.message)+'</p>';$("fuskann").disabled=false;return}
+  $("fuskann").disabled=false;const f=FU.forslag;
+  const rad=r=>{const k=r.kva?FUKVA[r.kva]||r.kva:(r.tilstand||"");let d="";
+    if(r.kva=="gnss")d=`$${r.talker||"??"}GGA · ${r.talker=="IN"?"<b>stangspiss (IMU)</b>":"antenne"} · ${r.hz==null?"–":F(r.hz,r.hz<2?1:0)} Hz · fix ${r.fix} · ${r.sats} sat`+(r.baud?` · ${r.baud} baud`:"");
+    else if(r.kva=="helling")d=Object.keys(r.typar||{}).join(", ");
+    else if(r.tilstand&&r.tilstand!="open")d=esc(r.tilstand)+(r.melding?" – "+esc(r.melding):"");
+    const val=r.port==f.mottakar?" ← mottakar":r.port==f.imu?" ← hellingsmålar":r.port==f.onevision?" ← til OneVision":"";
+    return `<tr${val?' style="font-weight:700"':""}><td>${esc(r.port)}</td><td>${esc(r.skildring||"")}</td><td class="${r.kva=="gnss"?"ok":""}">${k}${val?`<span class="ok">${val}</span>`:""}</td><td>${d}</td></tr>`};
+  let h=`<div class="tabell"><table><tr><th>Port</th><th>Eining</th><th>Kva</th><th>Detaljar</th></tr>${FU.portar.map(rad).join("")}</table></div>`;
+  h+=`<div class="k" style="background:var(--kort2);margin-top:12px"><b>Forslag</b><ul style="margin:6px 0">
+    <li>Mottakar: <b>${f.mottakar?esc(f.mottakar):"ikkje funnen"}</b>${f.talker?` ($${esc(f.talker)}GGA – ${f.talker=="IN"?"mottakaren rettar masta sjølv":"antenneposisjon"})`:""}${FU.noverande.mottakar&&FU.noverande.mottakar!=f.mottakar?` <span class="var">(no: ${esc(FU.noverande.mottakar)})</span>`:""}</li>
+    <li>Hellingsmålar: <b>${f.imu?esc(f.imu):"ingen"}</b></li>
+    <li>Til OneVision: <b>${f.onevision?esc(f.onevision):"ikkje funnen"}</b>${FU.com0com&&FU.com0com.forslag?` – vel <b>${esc(FU.com0com.forslag.onevision)}</b> i OneVision`:""}</li></ul>
+    ${FU.onevision?`<div class="hj">OneVision-oppsett (${esc(FU.onevision.fil)}): GPS xyz «${esc(FU.onevision.xyz)}»</div>`:'<div class="hj">Fann ikkje OneVision-oppsettet (Stream C.xml) på denne PC-en.</div>'}</div>`;
+  if(FU.atvaringar.length)h+=`<div class="k" style="border-color:var(--var);background:var(--kort2)">${FU.atvaringar.map(a=>"⚠ "+esc(a)).join("<br>")}</div>`;
+  else h+='<p class="ok"><b>✓ Alt ser rett ut.</b></p>';
+  $("fuinnhald").innerHTML=h;$("fubruk").style.display=f.mottakar?"inline-block":"none"}
+async function brukOppsett(){if(!FU)return;const f=FU.forslag;
+  try{const r=await post("api/bruk_oppsett",Object.assign({},f,{omstart:true}));
+    $("fuinnhald").insertAdjacentHTML("afterbegin",`<p class="ok"><b>✓ Oppsettet er lagra (kl. ${klokke(r.lagra)}). Snowman Geoscan startar på nytt …</b></p>`);
+    $("fubruk").style.display="none"}
+  catch(e){$("fuinnhald").insertAdjacentHTML("afterbegin",'<p class="feil">✗ '+esc(e.message)+'</p>')}}
 
 // ---------- tema (mørk / dagslys) ----------
 function setTema(t){const d=t=="dagslys";document.body.classList.toggle("dagslys",d);

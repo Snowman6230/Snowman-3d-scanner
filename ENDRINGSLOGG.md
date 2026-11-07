@@ -2,6 +2,19 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.6 – 7. november 2026
+- **Finn utstyr automatisk** (Norman 7.11: «oppstartsekvens som tolkar kva som blir sendt, kva COM-port, GGA-type
+  … heilautomatisk – vi kan bruke forskjellige roverar»). Ny `pc/finn_utstyr.py`:
+  - Skannar alle ledige portar parallelt på vanlege baudrater og tolkar dataa: GNSS (talker, Hz, fix, sat),
+    hellingsmålar ($PTNL,AVR / $PASHR / HPR), RTCM/UBX, stille, oppteken av anna program.
+  - Portar Geoscan alt les, blir ikkje opna – der blir live-dataa brukte. com0com-ender blir ikkje opna.
+  - Les OneVision sitt `Stream C.xml` og åtvarar om komma, mastehøgd og sideforskyving som ikkje stemmer.
+  - Forslag (IMU-retta `$INGGA` og høgast rate først) med «Bruk dette og start på nytt». `mottakar_kompenserer`
+    blir sett etter talker-ID-en.
+  - Startar av seg sjølv når mottakaren ikkje gir posisjon dei første 10 s (ikkje i demo).
+- Portoversikta på Status viser no talker, «stangspiss/antenne», Hz, fix og satellittar for kvar inngang.
+- Nytt sjekkpunkt r0.
+
 ## 0.9.5 – 7. november 2026
 - **Berre `$INGGA` blir rekna som stangspiss.** Norman 7.11: «Access reknar ut når det blir brukt, men streaming
   ut elles trur eg er i fasepunktet til antenna.» Rådataa frå felttesten stadfestar det: alle 2 760 posisjonane

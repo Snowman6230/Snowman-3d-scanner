@@ -45,6 +45,21 @@ vogna er **grøn** ved RTK FIX, **gul** ved FLOAT/DGPS og **raud** ved berre GPS
 posisjonen (det OneVision får). Den opne ringen er posisjonen frå mottakaren. Sporet har farge etter hellinga.
 Dreg du i kartet, sluttar det å følgje vogna – kryss av for «Følg vogna» for å slå det på att.
 
+### Finn utstyr automatisk
+
+Trykk **«🔍 Finn utstyr automatisk»** (under Status → Portar eller Innstillingar → Portar). Snowman Geoscan
+lyttar på alle portane i nokre sekund og viser kva som er kva:
+
+- **GNSS-mottakar**, med talker (`$INGGA` = stangspiss med IMU, `$GNGGA` = antenne), rate (Hz), fix og satellittar
+- **Hellingsmålar**, om det finst ein
+- **com0com-porten** til OneVision, og kva port OneVision skal bruke
+- portar som er **opptekne** av eit anna program (Trimble Access, NMEA-splitter)
+
+Han les òg GPS-oppsettet i OneVision (`Stream C.xml`) og åtvarar om mastehøgd eller forskyving ikkje stemmer,
+om rata er under 5 Hz, eller om masta ikkje blir retta for helling. **«Bruk dette og start på nytt»** lagrar
+forslaget. Får programmet ingen posisjon dei første 10 sekunda, startar skanninga av seg sjølv. Det gjer det
+enkelt å byte rover eller PC.
+
 ### Lagring av innstillingar
 
 Alt du endrar under **Innstillingar** blir lagra med ein gong. Stripa øvst viser *«✓ Lagra kl. … i

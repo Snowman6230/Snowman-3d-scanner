@@ -15,6 +15,7 @@ Køyr:  python geoscan.py                      (brukar geoscan_config.json ved s
 import argparse
 import json
 import math
+from collections import deque
 import re
 import socket
 import sys
@@ -28,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.5"
+VERSJON = "0.9.6"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -310,6 +311,7 @@ class App:
         self.k = Korrigerar(cfg)
         self.ut = Utgangar(cfg)
         self.state, self.handles = {}, {}
+        self.innraa = {}      # siste NMEA-linjer per inngang, til live-statistikk og «Finn utstyr»
         self.write_lock = threading.Lock()
         self.raw_gga, self.last_gga_t = None, None
         self.started = time.time()
@@ -370,13 +372,24 @@ class App:
                         raw, buf = buf.split(b"\n", 1)
                         j = raw.rfind(b"$")
                         if j >= 0:
-                            self.line_in(raw[j:].decode("ascii", "replace"))
+                            linje = raw[j:].decode("ascii", "replace")
+                            self.innraa.setdefault(name, deque(maxlen=400)).append(linje.strip())
+                            self.line_in(linje)
                     if len(buf) > 65536:
                         buf = buf[-4096:]
             except Exception as e:
                 self.handles.pop(name, None)
                 self.state[name] = f"feil: {e}"
                 time.sleep(2)
+
+    def innstat(self):
+        """Kva som kjem på kvar inngang no: talker, rate, fix, satellittar, setningstypar (frå dei siste linjene)."""
+        import finn_utstyr as FU
+        ut = {}
+        for name, d in list(self.innraa.items()):
+            a = FU.analyser(("\n".join(list(d)[-200:])).encode("ascii", "replace"))
+            ut[name] = {k: a[k] for k in ("kva", "talker", "hz", "fix", "sats", "typar", "helling")}
+        return ut
 
     # ---------- oppdatering (oppdater.py) ----------
     def check_update(self):
@@ -433,7 +446,7 @@ class App:
         if k.get("korrigert") and k.get("stamp") is not None:
             t = math.radians(math.hypot(k["stamp"], k["krenging"]))
             d25 = round(rd * math.sin(t) * 100, 1)
-        return {"korr": k, "ntrip": n, "inn": dict(self.state),
+        return {"korr": k, "ntrip": n, "inn": dict(self.state), "innstat": self.innstat(),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"], "kasta": o["kasta"]} for o in self.ut.ports],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25, "radar_djupn": rd,

@@ -18,6 +18,38 @@ WEB = HER / "web"
 MAKS_OPPLASTING = 500 * 1024 * 1024
 
 
+def finn_utstyr(app):
+    """Oppstartssjekken (finn_utstyr.py): skann ledige portar, bruk live-data for portane Geoscan alt les,
+    finn com0com-para og OneVision-oppsettet, og lag eit forslag."""
+    import com0com as C0
+    import finn_utstyr as FU
+    import innstillingar as INN
+    cfgf = dict(app.cfg, **INN._read(app.cfg_path))
+    c0c = C0.status(cfgf)
+    virtuelle = {x for p in c0c.get("par") or [] for x in (p["geoscan"], p["onevision"]) if x}
+    eigne = {n for n, v in app.state.items() if v == "open"}
+    portar = INN.porter()
+    skanna = FU.skann([p for p in portar if p["port"] not in virtuelle], hopp_over=eigne)
+    stat = app.innstat()
+    for n in eigne:
+        r = dict(stat.get(n) or {"kva": "stille"})
+        r.update(port=n, tilstand="brukt av Geoscan",
+                 skildring=next((p["skildring"] for p in portar if p["port"] == n), ""),
+                 baud=next((int(i.get("baud") or 115200) for i in cfgf.get("inn") or [] if i.get("port") == n), 115200))
+        skanna[n] = r
+    for v in sorted(virtuelle):
+        skanna[v] = {"port": v, "tilstand": "com0com", "kva": "com0com",
+                     "skildring": "virtuell kabel til OneVision", "melding": ""}
+    ov = FU.les_onevision()
+    f, atv = FU.forslag(skanna, c0c, cfgf, ov)
+    g = skanna.get(f["mottakar"]) or {}
+    f["talker"] = g.get("talker")
+    return {"portar": sorted(skanna.values(), key=lambda r: (r.get("kva") != "gnss", r["port"])),
+            "forslag": f, "atvaringar": atv, "onevision": ov, "com0com": c0c,
+            "noverande": {"mottakar": (cfgf.get("inn") or [{}])[0].get("port"),
+                          "onevision": (cfgf.get("ut_seriell") or [{}])[0].get("port") if cfgf.get("ut_seriell") else None}}
+
+
 def start(app, port=8088, lan=False):
     import innsending as INS
     import innstillingar as INN
@@ -172,6 +204,28 @@ def start(app, port=8088, lan=False):
                     return self._send({"ok": True, "lagra": t, "fil": Path(app.cfg_path).name, "feil": INN.lagre.feil,
                                        "har_passord": bool(INN._read(INN.HER / "ntrip_lokal.json").get("passord")),
                                        "har_token": bool(INN._read(INN.HER / "oppdatering_lokal.json").get("token"))})
+                if path == "/api/finn_utstyr":
+                    return self._send(finn_utstyr(app))
+                if path == "/api/bruk_oppsett":
+                    d = json.loads(self._body() or b"{}")
+                    cfgf = INN._read(app.cfg_path)
+                    mot = INN._port(d.get("mottakar"))
+                    if not mot:
+                        raise ValueError("ingen mottakar å bruke")
+                    inn = [{"port": mot, "baud": int(d.get("mottakar_baud") or 115200)}]
+                    if INN._port(d.get("imu")):
+                        inn.append({"port": INN._port(d["imu"]), "baud": int(d.get("imu_baud") or 115200)})
+                    cfgf["inn"] = inn
+                    ov = INN._port(d.get("onevision"))
+                    if ov:
+                        cfgf["ut_seriell"] = [{"port": ov, "baud": 115200, "setningar": ["GGA"]}]
+                    if d.get("talker"):
+                        # $INGGA = mottakaren rettar masta sjølv (stangspiss). Elles antenne.
+                        cfgf["mottakar_kompenserer"] = d["talker"] == "IN"
+                    Path(app.cfg_path).write_text(json.dumps(cfgf, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                    if d.get("omstart"):
+                        app.oppd["omstart"] = True
+                    return self._send({"ok": True, "lagra": INN.lagra_tid(app.cfg_path)})
                 if path == "/api/kjeldetabell":
                     # Mountpoints frå casteren til nedtrekkslista. Tomt passord i skjemaet = bruk det lagra.
                     import ntripklient as NK

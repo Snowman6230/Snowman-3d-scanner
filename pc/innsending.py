@@ -52,6 +52,7 @@ SJEKKLISTE = [
         {"id": "d4", "tekst": "Grav nedover, tverrsnitt, koordinatar og eksport (utsetting, CSV, GeoJSON, DXF) fungerer"},
         {"id": "d5", "tekst": "Rapporten kan skrivast ut eller lagrast som PDF"}]},
     {"steg": "Steg 2 – R12i innandørs", "punkt": [
+        {"id": "r0", "tekst": "«🔍 Finn utstyr automatisk» finn mottakaren (port, $INGGA/$GNGGA, Hz) og porten til OneVision"},
         {"id": "r1", "tekst": "Trimble Access er lukka, og mottakarporten (t.d. COM23) står som «open»"},
         {"id": "r2", "tekst": "Fix og satellittar blir viste (DGPS er greitt innandørs)"},
         {"id": "r3", "tekst": "Posisjonen er fornuftig – rett stad på kartet"},

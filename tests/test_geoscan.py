@@ -887,3 +887,108 @@ def test_gngga_er_antenne_sjolv_om_mottakar_kompenserer_er_paa():
     out = k.handle(_gga(talker="IN", alt="148.200"), now=2.0)[0]          # $INGGA: spissen → antenne = +1,8 m
     assert abs(N.parse_gga(N.split(out))["alt"] - 150.0) < 1e-6 and k.komp_aktiv
     assert "stangspiss" in k.status["melding"]
+
+
+def _nmea_bytes(talker="GN", n=10, hz=1.0, fix=4, ekstra=()):
+    ut = []
+    for i in range(n):
+        t = 50000 + i / hz
+        hh, mm, ss = int(t // 3600), int(t % 3600 // 60), t % 60
+        ut.append(N.build([f"{talker}GGA", f"{hh:02d}{mm:02d}{ss:05.2f}", "6217.6758806", "N", "00638.5705991", "E",
+                           str(fix), "14", "0.9", "67.958", "M", "45.210", "M", "1.0", "0000"]))
+        ut.extend(ekstra)
+    return ("\r\n".join(ut) + "\r\n").encode()
+
+
+def test_finn_utstyr_tolkar_data():
+    import finn_utstyr as FU
+    a = FU.analyser(_nmea_bytes("GN", 10, 1.0))
+    assert a["kva"] == "gnss" and a["talker"] == "GN" and a["hz"] == 1.0 and a["fix"] == 4 and a["sats"] == 14
+    a = FU.analyser(_nmea_bytes("IN", 11, 10.0))
+    assert a["talker"] == "IN" and a["hz"] == 10.0
+    pashr = N.build(["PASHR", "120000.00", "90.0", "T", "5.00", "0.00", "", "", "", "", "2", "1"])
+    a = FU.analyser(((pashr + "\r\n") * 5).encode())
+    assert a["kva"] == "helling" and a["helling"]
+    assert FU.analyser(b"\xd3\x00\x13" + bytes(30))["kva"] == "binaer"
+    assert FU.analyser(b"")["kva"] == "stille"
+    assert FU.analyser(b"$GNGGA,1,2*00\r\n")["kva"] == "ukjend"            # feil sjekksum
+
+
+def test_finn_utstyr_skann_og_forslag():
+    import finn_utstyr as FU
+
+    class Port:
+        def __init__(self, data): self.data = data
+        def read(self, n):
+            d, self.data = self.data[:n], self.data[n:]
+            if not d:
+                time.sleep(0.01)
+            return d
+        def close(self): pass
+
+    def opne(port, baud):
+        if port == "COM9":
+            raise PermissionError("could not open port 'COM9': PermissionError(13, 'Access is denied.')")
+        if port == "COM3":
+            return Port(_nmea_bytes("GN", 6, 1.0))
+        if port == "COM5":
+            return Port(_nmea_bytes("IN", 20, 10.0))
+        return Port(b"")
+    import time
+    portar = [{"port": p, "skildring": s} for p, s in
+              (("COM3", "Seriell USB-enhet"), ("COM5", "Bluetooth"), ("COM9", "x"), ("COM11", "Bluetooth"))]
+    res = FU.skann(portar, opne=opne, sekund=0.2, frist=5)
+    assert res["COM9"]["tilstand"] == "oppteken" and res["COM11"]["kva"] == "stille"
+    f, atv = FU.forslag(res, {"stotta": True, "installert": True, "par": [{"geoscan": "COM34", "onevision": "COM24"}],
+                              "forslag": {"geoscan": "COM34", "onevision": "COM24"}},
+                        {"spakarm": {"opp": 1.8, "hogre": -0.6}},
+                        {"fil": "Stream C.xml", "xyz": "0.13;0.42;1,9", "x": 0.13, "y": 0.42, "z": 1.9, "komma_feil": True})
+    assert f["mottakar"] == "COM5" and f["onevision"] == "COM34"               # IN (IMU) og 10 Hz føre GN 1 Hz
+    assert any("fleire portar" in a for a in atv) and any("komma" in a for a in atv)
+    assert any("Mastehøgda i OneVision er 1.9" in a for a in atv) and any("Sideforskyvinga" in a for a in atv)
+    f, atv = FU.forslag({"COM3": res["COM3"]})
+    assert f["mottakar"] == "COM3" and any("antenneposisjon" in a for a in atv) and any("5 Hz" in a for a in atv)
+
+
+def test_les_onevision_stream_c(tmp_path):
+    import finn_utstyr as FU
+    f = tmp_path / "Stream C.xml"
+    f.write_text('<RadarConfiguration><Radar><GPSs Count="1"><GPS Type="0" xyz="0.13;0.42;1,6"/></GPSs></Radar></RadarConfiguration>',
+                 encoding="utf-8")
+    ov = FU.les_onevision([tmp_path / "finst_ikkje.xml", f])
+    assert ov["komma_feil"] and ov["z"] == 1.6 and ov["y"] == 0.42
+    assert FU.les_onevision([tmp_path / "x.xml"]) is None
+
+
+def test_finn_utstyr_api(tmp_path, monkeypatch):
+    import json as _json
+    import urllib.request as _u
+    import finn_utstyr as FU
+    import innstillingar as INN
+    import webtenar as W
+    for mod in (INN, W):
+        monkeypatch.setattr(mod, "HER", tmp_path)
+    monkeypatch.setattr(INN, "porter", lambda: [{"port": "COM3", "skildring": "Seriell USB-enhet"}])
+    monkeypatch.setattr(FU, "skann", lambda portar, hopp_over=(), **k: {"COM3": dict(
+        FU.analyser(_nmea_bytes("GN", 6, 1.0)), port="COM3", baud=115200, tilstand="open", skildring="USB")})
+    monkeypatch.setattr(FU, "les_onevision", lambda stiar=None: None)
+    cfgp = tmp_path / "geoscan_config.json"
+    cfgp.write_text(_json.dumps({"inn": [{"port": "COM23"}], "spakarm": {"opp": 1.8}}))
+    app = G.App(dict(G.STANDARD, inn=[], ut_seriell=[], tcp_port=None, status_port=0,
+                     logg=str(tmp_path / "logg"), ntrip={"pa": False}), cfgp)
+    srv = W.start(app, 0)
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def post(u, d):
+        r = _u.Request(base + u, data=_json.dumps(d).encode(), headers={"Content-Type": "application/json"})
+        return _json.loads(_u.urlopen(r).read())
+    try:
+        r = post("/api/finn_utstyr", {})
+        assert r["forslag"]["mottakar"] == "COM3" and r["forslag"]["talker"] == "GN"
+        assert r["noverande"]["mottakar"] == "COM23" and any("antenneposisjon" in a for a in r["atvaringar"])
+        post("/api/bruk_oppsett", dict(r["forslag"], onevision="34"))
+        c = _json.loads(cfgp.read_text())
+        assert c["inn"] == [{"port": "COM3", "baud": 115200}] and c["mottakar_kompenserer"] is False
+        assert c["ut_seriell"][0]["port"] == "COM34" and c["spakarm"]["opp"] == 1.8 and app.oppd["omstart"] is False
+    finally:
+        srv.shutdown()
