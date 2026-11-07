@@ -2,6 +2,14 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.5 – 7. november 2026
+- **Berre `$INGGA` blir rekna som stangspiss.** Norman 7.11: «Access reknar ut når det blir brukt, men streaming
+  ut elles trur eg er i fasepunktet til antenna.» Rådataa frå felttesten stadfestar det: alle 2 760 posisjonane
+  var `$GNGGA`. Geoscan la likevel til mastehøgda (fordi `mottakar_kompenserer` var på), så høgda til OneVision
+  vart 1,8 m for høg. No avgjer talker-ID-en: `IN` = stangspiss, elles antenne. Rådata frå testen gir 0,0 m
+  skilnad i høgd. Status åtvarar når mottakaren sender antenneposisjon og masta ikkje blir retta.
+- Nytt ope punkt 15: kan R12i sende `$INGGA` utan Trimble Access?
+
 ## 0.9.4 – 7. november 2026
 Etter felttest hos Norman 7.11 (pakke SnowmanGeoscan_pakke_20261107_165722):
 - **Feil retta: spora i OneVision låg feil og bytte side når ein snudde.** Med R12i-tilt

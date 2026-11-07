@@ -28,7 +28,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.4"
+VERSJON = "0.9.5"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -88,6 +88,10 @@ class Korrigerar:
                        "hellingskjelde": None, "geoide": None, "feil_sjekksum": 0}
         self.logfile = None
         self.komp = bool(cfg.get("mottakar_kompenserer"))   # R12i: tilt-kompensasjon i mottakaren
+        # Berre $INGGA (INS-løysing med IMU) er stangspissen. $GNGGA/$GPGGA er antennefasesenteret, sjølv om
+        # «mottakar_kompenserer» står på (felttest 7.11: R12i direkte på USB sende $GNGGA – IMU ikkje i bruk).
+        self.komp_aktiv = False
+        self.talker = None
         self.zone = int(cfg["sone"]) if str(cfg.get("sone", "auto")).isdigit() else None
         if cfg.get("logg"):
             d = HER / cfg["logg"]
@@ -119,6 +123,8 @@ class Korrigerar:
         cfg, st = self.cfg, self.status
         gga = N.parse_gga(fields) if k == "GGA" else None
         if gga:
+            self.talker = (fields[0] or "")[:2].upper()
+            self.komp_aktiv = self.komp and self.talker == "IN"
             st.update(fix=gga["q"], sats=gga["sats"])
             self.hel.add_position(lat, lon, now)
         tilt = H.tilt_from(self.hel, cfg, now)
@@ -127,8 +133,11 @@ class Korrigerar:
         if tilt is None or hdg is None:
             st.update(korrigert=False, stamp=None, krenging=None, forskyving_cm=None,
                       melding="ingen fersk helling" if tilt is None else "ventar på kurs (køyr nokre meter)")
-            if self.komp:
+            if self.komp_aktiv:
                 st["melding"] = "masta retta i mottakaren (stangspiss)" + ("" if tilt is None else ", ventar på kurs")
+            elif self.komp and self.talker:
+                st["melding"] = (f"mottakaren sender antenneposisjon (${self.talker}GGA), ikkje stangspiss ($INGGA) "
+                                 "– masta blir ikkje retta for helling. Slå på IMU i R12i, eller bruk ekstra hellingsmålar")
             elif cfg.get("utan_helling") == "stopp":
                 return None
             pitch = roll = 0.0          # vatrett – gir same punkt som OneVision ville rekna sjølv
@@ -165,7 +174,7 @@ class Korrigerar:
     def _point(self, lat, lon, h, lever, hdg, pitch, roll, d0):
         """Punktet som blir sendt ut: masta retta (referansepunkt eller rett antenne), og om djupn_sanntid er sett,
         flytta vidare dit eit objekt på den djupna eigentleg ligg (berre sidelengs – høgda er framleis overflata)."""
-        if self.komp:
+        if self.komp_aktiv:
             # R12i med tilt på og stanghøgd = mastehøgda sender STANGSPISSEN: foten av masta, rett under antenna
             # når vogna står vatrett. Han ligg ikkje midt på radaren, men forskyvd (fram, høgre) frå han.
             # (Retta 7.11.2026: før vart spissen rekna som referansepunktet, og «rett antenne» flytta punktet

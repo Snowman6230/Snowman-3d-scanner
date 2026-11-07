@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-07-gngga",
+   "dato": "2026-11-07",
+   "versjon": "0.9.5",
+   "tittel": "Du hadde rett: R12i sende antenneposisjonen – høgda er retta",
+   "tekst": "Du hadde rett om punkt 1. I testen din sende R12i $GNGGA direkte på USB: posisjonen til antenna, utan tiltsensoren. Stangspissen kjem berre når IMU-en er i bruk ($INGGA), slik du skreiv at Access reknar ut.\n\nGeoscan trudde han fekk spissen og la til mastehøgda, så høgda til OneVision vart 1,8 m for høg. Det er retta i 0.9.5: Geoscan ser no på starten av setninga og reknar berre $INGGA som stangspiss. Sideflyttinga som vart retta i 0.9.4 var feil uansett.\n\nMed $GNGGA blir masta ikkje retta for helling (ca. 16 cm per 5° med 1,8 m mast). Status seier frå om dette. Prøv gjerne å slå på IMU i R12i og sjå om setningane byrjar på $INGGA. Om ikkje, er ein ekstra hellingsmålar på ramma den sikre løysinga.",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-07-felttest-svar",
    "dato": "2026-11-07",
    "versjon": "0.9.4",

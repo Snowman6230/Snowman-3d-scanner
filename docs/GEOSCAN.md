@@ -50,6 +50,12 @@ brukt slik:
   merket for antennehøgd. Då sender R12i sjølv **stangspissen** – foten av masta, rett under antenna når vogna
   står vatrett – og masta blir retta i mottakaren (`"mottakar_kompenserer": true`). Norman har alt sett at dette
   verkar: hoppet på 2,2 m når IMU blir slått av og på.
+- **Berre `$INGGA` er stangspissen.** Felttest 7.11: R12i direkte på USB (utan Trimble Access) sende `$GNGGA` –
+  antennefasesenteret, IMU-en ikkje i bruk. Stangspissen kom berre gjennom Access. Geoscan reknar no posisjonen som
+  stangspiss berre når talker-ID-en er `IN` og `mottakar_kompenserer` er på. Elles er det antenna, og Status
+  åtvarar om at masta ikkje blir retta for helling. *(0.9.5. Før vart mastehøgda lagd til høgda òg for `$GNGGA`,
+  så høgda til OneVision vart 1,8 m for høg.)* Om R12i kan sende `$INGGA` utan Access, og om det då er spissen
+  eller antenna, er ikkje stadfest.
 - **Stangspissen er ikkje midt på radaren.** Han ligg der masta står (GPS 0,6 m til venstre). Med `rett_antenne`
   sender Geoscan antenna som om vogna var vatrett: rett over stangspissen, utan sideflytting, og OneVision legg
   til forskyvinga si sjølv. Med `referansepunkt` blir den vassrette delen av spakarmen trekt frå.

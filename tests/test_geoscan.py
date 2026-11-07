@@ -872,3 +872,18 @@ def test_mountpoint_liste_fraa_casteren(tmp_path, monkeypatch):
         assert d["ok"] and sorted(m["mountpoint"] for m in d["mounts"]) == ["SIM2", "TH"]   # nærmaste først når posisjonen er kjend
     finally:
         srv.shutdown(); stop.set()
+
+
+def test_gngga_er_antenne_sjolv_om_mottakar_kompenserer_er_paa():
+    """Felttest 7.11: R12i direkte på USB sende $GNGGA (antennefasesenteret, IMU ikkje i bruk). Geoscan trudde
+    det var stangspissen og la til mastehøgda – høgda til OneVision vart 1,8 m for høg. Berre $INGGA er spissen."""
+    cfg = dict(G.STANDARD, logg=None, hoegd="mottakar", utgang="rett_antenne", mottakar_kompenserer=True,
+               spakarm={"fram": 0.4, "hogre": -0.6, "opp": 1.8})
+    k = G.Korrigerar(cfg)
+    out = k.handle(_gga(talker="GN", alt="150.000"), now=1.0)[0]
+    g = N.parse_gga(N.split(out))
+    assert abs(g["alt"] - 150.0) < 1e-6 and abs(g["lat"] - N.coord_in("6223.4000000", "N")) < 1e-9
+    assert "antenneposisjon ($GNGGA)" in k.status["melding"] and not k.komp_aktiv
+    out = k.handle(_gga(talker="IN", alt="148.200"), now=2.0)[0]          # $INGGA: spissen → antenne = +1,8 m
+    assert abs(N.parse_gga(N.split(out))["alt"] - 150.0) < 1e-6 and k.komp_aktiv
+    assert "stangspiss" in k.status["melding"]
