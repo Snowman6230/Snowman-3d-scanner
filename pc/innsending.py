@@ -260,6 +260,16 @@ def lag_pakke(cfg_path, loggdir, versjon, med_raa=True, dagar=None, status=None)
                                                              ensure_ascii=False, indent=1))
                 except Exception:
                     pass
+        # Siste «Finn utstyr»-skanning som lesbar tekst, så utviklaren ser oppsettet utan skjermbilete
+        if ld.exists():
+            sk = sorted(ld.glob("finn_utstyr_*.json"))
+            if sk:
+                try:
+                    r = json.loads(sk[-1].read_text(encoding="utf-8"))
+                    z.writestr("SKANNING.txt", "\n".join([f"{opphav.NAMN} {versjon} – siste «Finn utstyr»",
+                                                           r.get("tid", ""), ""] + list(r.get("samandrag") or [])))
+                except Exception:
+                    pass
         info = {"versjon": versjon, "python": sys.version, "system": platform.platform(), "maskin": platform.node()}
         if status:
             info["status"] = _redact(status)

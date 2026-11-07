@@ -220,3 +220,30 @@ def forslag(skanna, c0c=None, cfg=None, ov=None):
         if "y" in ov and side and abs(abs(ov["y"]) - side) > 0.02:
             atv.append(f"Sideforskyvinga i OneVision er {abs(ov['y']):g} m, i Geoscan {side:g} m.")
     return f, atv
+
+
+def samandrag(res):
+    """Kort tekst om ei skanning (til sjekklista og pakka), så operatøren slepp skjermbilete."""
+    f = res.get("forslag") or {}
+    port = {r["port"]: r for r in res.get("portar") or []}
+    g = port.get(f.get("mottakar")) or {}
+    linjer = []
+    if g:
+        linjer.append(f"Mottakar: {g['port']} (${g.get('talker') or '??'}GGA, "
+                      f"{'stangspiss/IMU' if g.get('talker') == 'IN' else 'antenne'}, {g.get('hz')} Hz, "
+                      f"fix {g.get('fix')}, {g.get('sats')} sat, {g.get('baud')} baud, {g.get('tilstand')})")
+    else:
+        linjer.append("Mottakar: ikkje funnen")
+    if f.get("imu"):
+        linjer.append(f"Hellingsmålar: {f['imu']}")
+    c0c = res.get("com0com") or {}
+    if c0c.get("forslag"):
+        linjer.append(f"OneVision: Geoscan → {c0c['forslag']['geoscan']}, OneVision les {c0c['forslag']['onevision']}")
+    ov = res.get("onevision")
+    linjer.append(f"Stream C.xml: GPS xyz «{ov['xyz']}»" if ov else "Stream C.xml: ikkje funnen")
+    andre = [f"{r['port']}={r.get('kva') or r.get('tilstand')}" for r in res.get("portar") or [] if r["port"] != g.get("port")]
+    if andre:
+        linjer.append("Andre portar: " + ", ".join(andre))
+    for a in res.get("atvaringar") or []:
+        linjer.append("Åtvaring: " + a)
+    return linjer

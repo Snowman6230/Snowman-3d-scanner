@@ -2,11 +2,11 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
-   "id": "2026-11-07-finn-utstyr",
+   "id": "2026-11-07-finn-utstyr-2",
    "dato": "2026-11-07",
-   "versjon": "0.9.6",
+   "versjon": "0.9.7",
    "tittel": "Nytt: «Finn utstyr automatisk» – oppsettet gjer seg sjølv",
-   "tekst": "Takk for forslaget om ein oppstartsekvens. Det er laga:\n\nTrykk «🔍 Finn utstyr automatisk» under Status → Portar. Snowman Geoscan lyttar på alle portane i nokre sekund og viser kvar mottakaren er, kva han sender ($INGGA med IMU eller $GNGGA = antenne), kor mange posisjonar i sekundet, fix og satellittar. Han finn òg com0com-porten til OneVision og les GPS-oppsettet i Stream C.xml, og åtvarar om noko ikkje stemmer.\n\nTrykk «Bruk dette og start på nytt», så er oppsettet gjort. Får programmet ingen posisjon dei første 10 sekunda, startar skanninga av seg sjølv. Då går det fort å byte rover.\n\nLukk Trimble Access og NMEA-splitteren først – portar som er opptekne av andre program, blir viste som «oppteken».",
+   "tekst": "Takk for forslaget om ein oppstartsekvens. Det er laga:\n\nTrykk «🔍 Finn utstyr automatisk» under Status → Portar. Snowman Geoscan lyttar på alle portane i nokre sekund og viser kvar mottakaren er, kva han sender ($INGGA med IMU eller $GNGGA = antenne), kor mange posisjonar i sekundet, fix og satellittar. Han finn òg com0com-porten til OneVision og les GPS-oppsettet i Stream C.xml, og åtvarar om noko ikkje stemmer.\n\nTrykk «Bruk dette og start på nytt», så er oppsettet gjort. Får programmet ingen posisjon dei første 10 sekunda, startar skanninga av seg sjølv. Då går det fort å byte rover.\n\nLukk Trimble Access og NMEA-splitteren først – portar som er opptekne av andre program, blir viste som «oppteken».\n\nDu treng ikkje ta skjermbilete: resultatet av skanninga blir lagra og kjem med i pakka av seg sjølv, og står i kommentaren ved punkt r0 i sjekklista. Du set berre om det var godkjent.",
    "sjekk": {}
   },
   {

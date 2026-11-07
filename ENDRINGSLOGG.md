@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.7 – 7. november 2026
+- **Resultatet av «Finn utstyr» kjem til utviklaren av seg sjølv.** Kvar skanning blir lagra i loggmappa
+  (`finn_utstyr_*.json`, dei 5 siste), og samandraget blir skrive i kommentaren til sjekkpunkt r0 (merkt «[auto]»,
+  berre om operatøren ikkje har skrive noko sjølv). Pakka får `SKANNING.txt` med siste skanning: mottakar, talker,
+  Hz, fix, satellittar, baud, com0com-portane, Stream C.xml og åtvaringar. Operatøren treng ikkje ta skjermbilete.
+
 ## 0.9.6 – 7. november 2026
 - **Finn utstyr automatisk** (Norman 7.11: «oppstartsekvens som tolkar kva som blir sendt, kva COM-port, GGA-type
   … heilautomatisk – vi kan bruke forskjellige roverar»). Ny `pc/finn_utstyr.py`:

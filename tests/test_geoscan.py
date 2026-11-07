@@ -965,8 +965,9 @@ def test_finn_utstyr_api(tmp_path, monkeypatch):
     import urllib.request as _u
     import finn_utstyr as FU
     import innstillingar as INN
+    import innsending as IS
     import webtenar as W
-    for mod in (INN, W):
+    for mod in (INN, W, IS):
         monkeypatch.setattr(mod, "HER", tmp_path)
     monkeypatch.setattr(INN, "porter", lambda: [{"port": "COM3", "skildring": "Seriell USB-enhet"}])
     monkeypatch.setattr(FU, "skann", lambda portar, hopp_over=(), **k: {"COM3": dict(
@@ -986,6 +987,15 @@ def test_finn_utstyr_api(tmp_path, monkeypatch):
         r = post("/api/finn_utstyr", {})
         assert r["forslag"]["mottakar"] == "COM3" and r["forslag"]["talker"] == "GN"
         assert r["noverande"]["mottakar"] == "COM23" and any("antenneposisjon" in a for a in r["atvaringar"])
+        # Resultatet blir med i pakka av seg sjølv: fil i loggmappa, kommentar i sjekkpunkt r0, SKANNING.txt
+        filer = list(app.loggdir.glob("finn_utstyr_*.json"))
+        assert len(filer) == 1 and "Mottakar: COM3 ($GNGGA, antenne, 1.0 Hz" in filer[0].read_text(encoding="utf-8")
+        assert IS.sjekk_les()["punkt"]["r0"]["kommentar"].startswith("[auto] Mottakar: COM3")
+        import zipfile
+        zp = IS.lag_pakke(cfgp, app.loggdir, G.VERSJON)
+        with zipfile.ZipFile(zp) as z:
+            assert "Mottakar: COM3" in z.read("SKANNING.txt").decode("utf-8")
+            assert any(n.startswith("logg/finn_utstyr_") for n in z.namelist())
         post("/api/bruk_oppsett", dict(r["forslag"], onevision="34"))
         c = _json.loads(cfgp.read_text())
         assert c["inn"] == [{"port": "COM3", "baud": 115200}] and c["mottakar_kompenserer"] is False

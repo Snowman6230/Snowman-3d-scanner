@@ -18,6 +18,28 @@ WEB = HER / "web"
 MAKS_OPPLASTING = 500 * 1024 * 1024
 
 
+def lagre_skanning(app, res):
+    """Resultatet blir med i pakka til utviklaren av seg sjølv: fil i loggmappa (dei 5 siste blir tekne vare på),
+    og samandraget blir skrive i kommentaren til sjekkpunkt r0 (om operatøren ikkje har skrive noko sjølv)."""
+    import time as _t
+    import finn_utstyr as FU
+    import innsending as IS
+    try:
+        d = Path(app.loggdir)
+        d.mkdir(parents=True, exist_ok=True)
+        f = d / _t.strftime("finn_utstyr_%Y%m%d_%H%M%S.json")
+        f.write_text(json.dumps(dict(res, tid=_t.strftime("%Y-%m-%d %H:%M:%S"), samandrag=FU.samandrag(res)),
+                                ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+        for gml in sorted(d.glob("finn_utstyr_*.json"))[:-5]:
+            gml.unlink()
+        cur = IS.sjekk_les()["punkt"].get("r0") or {}
+        if not cur.get("kommentar") or cur["kommentar"].startswith("[auto]"):
+            IS.sjekk_lagre({"punkt": {"r0": {"status": cur.get("status", ""),
+                                             "kommentar": "[auto] " + " | ".join(FU.samandrag(res))}}})
+    except Exception:
+        pass
+
+
 def finn_utstyr(app):
     """Oppstartssjekken (finn_utstyr.py): skann ledige portar, bruk live-data for portane Geoscan alt les,
     finn com0com-para og OneVision-oppsettet, og lag eit forslag."""
@@ -205,7 +227,9 @@ def start(app, port=8088, lan=False):
                                        "har_passord": bool(INN._read(INN.HER / "ntrip_lokal.json").get("passord")),
                                        "har_token": bool(INN._read(INN.HER / "oppdatering_lokal.json").get("token"))})
                 if path == "/api/finn_utstyr":
-                    return self._send(finn_utstyr(app))
+                    res = finn_utstyr(app)
+                    lagre_skanning(app, res)
+                    return self._send(res)
                 if path == "/api/bruk_oppsett":
                     d = json.loads(self._body() or b"{}")
                     cfgf = INN._read(app.cfg_path)
