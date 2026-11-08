@@ -184,6 +184,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div class="verktoy">
       <label class="b">Vel eksportfil …<input type="file" id="eksport" accept=".geojson,.json,.svy,.csv,.txt" style="display:none"></label>
       <button class="b gra" id="demoeks" style="display:none" onclick="provEksempel()">Prøv med eksempelfil (DEMO)</button>
+      <label class="hj" style="display:inline-flex;align-items:center;gap:6px" title="Av: objekta blir viste og eksporterte som i OneVision, utan retting for helling">
+        <input type="checkbox" id="rhelling" checked onchange="rettPaNytt()"> Rett for helling</label>
       <label style="font-size:13px;color:var(--svak)">z er
         <select id="zmode"><option value="auto">finn ut sjølv</option><option value="djupn">djupn (m under bakken)</option><option value="hoegd">høgd (NN2000)</option></select></label>
       <label style="font-size:13px;color:var(--svak)">UTM-sone
@@ -531,7 +533,7 @@ async function gjenopprett(o){const ui=o.ui||{};gjenopprettar=true;
     if(ui.fane&&$("f-"+ui.fane))visFane(ui.fane);
     if(ui.fane=="resultat"||o.resultat||ui.spor){initKart();if(ui.spor)await visSpor(ui.spor)}
     if(o.resultat){const r0=o.resultat;
-      try{const r=await post("api/rett",{fil:r0.fil,z:r0.z,sone:r0.sone,okter:r0.okter,maks_avstand:r0.maks_avstand});visResultat(r,r0.namn||r0.fil);lastResFiler();
+      try{const r=await post("api/rett",{fil:r0.fil,z:r0.z,sone:r0.sone,okter:r0.okter,maks_avstand:r0.maks_avstand,helling:r0.helling!==false});$("rhelling").checked=r0.helling!==false;sisteFil={fil:r0.fil,namn:r0.namn||r0.fil};visResultat(r,r0.namn||r0.fil);visMerknad(r);lastResFiler();
         (ui.valt||[]).forEach(fi=>{if(fi<r.tabell.length)velObjekt(fi,true)});
         if(ui.profil!=null&&ui.profil<r.tabell.length)visProfil(ui.profil);
         if(ui.djupnTekst)bytDjupnTekst();
@@ -745,18 +747,24 @@ async function brukOV(){const f=ovFiler[+$("ovval").value];if(!f)return;const m=
   m.className="melding";m.textContent="Hentar "+f.namn+" frå OneVision …";
   try{const up=await post("api/onevision/hent",{sti:f.sti});ovIBruk=f.sti;
     m.textContent="Rettar …";
-    const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde]});
-    visResultat(r,f.namn);m.textContent="";lastResFiler();
+    const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde],helling:$("rhelling").checked});
+    sisteFil={fil:up.fil,namn:f.namn};visResultat(r,f.namn);visMerknad(r);lastResFiler();
     if(!innst)try{innst=await api("api/innstillingar")}catch(e){}
     $("ovinfo").innerHTML="I bruk: "+esc(f.namn)+" ("+ovDato(f.dato)+", "+(f.objekt??"?")+" objekt) frå "+esc(f.mappe)+ovGps(f);
     [...$("ovval").options].forEach((o,i)=>o.textContent=o.textContent.replace(" (i bruk)","")+(i==+$("ovval").value?" (i bruk)":""))}
   catch(err){m.className="melding feil";m.textContent="Kunne ikkje hente målinga: "+err.message}}
+let sisteFil=null;
+function visMerknad(r){const m=$("rmeld");m.className=r.merknad?"melding var":"melding";m.textContent=r.merknad||""}
+// «Rett for helling» av/på: rekn ut på nytt med same fil
+async function rettPaNytt(){if(!sisteFil)return;const m=$("rmeld");m.className="melding";m.textContent="Reknar ut på nytt …";
+  try{const r=await post("api/rett",{fil:sisteFil.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde],helling:$("rhelling").checked});
+    visResultat(r,sisteFil.namn);visMerknad(r)}catch(err){m.className="melding feil";m.textContent="Kunne ikkje rekne ut: "+err.message}}
 async function rettFil(f){const m=$("rmeld");
   m.className="melding";m.textContent="Lastar opp "+f.name+" …";
   try{const up=await api("api/last-opp?type=eksport&namn="+encodeURIComponent(f.name),{method:"POST",body:f});
     m.textContent="Rettar …";
-    const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde]});
-    visResultat(r,f.name);m.textContent="";lastResFiler()}
+    const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde],helling:$("rhelling").checked});
+    sisteFil={fil:up.fil,namn:f.name};visResultat(r,f.name);visMerknad(r);lastResFiler()}
   catch(err){m.className="melding feil";m.textContent="Kunne ikkje rette: "+err.message}}
 // djupn → farge (grunt = lys, djupt = mørk lilla)
 const djFarge=d=>d==null?"#4ea8ff":d<0.5?"#9be7ff":d<1?"#4ea8ff":d<1.5?"#6a6cff":d<2?"#a855f7":d<3?"#e04fd0":d<5?"#ff6b6b":"#ffb347";

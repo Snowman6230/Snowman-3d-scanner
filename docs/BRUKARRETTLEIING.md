@@ -143,6 +143,9 @@ Fana **Resultat**:
   30 m). Det styrer «Grav nedover», og kva djupn Status reknar feilen for. Fargeskalaen går til over 5 m.
 - **Bakgrunnskart:** vel i menyen «Kart» over kartet – fargekart eller gråtonekart frå Kartverket, flyfoto
   (Esri) eller OpenStreetMap. Flyfoto viser kantsteinar og kummar. Valet blir hugsa («✓ lagra»).
+- **Rett for helling:** kryss av (standard) for å rette objekta for hellinga til vogna. Ta bort krysset for å sjå
+  og eksportere objekta som i OneVision. Utan hellingsdata i loggen (R12i utan IMU) blir dei viste urørte uansett,
+  med ein merknad.
 - **Måling frå OneVision:** Geoscan finn målingane sjølv (`Survey_ÅÅÅÅ.MM.DD_NNN`) i OneVision-mappa, til dømes
   `E:\Dokumenter\OneVision\Projects`. Den nyaste med objekt blir lasta inn automatisk. Vil du sjå ei anna måling,
   vel ho i lista og trykk **Bruk denne**. **↻ Leit på nytt** hentar målingar som er lagra etterpå. Ligg målingane ein

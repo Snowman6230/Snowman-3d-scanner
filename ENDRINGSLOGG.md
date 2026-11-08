@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.13 – 8. november 2026
+- Resultat: nytt val «Rett for helling» (på som standard). Av: objekta frå OneVision blir viste og eksporterte
+  urørte. Før stoppa Geoscan med feilen «loggane har ingen posisjonar med helling» når R12i køyrde utan IMU, og
+  då kunne ein ikkje sjå målinga i det heile. No blir objekta viste likevel, med ein merknad om at dei ikkje er
+  retta, og kart, tverrsnitt og «grav nedover» verkar. Ønske frå Hans Petter etter test 8.11.
+
 ## 0.9.12 – 8. november 2026
 - OneVision lagrar kvar måling som `Projects/Survey_…/Survey_….svy`, med vogneoppsettet i `Data/Stream C.xml`
   (sett hos Norman 8.11). Når ei måling blir teken i bruk under Resultat, viser Geoscan GPS-forskyvinga (x, y, z)

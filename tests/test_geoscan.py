@@ -1029,3 +1029,18 @@ def test_onevision_filer_gps_xyz_per_maaling(tmp_path):
     (m / "Data" / "Stream C.xml").write_text('<Cfg><GPS Name="g" xyz="0.13;0.42;1.9"/></Cfg>')
     f = OVF.finn({"onevision_mappe": str(tmp_path / "Projects")})["filer"][0]
     assert f["gps_xyz"] == [0.13, 0.42, 1.9]
+
+
+def test_resultat_utan_helling(tmp_path):
+    """Utan hellingsdata (eller med helling slått av) blir objekta viste urørte, med merknad – ikkje feil."""
+    import json as _json
+    import resultat as RES
+    gj = {"type": "FeatureCollection", "crs": {"type": "name", "properties": {"name": "EPSG:32632"}},
+          "features": [{"type": "Feature", "properties": {"id": 1},
+                        "geometry": {"type": "LineString", "coordinates": [[379000.0, 6920000.0, 0.8], [379002.0, 6920001.0, 0.9]]}}]}
+    f = tmp_path / "obj.geojson"
+    f.write_text(_json.dumps(gj))
+    for helling in (True, False):
+        r = RES.rett_eksport(f, [], tmp_path / "ut", helling=helling)
+        assert r["merknad"] and r["helling"] is False and r["sone"] == 32
+        assert r["tabell"][0]["djupn_etter"]["snitt"] == 0.85

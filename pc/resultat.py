@@ -185,15 +185,21 @@ def skriv_dxf(gj, path):
 
 
 # ---------- retting ----------
-def rett_eksport(objektfil, loggfiler, utdir, zmode="auto", sone=None, maks_avstand=1.0):
-    """Rett ei eksportfil mot loggane. Returnerer det kartet og tabellen treng, og skriv utfilene."""
+def rett_eksport(objektfil, loggfiler, utdir, zmode="auto", sone=None, maks_avstand=1.0, helling=True, standard_sone=32):
+    """Rett ei eksportfil mot loggane. Returnerer det kartet og tabellen treng, og skriv utfilene.
+    helling=False: objekta blir viste og eksporterte urørte (same posisjon og djupn som i OneVision). Det same skjer
+    når loggane ikkje har helling – då med ein merknad i staden for feil, så kart, tverrsnitt og grav nedover
+    framleis verkar (8.11.2026, R12i utan IMU)."""
     gj = les_objekt(objektfil)
     zone = sone or KO.geojson_zone(gj)
-    logg = KO.Logg(loggfiler, zone)
-    if not logg.rows:
-        raise ValueError("loggane har ingen posisjonar med helling. Var hellinga tilgjengeleg under skanninga? "
-                         "(Med berre R12i blir masta retta, men djupna krev ein ekstra IMU på ramma.)")
-    zone = zone or logg.rows[0]["sone"]
+    logg = KO.Logg(loggfiler if helling else [], zone)
+    merknad = None
+    if helling and not logg.rows:
+        merknad = ("Loggane har ingen posisjonar med helling, så objekta er viste utan hellingsretting (som i "
+                   "OneVision). Slå på IMU i R12i eller bruk ein ekstra hellingsmålar for å rette djupna.")
+    elif not helling:
+        merknad = "Hellingsretting er slått av: objekta er viste som i OneVision."
+    zone = zone or (logg.rows[0]["sone"] if logg.rows else standard_sone)
     orig = copy.deepcopy(gj)
     ok, miss, zmode = KO.correct_geojson(gj, logg, zmode, maks_avstand)
     gj.setdefault("properties", {})
@@ -221,4 +227,5 @@ def rett_eksport(objektfil, loggfiler, utdir, zmode="auto", sone=None, maks_avst
                        "maks_endring_cm": pr.get("helling_maks_endring_cm", 0),
                        "djupn_for": st(f0), "djupn_etter": st(f1)})
     return {"retta_punkt": ok, "utan_logg": miss, "z": zmode, "sone": zone, "filer": filer, "tabell": tabell,
+            "helling": bool(logg.rows), "merknad": merknad,
             "for": _to_latlon(orig, zone), "etter": _to_latlon(gj, zone)}

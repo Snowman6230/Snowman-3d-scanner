@@ -347,15 +347,20 @@ def start(app, port=8088, lan=False):
                     logs = [p for p in logs if p.is_file()]
                     if app.cfg.get("demo") and (WEB / "vendor" / "demo-logg.csv").is_file():
                         logs.append(WEB / "vendor" / "demo-logg.csv")   # DEMO: ferdig logg over heile simulatorfeltet
-                    if not logs:
-                        return self._err("ingen loggar å rette mot. Skann først med Snowman Geoscan i gang.")
+                    helling = d.get("helling", True) is not False
+                    if not logs and helling:
+                        return self._err("ingen loggar å rette mot. Skann først med Snowman Geoscan i gang, "
+                                         "eller slå av «Rett for helling» for å sjå objekta som dei er.")
                     sone = d.get("sone")
+                    cs = app.cfg.get("sone")
                     r = RES.rett_eksport(src, logs, HER / "resultat", d.get("z", "auto"),
                                          int(sone) if str(sone or "").isdigit() else None,
-                                         float(d.get("maks_avstand") or 1.0))
+                                         float(d.get("maks_avstand") or 1.0), helling,
+                                         int(cs) if str(cs or "").isdigit() else 32)
                     r["ok"] = True
                     app.okt.sett_resultat({"fil": src.name, "namn": src.name.split("_", 3)[-1], "z": d.get("z", "auto"),
-                                           "sone": sone, "okter": okter, "maks_avstand": d.get("maks_avstand")})
+                                           "sone": sone, "okter": okter, "maks_avstand": d.get("maks_avstand"),
+                                           "helling": helling})
                     return self._send(r)
                 if path == "/api/pakke":
                     d = json.loads(self._body() or b"{}")
