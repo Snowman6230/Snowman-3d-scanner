@@ -2,6 +2,13 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.14 – 8. november 2026
+- «Finn utstyr» og com0com-dialogen kunne bli høgare enn skjermen på Panasonic-nettbrettet. Då forsvann ✕ og
+  knappane, og dialogen kunne verken lukkast eller rullast. No får ingen dialog bli høgare enn skjermen. Han
+  rullar inni, og ✕ står alltid synleg øvst til høgre. Esc og trykk utanfor lukkar òg.
+- Lange Windows-feilmeldingar for portar er gjort korte («svarar ikkje (Bluetooth-port utan tilkopla eining)»,
+  «oppteken av eit anna program»).
+
 ## 0.9.13 – 8. november 2026
 - Resultat: nytt val «Rett for helling» (på som standard). Av: objekta frå OneVision blir viste og eksporterte
   urørte. Før stoppa Geoscan med feilen «loggane har ingen posisjonar med helling» når R12i køyrde utan IMU, og

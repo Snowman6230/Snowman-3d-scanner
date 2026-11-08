@@ -67,7 +67,10 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 svg{display:block;margin:6px auto 0}
 .leaflet-container{font:inherit}
 .overlay{position:fixed;inset:0;background:rgba(5,10,14,.82);z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px}
-.modal{max-width:640px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid var(--linje)}
+.modal{max-width:640px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid var(--linje);
+  max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain}
+.modal>.lukkx{position:sticky;top:0;float:right;z-index:3;font-size:20px;min-width:48px;min-height:44px}
+.modal .tabell td{overflow-wrap:anywhere}
 .djl{background:#0f1418;color:#e8eef2;border:1px solid #4ea8ff;font-size:11px;font-weight:700;padding:1px 5px;box-shadow:none}
 .djl:before{display:none}
 .lagrestatus{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;margin-bottom:12px;border-radius:10px;border:1px solid var(--linje);background:var(--kort);font-weight:600}
@@ -412,7 +415,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 </main>
 
 <div id="fu" class="overlay" style="display:none" onclick="if(event.target==this)lukkFu()"><div class="k modal" style="max-width:860px">
-  <button class="b gra" style="float:right" onclick="lukkFu()" title="Lukk">✕</button>
+  <button class="b gra lukkx" onclick="lukkFu()" title="Lukk (Esc)">✕</button>
   <h2 style="font-size:20px">🔍 Finn utstyr automatisk</h2>
   <div id="fuinnhald"></div>
   <div class="verktoy" style="margin-top:14px"><span style="flex:1"></span>
@@ -421,7 +424,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <button class="b gra" onclick="lukkFu()">Lukk</button></div>
 </div></div>
 <div id="c0c" class="overlay" style="display:none" onclick="if(event.target==this)lukkCom0com()"><div class="k modal">
-  <button class="b gra" style="float:right" onclick="lukkCom0com()" title="Lukk">✕</button>
+  <button class="b gra lukkx" onclick="lukkCom0com()" title="Lukk (Esc)">✕</button>
   <div id="c0cinnhald"></div>
   <div class="verktoy" style="margin-top:14px">
     <label class="hj" id="c0cskjulw"><input type="checkbox" id="c0cskjul" checked> Ikkje vis dette igjen før noko endrar seg</label>
@@ -596,16 +599,20 @@ function fuSjekk(s){if(s.demo){$("fubanner").style.display="none";return}
     // Heilautomatisk: første gong utan data blir skanninga starta av seg sjølv.
     if(!fuAutoKoyrd&&$("oktval").style.display=="none"&&$("c0c").style.display=="none"){fuAutoKoyrd=true;opneFu()}}}
 function lukkFu(){$("fu").style.display="none"}
+document.addEventListener("keydown",e=>{if(e.key!="Escape")return;
+  if($("fu").style.display!="none")lukkFu();else if($("c0c").style.display!="none")lukkCom0com()});
 function opneFu(){$("fu").style.display="flex";finnUtstyr()}
 const FUKVA={gnss:"GNSS-mottakar",helling:"Hellingsmålar",binaer:"binærdata (RTCM/UBX)",ukjend:"ukjende data",stille:"ingen data",com0com:"com0com (OneVision)"};
 async function finnUtstyr(){$("fubruk").style.display="none";$("fuskann").disabled=true;
   $("fuinnhald").innerHTML='<p class="var"><b>Skannar portane …</b> Lyttar på kvar port i nokre sekund (ca. 10–15 s). Bluetooth-portar kan bruke litt tid.</p>';
   try{FU=await post("api/finn_utstyr",{})}catch(e){$("fuinnhald").innerHTML='<p class="feil">✗ '+esc(e.message)+'</p>';$("fuskann").disabled=false;return}
   $("fuskann").disabled=false;const f=FU.forslag;
+  const kortPortfeil=m=>/semafor|semaphore|121\)/i.test(m)?"svarar ikkje (Bluetooth-port utan tilkopla eining)":
+    /tilgang|access is denied|PermissionError|\(5,/i.test(m)?"oppteken av eit anna program":/FileNotFound|\(2,/i.test(m)?"finst ikkje lenger":m.length>90?m.slice(0,90)+" …":m;
   const rad=r=>{const k=r.kva?FUKVA[r.kva]||r.kva:(r.tilstand||"");let d="";
     if(r.kva=="gnss")d=`$${r.talker||"??"}GGA · ${r.talker=="IN"?"<b>stangspiss (IMU)</b>":"antenne"} · ${r.hz==null?"–":F(r.hz,r.hz<2?1:0)} Hz · fix ${r.fix} · ${r.sats} sat`+(r.baud?` · ${r.baud} baud`:"");
     else if(r.kva=="helling")d=Object.keys(r.typar||{}).join(", ");
-    else if(r.tilstand&&r.tilstand!="open")d=esc(r.tilstand)+(r.melding?" – "+esc(r.melding):"");
+    else if(r.tilstand&&r.tilstand!="open")d=esc(r.tilstand)+(r.melding?" – "+esc(kortPortfeil(r.melding)):"");
     const val=r.port==f.mottakar?" ← mottakar":r.port==f.imu?" ← hellingsmålar":r.port==f.onevision?" ← til OneVision":"";
     return `<tr${val?' style="font-weight:700"':""}><td>${esc(r.port)}</td><td>${esc(r.skildring||"")}</td><td class="${r.kva=="gnss"?"ok":""}">${k}${val?`<span class="ok">${val}</span>`:""}</td><td>${d}</td></tr>`};
   let h=`<div class="tabell"><table><tr><th>Port</th><th>Eining</th><th>Kva</th><th>Detaljar</th></tr>${FU.portar.map(rad).join("")}</table></div>`;
