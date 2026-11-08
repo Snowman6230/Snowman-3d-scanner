@@ -166,6 +166,9 @@ def start(app, port=8088, lan=False):
                                        "sjekk_svar": INS.meldingar()["sjekk_svar"]})
                 if path == "/api/meldingar":
                     return self._send(INS.meldingar())
+                if path == "/api/onevision":
+                    import onevision_filer as OVF          # målefilene frå OneVision, nyaste først
+                    return self._send(OVF.finn(app.cfg))
                 if path == "/api/resultatfiler":
                     d = HER / "resultat"
                     fl = sorted(d.iterdir(), key=lambda p: -p.stat().st_mtime) if d.exists() else []
@@ -326,6 +329,14 @@ def start(app, port=8088, lan=False):
                     return self._send({"ok": True, "fil": fn})
                 if path == "/api/slett-fil":
                     return self._send({"ok": INS.fil_slett(json.loads(self._body() or b"{}").get("fil", ""))})
+                if path == "/api/onevision/hent":
+                    import onevision_filer as OVF
+                    sti = json.loads(self._body() or b"{}").get("sti", "")
+                    if not OVF.er_funnen(app.cfg, sti):
+                        return self._err("fann ikkje målefila (berre .svy i OneVision-mappene kan hentast)")
+                    src = Path(sti)
+                    fn = INS.fil_lagre(src.name, src.read_bytes(), "eksport")
+                    return self._send({"ok": True, "fil": fn, "namn": src.name})
                 if path == "/api/rett":
                     d = json.loads(self._body() or b"{}")
                     src = HER / "innsendt" / "filer" / INS.safe_name(d.get("fil", ""))

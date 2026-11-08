@@ -143,6 +143,10 @@ Fana **Resultat**:
   30 m). Det styrer «Grav nedover», og kva djupn Status reknar feilen for. Fargeskalaen går til over 5 m.
 - **Bakgrunnskart:** vel i menyen «Kart» over kartet – fargekart eller gråtonekart frå Kartverket, flyfoto
   (Esri) eller OpenStreetMap. Flyfoto viser kantsteinar og kummar. Valet blir hugsa («✓ lagra»).
+- **Måling frå OneVision:** Geoscan finn målingane sjølv (`Survey_ÅÅÅÅ.MM.DD_NNN`) i OneVision-mappa, til dømes
+  `E:\Dokumenter\OneVision\Projects`. Den nyaste med objekt blir lasta inn automatisk. Vil du sjå ei anna måling,
+  vel ho i lista og trykk **Bruk denne**. **↻ Leit på nytt** hentar målingar som er lagra etterpå. Ligg målingane ein
+  annan stad, skriv mappa under Innstillingar → Retting og lagring.
 - **Tverrsnitt og Grav nedover står alltid over kartet, men er grå** til du har lasta inn ei eksportfil med objekt
   («Vel eksportfil …»). Merk røyr og kablar i OneVision (Targets) og vel `.svy`-fila for målinga. «Grav nedover»
   krev i tillegg at objekta har djupn.

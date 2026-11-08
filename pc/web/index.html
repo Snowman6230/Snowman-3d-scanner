@@ -174,6 +174,13 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <h2>2. Rett røyr og kablar frå GRED HD / OneVision</h2>
     <p class="hj">Eksporter objekta frå GRED HD eller OneVision som <b>GeoJSON</b> (eller CSV med austing, nording og djupn), eller
     vel <b>målefila frå OneVision (.svy)</b> direkte – objekta ligg inne i ho. Vel fila her. Ho blir retta for hellinga og lagra, så utviklaren òg kan sjå henne.</p>
+    <div class="verktoy" id="ovboks" style="margin-bottom:8px;gap:8px">
+      <b>Måling frå OneVision:</b>
+      <select id="ovval" style="flex:1;min-width:260px"><option value="">Leitar …</option></select>
+      <button class="b" onclick="brukOV()">Bruk denne</button>
+      <button class="b gra" onclick="lastOV(true)" title="Leit etter nye målingar i OneVision-mappene">↻ Leit på nytt</button>
+    </div>
+    <div class="hj" id="ovinfo" style="margin:-2px 0 10px"></div>
     <div class="verktoy">
       <label class="b">Vel eksportfil …<input type="file" id="eksport" accept=".geojson,.json,.svy,.csv,.txt" style="display:none"></label>
       <button class="b gra" id="demoeks" style="display:none" onclick="provEksempel()">Prøv med eksempelfil (DEMO)</button>
@@ -353,6 +360,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div class="felt">
       <label><span>Djupn å rette for under skanninga (m, 0 = berre masta)</span><input name="djupn_sanntid" inputmode="decimal"></label>
       <label><span>Djupast georadaren skannar (m) – styrer skala og «grav nedover»</span><input name="radar_djupn" inputmode="decimal"></label>
+      <label><span>Mappe for OneVision-målingar (tom = finn sjølv)</span><input name="onevision_mappe" placeholder="t.d. E:\Dokumenter\OneVision\Projects"></label>
       <label><span>UTM-sone for loggen</span><select name="sone"><option>32</option><option>33</option><option>35</option><option value="auto">auto</option></select></label>
     </div>
     <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="opptak">Lagre all rådata frå mottakaren (tilrådd under testing)</label><br>
@@ -454,7 +462,7 @@ function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.
   document.querySelectorAll(".fane").forEach(s=>s.classList.toggle("aktiv",s.id=="f-"+f));
   lagreOkt();
   if(f=="status")setTimeout(()=>lkart&&lkart.invalidateSize(),50);
-  if(f=="resultat"){initKart();lastOkter();lastResFiler();setTimeout(()=>kart&&kart.invalidateSize(),50)}
+  if(f=="resultat"){initKart();lastOkter();lastResFiler();lastOV(false);setTimeout(()=>kart&&kart.invalidateSize(),50)}
   if(f=="send")lastInnsending();if(f=="innst")lastInnst()}
 
 // ---------- status ----------
@@ -713,6 +721,29 @@ async function lastOkter(){let o;try{o=await api("api/okter")}catch(e){return}co
 async function provEksempel(){try{const b=await (await fetch("vendor/demo-eksport.geojson")).blob();
   rettFil(new File([b],"demo-eksport.geojson",{type:"application/geo+json"}))}catch(e){$("rmeld").textContent="Fann ikkje eksempelfila."}}
 $("eksport").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)rettFil(f)};
+// ---------- målingar frå OneVision (Survey_ÅÅÅÅ.MM.DD_NNN.svy), nyaste først ----------
+let ovFiler=[],ovIBruk=null,ovAuto=false;
+const ovDato=d=>d?d.split("-").reverse().join("."):"utan dato";
+async function lastOV(manuell){let r;try{r=await api("api/onevision")}catch(e){$("ovinfo").textContent="Kunne ikkje leite: "+e.message;return}
+  ovFiler=r.filer||[];const v=$("ovval"),gml=v.value;
+  if(!ovFiler.length){v.innerHTML='<option value="">Fann ingen målingar</option>';
+    $("ovinfo").innerHTML="Leita i: "+(r.mapper.length?r.mapper.map(esc).join(" · "):"(fann ingen OneVision-mapper)")+
+      ". Ligg målingane ein annan stad, skriv mappa under Innstillingar → Retting og lagring.";return}
+  v.innerHTML=ovFiler.map((f,i)=>`<option value="${i}">${ovDato(f.dato)}${f.nr!=null?" nr "+f.nr:""} · ${esc(f.namn)}`+
+    `${f.objekt==null?"":" · "+f.objekt+" objekt"} · endra ${esc(f.endra)}${i==0?" – nyaste":""}${f.sti==ovIBruk?" (i bruk)":""}</option>`).join("");
+  const k=ovFiler.findIndex(f=>f.sti==ovIBruk);v.value=manuell&&gml!==""&&ovFiler[+gml]?gml:String(k>=0?k:0);
+  $("ovinfo").textContent=ovFiler.length+" måling"+(ovFiler.length==1?"":"ar")+" funne i "+[...new Set(r.mapper)].join(" · ");
+  // Automatisk: er ingenting lasta inn, blir den nyaste målinga med objekt brukt (etter at ei lagra økt har fått gjenopprette seg)
+  if(!ovAuto&&!manuell){ovAuto=true;setTimeout(()=>{if(!siste&&!gjenopprettar){const i=ovFiler.findIndex(f=>f.objekt);if(i>=0){$("ovval").value=String(i);brukOV()}}},1500)}}
+async function brukOV(){const f=ovFiler[+$("ovval").value];if(!f)return;const m=$("rmeld");
+  m.className="melding";m.textContent="Hentar "+f.namn+" frå OneVision …";
+  try{const up=await post("api/onevision/hent",{sti:f.sti});ovIBruk=f.sti;
+    m.textContent="Rettar …";
+    const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde]});
+    visResultat(r,f.namn);m.textContent="";lastResFiler();
+    $("ovinfo").textContent="I bruk: "+f.namn+" ("+ovDato(f.dato)+", "+(f.objekt??"?")+" objekt) frå "+f.mappe;
+    [...$("ovval").options].forEach((o,i)=>o.textContent=o.textContent.replace(" (i bruk)","")+(i==+$("ovval").value?" (i bruk)":""))}
+  catch(err){m.className="melding feil";m.textContent="Kunne ikkje hente målinga: "+err.message}}
 async function rettFil(f){const m=$("rmeld");
   m.className="melding";m.textContent="Lastar opp "+f.name+" …";
   try{const up=await api("api/last-opp?type=eksport&namn="+encodeURIComponent(f.name),{method:"POST",body:f});
@@ -773,8 +804,8 @@ function verktoyTilstand(harObj,harDjupn){verkObj=harObj;verkDjupn=harDjupn;cons
   t.disabled=!harObj;t.title=harObj?"Klikk to punkt på kartet, A og B, på tvers av grøfta":"Last inn ei eksportfil med objekt først";
   ["gdjupn","gspel","galt"].forEach(i=>$(i).disabled=!g);$("grav").style.opacity=g?"1":".6";
   $("ginfo").innerHTML=g?GINFO:harObj?"Objekta i fila har inga djupn, så det er ingenting å grave ned til.":
-    "<b>Last inn ei eksportfil med objekt først</b> (knappen «Vel eksportfil …» over). Merk røyr og kablar i OneVision "+
-    "(Targets), og vel .svy-fila for målinga. Då blir «Grav nedover» og «✚ Tverrsnitt» aktive."}
+    "<b>Vel ei måling med objekt først</b> (under «Måling frå OneVision» over, eller «Vel eksportfil …»). Merk røyr og "+
+    "kablar i OneVision (Targets). Då blir «Grav nedover» og «✚ Tverrsnitt» aktive."}
 const SNITT=0.05;   // ±5 cm
 let lagSnitt=null;
 function grav(cm){const d=cm/100;lagreOkt();$("gtekst").textContent=cm+" cm";gravPa=true;if(lagFor)lagFor.setStyle({opacity:0,fillOpacity:0});

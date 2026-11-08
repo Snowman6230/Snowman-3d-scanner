@@ -43,6 +43,7 @@ def hent(cfg_path, cfg):
         "utgang": cfg.get("utgang", "rett_antenne"),
         "djupn_sanntid": cfg.get("djupn_sanntid", 0.0),
         "radar_djupn": cfg.get("radar_djupn", 2.5),
+        "onevision_mappe": cfg.get("onevision_mappe", ""),
         "sone": str(cfg.get("sone", "32")),
         "opptak": bool(cfg.get("opptak", True)),
         "status_lan": bool(cfg.get("status_lan")),
@@ -138,6 +139,8 @@ def lagre(cfg_path, d, streng=True):
         raise ValueError("ukjend utgang")
     cfg["djupn_sanntid"] = tal("djupn_sanntid", 0, 20, "djupn i sanntid", cfg.get("djupn_sanntid", 0.0))
     cfg["radar_djupn"] = tal("radar_djupn", 0.5, 30, "djupast georadaren skannar", cfg.get("radar_djupn", 2.5))
+    if "onevision_mappe" in d:
+        cfg["onevision_mappe"] = str(d.get("onevision_mappe") or "").strip().strip('"')
     if str(d.get("sone")) in ("32", "33", "35", "auto"):
         cfg["sone"] = str(d["sone"])
     elif streng:

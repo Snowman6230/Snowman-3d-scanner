@@ -1002,3 +1002,19 @@ def test_finn_utstyr_api(tmp_path, monkeypatch):
         assert c["ut_seriell"][0]["port"] == "COM34" and c["spakarm"]["opp"] == 1.8 and app.oppd["omstart"] is False
     finally:
         srv.shutdown()
+
+
+def test_onevision_filer_nyaste_forst(tmp_path):
+    """Målefilene frå OneVision blir funne i undermapper og sorterte nyaste først (dato og nummer i namnet)."""
+    import onevision_filer as OVF
+    rot = tmp_path / "Projects"
+    for namn in ("Survey_2026.11.07_001", "Survey_2026.11.08_002", "Survey_2026.11.08_001"):
+        (rot / namn).mkdir(parents=True)
+        (rot / namn / f"{namn}.svy").write_text("<Survey></Survey>")
+    (rot / "anna.txt").write_text("x")
+    r = OVF.finn({"onevision_mappe": str(rot)})
+    assert [f["namn"] for f in r["filer"][:3]] == ["Survey_2026.11.08_002.svy", "Survey_2026.11.08_001.svy",
+                                                  "Survey_2026.11.07_001.svy"]
+    assert r["filer"][0]["dato"] == "2026-11-08" and r["filer"][0]["nr"] == 2
+    assert OVF.er_funnen({"onevision_mappe": str(rot)}, r["filer"][0]["sti"])
+    assert not OVF.er_funnen({"onevision_mappe": str(rot)}, str(rot / "anna.txt"))

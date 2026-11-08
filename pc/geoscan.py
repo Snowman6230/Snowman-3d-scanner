@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.10"
+VERSJON = "0.9.11"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -42,6 +42,7 @@ STANDARD = {
     "mottakar_kompenserer": False,
     "djupn_sanntid": 0.0,
     "radar_djupn": 2.5,
+    "onevision_mappe": "",       # arbeidsmappa i OneVision (tom = finn sjølv, sjå onevision_filer.py)
     "sone": "32",
     "hoegd": "nn2000",
     "kurs_kjelde": "auto",

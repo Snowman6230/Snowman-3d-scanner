@@ -2,6 +2,15 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.11 – 8. november 2026
+- Resultat finn målingane frå OneVision sjølv (`Survey_ÅÅÅÅ.MM.DD_NNN … .svy`, nytt `onevision_filer.py`). Lista
+  «Måling frå OneVision» viser alle, nyaste først, med dato, nummer og tal objekt. Er ingenting lasta inn, blir den
+  nyaste målinga med objekt brukt automatisk. Ein kan velje ei anna og trykkje «Bruk denne». Ønske frå Hans Petter
+  og Norman etter test 8.11.
+- Geoscan leitar i `<Dokument>/OneVision/Projects` og `X:/Dokumenter/OneVision/Projects` på alle stasjonar (hos
+  Norman `E:/Dokumenter/OneVision/Projects`). Ny innstilling `onevision_mappe` (Retting og lagring) om målingane
+  ligg ein annan stad. Berre `.svy`-filer i desse mappene kan hentast frå nettsida.
+
 ## 0.9.10 – 8. november 2026
 - Resultat: «✚ Tverrsnitt» og «Grav nedover» står no alltid over kartet. Før var dei gøymde til ei eksportfil med
   objekt var lasta inn, og Norman fann dei ikkje. No er dei grå med ei forklaring om å laste inn `.svy`-fila frå
