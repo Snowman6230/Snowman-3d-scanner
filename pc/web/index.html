@@ -485,7 +485,8 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
   fuSjekk(s)}
 function visOppd(o){const nk=o.feil=="nokkel"&&!o.nyare&&!o.koyrer;
   $("nokkel").style.display=nk?"block":"none";
-  const ug=$("nokkelug");if(ug)ug.style.display=o.nokkel_ugyldig?"block":"none";
+  // Ugyldig nøkkel blir ikkje vist som stripe: så lenge repoet er ope, går oppdateringane likevel.
+  // Det står berre som ei lita linje under Innstillingar → Oppdatering.
   const vis=o.nyare||o.koyrer||o.logg.length||o.omstart;$("oppd").style.display=vis?"block":"none";
   $("otekst").textContent=o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?"Ny versjon v"+o.github+" finst"+(o.melding?": «"+o.melding+"»":".")+" ":"";
   $("obtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none";$("ologg").textContent=o.logg.join("\n");
@@ -535,7 +536,8 @@ function visUst(o){if(!$("ust"))return;
   $("ust").innerHTML=`Installert: <b>v${esc(o.lokal)}</b>`+(o.github?` · på GitHub: <b>v${esc(o.github)}</b>`:"")+
     (o.sjekka?` · sist sjekka ${esc(o.sjekka)}`:"")+"<br>"+(o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?`<b class="var">Ny versjon finst${o.melding?": «"+esc(o.melding)+"»":""}</b>`:
     o.feil=="nokkel"?'<b class="var">Får ikkje sjekke: repoet er privat, og nøkkelen manglar eller er ugyldig (sjå under).</b>':o.feil=="nett"?'<span class="var">Fekk ikkje kontakt med GitHub (sjekk nettet).</span>':
-    o.github?'<span class="ok">Du har siste versjon.</span>':"");
+    o.github?'<span class="ok">Du har siste versjon.</span>':"")+
+    (o.nokkel_ugyldig?'<br><span class="hj">(Den lagra GitHub-nøkkelen blir ikkje godteken, men trengst ikkje så lenge repoet er ope.)</span>':"");
   $("ubtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none"}
 async function sjekkNo(){set("umeld","Sjekkar …");try{const r=await post("api/sjekk-oppdatering");visUst(r.oppdatering);set("umeld","")}catch(e){set("umeld",e.message,"feil")}}
 async function tilbake(){if(!confirm("Gå tilbake til versjonen før siste oppdatering? Snowman Geoscan startar på nytt."))return;
