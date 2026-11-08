@@ -2,6 +2,35 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-09-v0918-pakke",
+   "dato": "2026-11-09",
+   "versjon": "0.9.18",
+   "tittel": "Versjon 0.9.18: svar på pakka di – GPS-oppsett, Stream C.xml frå Geoscan, mountpoint-meny og 96 cm stripe",
+   "tekst": "Hei Norman! Takk for pakka frå 8.11. Her er det som er nytt i versjon 0.9.18:\n\n1. GPS-OPPSETT (versjon 0.9.18) – ønsket ditt\nØvst under Innstillingar vel du no:\n• R12i utan Trimble Access – Geoscan hentar NTRIP (stanghøgd = mastehøgd)\n• R12i med Trimble Access – Access hentar NTRIP og rettar med IMU. Geoscan hentar ikkje NTRIP og reknar ikkje om\n• Berre rådata – antenneposisjonen, ingen NTRIP frå Geoscan\nValet set resten av seg sjølv. Trykk «Start på nytt no» etterpå.\n\n2. GEOSCAN SKRIV GPS-FORSKYVINGA TIL ONEVISION (versjon 0.9.18)\nDu skreiv at det ikkje går an å endre dette i OneVision. Under Innstillingar → Vogn og mast står no kva som er i Stream C.xml (0.13;0.42;1.9 hos deg), og kva det bør vere. Trykk «Skriv Geoscan-måla til OneVision». Geoscan tek kopi først, og Windows spør kanskje om løyve. Start OneVision på nytt etterpå.\nMål mastehøgda nøye først (bakken → underkanten av R12i) og skriv han i Geoscan. Talet må vere den verkelege høgda – 1,6 gir ikkje mindre avvik, berre feil høgd. Berre ei kortare mast gir mindre feil.\nForteiknet på sida veit vi ikkje enno. Køyr over eit kjent røyr fram og tilbake: ligg treffa oppå kvarandre, er det rett. Ligg dei ca. 1 m frå kvarandre, må y snuast (−0.6).\n\n3. MOUNTPOINT SOM MENY (versjon 0.9.18) – ønsket ditt\nLista blir henta frå casteren av seg sjølv når du opnar Innstillingar. Vel i menyen over feltet.\n\n4. INGA STRIPE NÅR DU SNUR (versjon 0.9.18) – ønsket ditt\nStripa blir ikkje teikna når vogna står eller svingar kraftig. Slå av med «Auto-pause ved snuing» over kartet. «⏸ Pause sporet» stoppar alt.\n\n5. SKANNEBREIDDA ER 96 CM (retta i versjon 0.9.18)\nEg skreiv 77 cm før. Det var feil: målinga di frå 7.11 viser 96 cm, som IDS oppgir. Stripa er retta. Hald under ca. 90 cm mellom midtlinjene på spora.\n\nANNA FRÅ PAKKA\n• R12i sende $INGGA (IMU) i kveld medan Access var kopla til – bra! Men det var berre DGPS innandørs (2–5 m feil, QH/QV viste det rett). Test ute med RTK FIX.\n• Midt på dagen hadde du RTK FIX 95 % av tida.\n• Bakgrunnsfiler (DXF/KOF) i kartet kjem i neste versjon (0.9.19). DWG må lagrast som DXF.\n\nHelsing Hans Petter",
+   "sjekk": {
+    "n1": {
+     "tekst": "Laga i versjon 0.9.18: val av GPS-oppsett øvst under Innstillingar (utan Access / med Access og IMU / berre rådata).",
+     "prov_att": true
+    },
+    "n2": {
+     "tekst": "Laga i versjon 0.9.18: mountpoint-meny som blir fylt frå casteren av seg sjølv.",
+     "prov_att": true
+    },
+    "f1": {
+     "tekst": "Laga i versjon 0.9.18: auto-pause av stripa når vogna står eller snur. «⏸ Pause sporet» stoppar alt.",
+     "prov_att": true
+    },
+    "r4": {
+     "tekst": "Stream C.xml har framleis 0.13;0.42;1.9. Bruk «Skriv Geoscan-måla til OneVision» (versjon 0.9.18) under Vogn og mast, og test forteiknet med eit kjent røyr begge vegar.",
+     "prov_att": true
+    },
+    "r1": {
+     "tekst": "Med versjon 0.9.18: vel GPS-oppsett. Med Access: kople Access til R12i over Bluetooth, så Geoscan har USB.",
+     "prov_att": true
+    }
+   }
+  },
+  {
    "id": "2026-11-08-v0917-stripe",
    "dato": "2026-11-08",
    "versjon": "0.9.17",

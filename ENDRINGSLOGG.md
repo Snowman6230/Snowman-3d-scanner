@@ -2,6 +2,23 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.18 – 9. november 2026
+Etter testpakka frå Norman 8.11.
+- **Skannebreidda er 96 cm**, ikkje 77 cm. Objekt tvers over beltet i `.svy` frå 7.11 går ±0,479 m, som IDS oppgir.
+  0.9.17 brukte ±0,383 m frå målinga i 2022. Stripa på karta er no 96 cm (`skannebreidd`), utan lysare kantfelt.
+- **Val av GPS-oppsett** øvst under Innstillingar (ønske frå Norman): «R12i utan Trimble Access – Geoscan hentar
+  NTRIP», «R12i med Trimble Access – Access hentar NTRIP og rettar med IMU» og «Berre rådata». Valet set NTRIP og
+  «R12i rettar masta sjølv» når det blir endra (`gps_oppsett`, `innstillingar.GPS_OPPSETT`).
+- **Geoscan skriv GPS-forskyvinga til OneVision** (Innstillingar → Vogn og mast). OneVision kan ikkje endre ho sjølv.
+  Nytt `streamc.py`: les `Stream C.xml`, viser før og etter, tek kopi (reserve/ og .bak ved fila) og skriv
+  y = |høgre| (forteiknet i fila blir halde) og z = mastehøgda. Krev det administratorløyve, spør Windows.
+- **Mountpoint som meny**: lista blir henta frå casteren av seg sjølv når Innstillingar blir opna (ønske frå Norman).
+- **Auto-pause av stripa** når vogna står (under 0,15 m/s) eller svingar kraftig (over 20°/s), slik at snuing og
+  ranger ikkje teiknar stripe (ønske frå Norman). Brytar «Auto-pause ved snuing» på live-kartet. På Resultat blir
+  stykke der sporet knekk meir enn 35° hoppa over.
+- Same OneVision-måling blir ikkje lagra på nytt kvar gong ein trykkjer «Bruk denne» (`fil_lagre(gjenbruk=True)`).
+- «Finn utstyr» rangerer GPS-en i LTE-modemet (Sierra Wireless, COM21 på Panasonic CS35) under R12i.
+
 ## 0.9.17 – 8. november 2026
 - Skannestripe på karta (Status → Kart – live og Resultat → Kart): stripa radaren dekkjer, 77 cm (dei ytste spora i
   Stream C, ±0,383 m) med eit lysare felt ut til 96 cm (det IDS oppgir). Ho ligg midt på radaren, ikkje på antenna:

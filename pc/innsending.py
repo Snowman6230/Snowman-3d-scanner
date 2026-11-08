@@ -179,11 +179,21 @@ def svar_lagre(data):
     return cur
 
 
-def fil_lagre(name, data, kind="anna"):
-    """Lagrar ei opplasta fil i innsendt/filer/ med tid og type framfor namnet."""
+def fil_lagre(name, data, kind="anna", gjenbruk=False):
+    """Lagrar ei opplasta fil i innsendt/filer/ med tid og type framfor namnet.
+    gjenbruk=True: ligg same fil (namn og innhald) der frå før, blir ho brukt i staden for ein ny kopi
+    (0.9.18: «Bruk denne» på same OneVision-måling laga ein ny kopi kvar gong)."""
     if len(data) > MAKS_FIL:
         raise ValueError(f"fila er for stor (maks {MAKS_FIL // 1024 // 1024} MB)")
     kind = kind if kind in FILTYPAR else "anna"
+    if gjenbruk:
+        hale = f"_{kind}_{safe_name(name)}"
+        for p in sorted((_dir() / "filer").glob("*" + hale), reverse=True):
+            try:
+                if p.stat().st_size == len(data) and p.read_bytes() == data:
+                    return p.name
+            except OSError:
+                continue
     fn = f"{time.strftime('%Y%m%d_%H%M%S')}_{kind}_{safe_name(name)}"
     p = _dir() / "filer" / fn
     p.write_bytes(data)

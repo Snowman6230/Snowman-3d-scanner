@@ -22,7 +22,7 @@ Total feil ≈ (h_mast + d)·sin(helling). Med h = 1,2 m:
 | 5° | 10 cm | 19 cm | 32 cm |
 | 10° | 21 cm | 38 cm | 64 cm |
 
-Skannebreidda til Stream C er 96 cm ifølgje IDS. Mellom dei ytste spora (V24, 23 kanalar) er det 77 cm (±0,383 m i .svy). Karta i Geoscan viser stripa med 77 cm og eit lysare felt ut til 96 cm, midt på radaren (0.9.17). Alt over nokre få grader flyttar altså røyr og kablar ein stor del av breidda.
+Skannebreidda til Stream C er 96 cm ifølgje IDS, og objekt som går tvers over beltet i .svy frå 7.11.2026 går frå −0,479 til +0,479 m. Karta i Geoscan viser stripa med 96 cm, midt på radaren (0.9.18; 0.9.17 viste feilaktig 77 cm, frå ±0,383 m i målinga frå 2022). Alt over nokre få grader flyttar altså røyr og kablar ein stor del av breidda.
 
 ## Løysinga i to delar
 

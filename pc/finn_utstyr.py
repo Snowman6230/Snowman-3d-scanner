@@ -182,7 +182,10 @@ def forslag(skanna, c0c=None, cfg=None, ov=None):
     """Kva oppsett som bør brukast, og åtvaringar. skanna: {port: analyse}."""
     cfg = cfg or {}
     gnss = [r for r in skanna.values() if r.get("kva") == "gnss"]
-    gnss.sort(key=lambda r: (r.get("talker") != "IN", -(r.get("hz") or 0), -(r.get("fix") or 0)))
+    # GPS-en i LTE-modemet på PC-en (Sierra Wireless «NMEA Port», Panasonic CS35, 8.11.2026) skal aldri vinne over R12i
+    modem = lambda r: bool(re.search(r"sierra|wwan|lte|modem|snapdragon|qualcomm|u-blox.*gnss receiver",
+                                     r.get("skildring") or "", re.I))
+    gnss.sort(key=lambda r: (modem(r), r.get("talker") != "IN", -(r.get("hz") or 0), -(r.get("fix") or 0)))
     hell = [r for r in skanna.values() if r.get("kva") == "helling" and (not gnss or r["port"] != gnss[0]["port"])]
     f = {"mottakar": gnss[0]["port"] if gnss else None, "mottakar_baud": gnss[0].get("baud") if gnss else None,
          "imu": hell[0]["port"] if hell else None, "imu_baud": hell[0].get("baud") if hell else None,

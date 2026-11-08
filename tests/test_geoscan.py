@@ -1069,3 +1069,50 @@ def test_radarmidt_rett_antenne():
     assert abs((lor - lo) * mx + 0.6) < 0.005
     assert H2.radarmidt(la, lo, 0.0, (0.0, -0.6, 1.8), "referansepunkt") == (la, lo)
     assert H2.radarmidt(la, lo, None, (0.0, -0.6, 1.8), "rett_antenne") == (None, None)
+
+
+def test_gps_oppsett_set_ntrip_og_komp(tmp_path):
+    """Valet av GPS-oppsett set NTRIP og «R12i rettar masta sjølv» når det blir endra (ønske frå Norman 8.11)."""
+    import copy
+    import json as _json
+    import geoscan as G
+    import innstillingar as INN
+    cfg = copy.deepcopy(G.STANDARD); cfg["demo"] = True; cfg["ntrip"]["pa"] = True
+    p = tmp_path / "cfg.json"; p.write_text(_json.dumps(cfg))
+    d = INN.hent(p, cfg)
+    assert d["gps_oppsett"] == "geoscan_ntrip"
+    d.update(gps_oppsett="access", mottakar="COM3")
+    INN.lagre(p, d)
+    c2 = _json.loads(p.read_text())
+    assert c2["ntrip"]["pa"] is False and c2["mottakar_kompenserer"] is True and c2["gps_oppsett"] == "access"
+    d2 = INN.hent(p, c2); d2.update(gps_oppsett="raa", mottakar="COM3")
+    INN.lagre(p, d2)
+    c3 = _json.loads(p.read_text())
+    assert c3["ntrip"]["pa"] is False and c3["mottakar_kompenserer"] is False
+
+
+def test_streamc_skriv_gps_xyz(tmp_path):
+    """Geoscan skriv sida (|høgre|, forteiknet i fila blir halde) og mastehøgda til Stream C.xml. x blir ikkje rørt."""
+    import streamc as SC
+    f = tmp_path / "Stream C.xml"
+    f.write_bytes(b'\xef\xbb\xbf<Radar><GPSs Count="1"><GPS Type="0" xyz="0.13;0.42;1.9"/></GPSs></Radar>')
+    cfg = {"spakarm": {"fram": -0.4, "hogre": -0.6, "opp": 1.86}}
+    st = SC.status(cfg, [f])
+    assert st["ulik"] and st["forslag"]["xyz"] == "0.13;0.6;1.86"
+    r = SC.skriv(cfg, stiar=[f], reserve=tmp_path / "res")
+    assert r["for"] == "0.13;0.42;1.9" and r["etter"] == "0.13;0.6;1.86"
+    assert f.read_bytes().startswith(b"\xef\xbb\xbf") and b'xyz="0.13;0.6;1.86"' in f.read_bytes()
+    assert list(tmp_path.glob("Stream C.xml.bak_*"))
+    assert not SC.status(cfg, [f])["ulik"]
+    import pytest
+    with pytest.raises(ValueError):
+        SC.ny_tekst('<GPS xyz="1;2;3"/>', "0,6;1;2")
+
+
+def test_finn_utstyr_modem_under_r12i():
+    """LTE-modemet sin GPS (COM21 på Panasonic CS35) skal ikkje bli valt framfor R12i, sjølv med høgare rate."""
+    import finn_utstyr as FU
+    sk = {"COM21": {"port": "COM21", "kva": "gnss", "talker": "GP", "hz": 10, "fix": 1,
+                    "skildring": "Sierra Wireless Snapdragon X7 LTE-A NMEA Port (COM21)"},
+          "COM3": {"port": "COM3", "kva": "gnss", "talker": "GN", "hz": 5, "fix": 4, "skildring": "Seriell USB-enhet"}}
+    assert FU.forslag(sk)[0]["mottakar"] == "COM3"

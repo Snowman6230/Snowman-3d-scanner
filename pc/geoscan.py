@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.17"
+VERSJON = "0.9.18"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -42,8 +42,8 @@ STANDARD = {
     "mottakar_kompenserer": False,
     "djupn_sanntid": 0.0,
     "radar_djupn": 2.5,
-    "skannebreidd": 0.77,        # m, mellom dei ytste spora i Stream C (±0,383 m, .svy) – stripa på karta
-    "skannebreidd_ytre": 0.96,   # m, skannebreidda IDS oppgir – lysare felt utanfor
+    "skannebreidd": 0.96,        # m, Stream C: IDS oppgir 96 cm, og objekt i .svy (7.11.2026) går ±0,479 m – stripa på karta
+    "skannebreidd_ytre": 0.0,    # m, valfritt lysare felt utanfor stripa (0 = ingen)
     "onevision_mappe": "",       # arbeidsmappa i OneVision (tom = finn sjølv, sjå onevision_filer.py)
     "sone": "32",
     "hoegd": "nn2000",
@@ -497,7 +497,7 @@ class App:
         return {"korr": k, "ntrip": n, "inn": dict(self.state), "innstat": self.innstat(),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"], "kasta": o["kasta"]} for o in self.ut.ports],
-                "stripe": [float(self.cfg.get("skannebreidd") or 0.77), float(self.cfg.get("skannebreidd_ytre") or 0.96)],
+                "stripe": [float(self.cfg.get("skannebreidd") or 0.96), float(self.cfg.get("skannebreidd_ytre") or 0.0)],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25, "radar_djupn": rd,
                 "namn": NAMN, "produsent": PRODUSENT, "signatur": SIGNATUR,
                 "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}

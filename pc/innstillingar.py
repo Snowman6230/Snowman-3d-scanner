@@ -40,6 +40,7 @@ def hent(cfg_path, cfg):
         "tcp_port": cfg.get("tcp_port", 5000),
         "mast": s.get("opp", 1.8), "fram": s.get("fram", 0.0), "hogre": s.get("hogre", 0.0),
         "mottakar_kompenserer": bool(cfg.get("mottakar_kompenserer")),
+        "gps_oppsett": gps_oppsett(cfg),
         "utgang": cfg.get("utgang", "rett_antenne"),
         "djupn_sanntid": cfg.get("djupn_sanntid", 0.0),
         "radar_djupn": cfg.get("radar_djupn", 2.5),
@@ -56,6 +57,23 @@ def hent(cfg_path, cfg):
         "lagra_tid": lagra_tid(cfg_path),
         "har_token": bool(_read(HER / "oppdatering_lokal.json").get("token")),
     }
+
+
+# GPS-oppsett (ønske frå Norman 8.11.2026): eitt val som set NTRIP av/på og om mottakaren rettar masta sjølv.
+GPS_OPPSETT = {
+    "geoscan_ntrip": {"ntrip_pa": True, "mottakar_kompenserer": True},   # NTRIP i Geoscan, R12i utan Access
+    "access": {"ntrip_pa": False, "mottakar_kompenserer": True},         # Trimble Access: IMU og NTRIP i Access
+    "raa": {"ntrip_pa": False, "mottakar_kompenserer": False},           # berre antenneposisjonen, ingen NTRIP
+}
+
+
+def gps_oppsett(cfg):
+    v = cfg.get("gps_oppsett")
+    if v in GPS_OPPSETT:
+        return v
+    if (cfg.get("ntrip") or {}).get("pa"):
+        return "geoscan_ntrip"
+    return "access" if cfg.get("mottakar_kompenserer") else "raa"
 
 
 def lagra_tid(cfg_path):
@@ -132,6 +150,10 @@ def lagre(cfg_path, d, streng=True):
     cfg["spakarm"] = {"fram": tal("fram", -3, 3, "fram", gs.get("fram", 0.0)),
                       "hogre": tal("hogre", -3, 3, "høgre", gs.get("hogre", 0.0)),
                       "opp": tal("mast", 0, 5, "mastehøgd", gs.get("opp", 1.8))}
+    if d.get("gps_oppsett") in GPS_OPPSETT:          # valet styrer NTRIP og «R12i rettar masta sjølv»
+        if d["gps_oppsett"] != gps_oppsett(cfg):     # berre når valet blir endra – kryssa kan justerast etterpå
+            d.update(GPS_OPPSETT[d["gps_oppsett"]])
+        cfg["gps_oppsett"] = d["gps_oppsett"]
     cfg["mottakar_kompenserer"] = bool(d.get("mottakar_kompenserer"))
     if d.get("utgang") in ("rett_antenne", "referansepunkt"):
         cfg["utgang"] = d["utgang"]

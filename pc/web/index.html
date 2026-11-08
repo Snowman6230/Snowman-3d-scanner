@@ -146,7 +146,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><div class="l" style="margin:0">Kart – live</div>
       <span class="verktoy" style="gap:10px">
         <label class="hj"><input type="checkbox" id="lfolg" checked onchange="lfolg=this.checked;if(lfolg&&lsist)lkart.panTo(lsist)"> Følg vogna</label>
-        <label class="hj" title="Stripa radaren dekkjer: 77 cm (dei ytste spora), lysare ut til 96 cm. Ligg midt på radaren, ikkje på antenna."><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
+        <label class="hj" title="Stripa radaren dekkjer: 96 cm, midt på radaren (ikkje på antenna)."><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
+        <label class="hj" title="Ingen stripe når vogna står i ro (under 0,15 m/s) eller svingar kraftig (over 20°/s) – til dømes når du snur og rangerar"><input type="checkbox" id="lautop" checked onchange="settAutoPause(this.checked)"> Auto-pause ved snuing</label>
         <label class="hj"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
         <button class="b gra" id="lpause" onclick="pauseLive()" title="Stopp teikninga når du snur og rangerer – vogna blir framleis vist, og loggen held fram">⏸ Pause sporet</button>
         <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
@@ -155,7 +156,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
           <option value="flyfoto">Flyfoto</option><option value="osm">OpenStreetMap</option></select></span></div>
     <div id="livekart" style="height:380px;border-radius:10px;overflow:hidden"></div>
     <div class="hj" id="liveinfo" style="margin-top:6px">Ventar på posisjon frå mottakaren …</div>
-    <div class="hj"><span style="color:#29b6f6">■</span> Skannestripa er det radaren dekkjer: 77 cm, lysare ut til 96 cm, midt på radaren.
+    <div class="hj"><span style="color:#29b6f6">■</span> Skannestripa er det radaren dekkjer: 96 cm, midt på radaren.
       Når ho blir vist, står vogna midt på radaren, elles på punktet som blir sendt til OneVision. Strekane er punktet som blir
       sendt til OneVision (med «rett antenne» er det antenna, 0,6 m ved sida av stripa). Vogna snur seg etter køyreretninga.
       GPS-prikken på vogna har farge etter fix: <span class="ok">grøn = RTK FIX</span> · <span class="var">gul = FLOAT/DGPS</span> · <span class="feil">raud = GPS</span>.
@@ -203,7 +204,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   </div>
   <div class="k">
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
-      <span><label class="hj" style="display:inline-flex;align-items:center;gap:6px;margin-right:8px" title="Stripa radaren dekkjer: 77 cm (dei ytste spora), lysare ut til 96 cm"><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
+      <span><label class="hj" style="display:inline-flex;align-items:center;gap:6px;margin-right:8px" title="Stripa radaren dekkjer: 96 cm, midt på radaren"><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
       <button class="b gra" id="tbtn" onclick="startTverr()" disabled title="Last inn ei eksportfil med objekt først">✚ Tverrsnitt</button>
       <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
       <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Kart:
@@ -226,7 +227,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div id="kart"></div>
     <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel. Prøv eit anna kart i menyen.</div>
     <div class="forkl">
-      <span><i style="background:rgba(41,182,246,.55)"></i>skannestripe 77 cm (lys: 96 cm)</span>
+      <span><i style="background:rgba(41,182,246,.55)"></i>skannestripe 96 cm</span>
       <span><i style="background:#3ecf74"></i>helling under 1°</span><span><i style="background:#c6d83a"></i>1–3°</span>
       <span><i style="background:#f2b33d"></i>3–6°</span><span><i style="background:#ef5b5b"></i>over 6°</span>
       <span><i style="background:#6b7780"></i>utan hellingsdata</span>
@@ -345,6 +346,13 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div id="lagrestatus" class="lagrestatus"><span id="lstekst">Innstillingane blir lagra automatisk.</span>
     <span style="flex:1"></span>
     <button type="button" class="b" id="lsomstart" style="display:none;background:var(--var)" onclick="startPaaNytt()">Start på nytt no – bruk endringane</button></div>
+  <div class="k"><h2>GPS-oppsett</h2>
+    <div class="felt"><label><span>Kva slags posisjon kjem frå mottakaren?</span><select name="gps_oppsett" onchange="velGpsOppsett(this.value)">
+      <option value="geoscan_ntrip">R12i utan Trimble Access – Snowman Geoscan hentar NTRIP (stanghøgd = mastehøgd)</option>
+      <option value="access">R12i med Trimble Access – Access hentar NTRIP og rettar med IMU</option>
+      <option value="raa">Berre rådata – antenneposisjonen, ingen NTRIP frå Geoscan</option></select></label></div>
+    <p class="hj" id="gpsforkl" style="margin-top:6px"></p>
+  </div>
   <div class="k"><h2>Portar</h2>
     <p class="hj">Tilgjengelege portar på denne PC-en: <span id="iporter">–</span></p>
     <div class="felt">
@@ -367,6 +375,12 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
         <option value="referansepunkt">referansepunktet på radaren – sett antennehøgda i OneVision til 0</option></select></label>
     </div>
     <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="mottakar_kompenserer">R12i rettar masta sjølv (tilt på, stanghøgd = mastehøgd)</label></p>
+    <div class="k" style="background:var(--kort2);margin-top:10px" id="scboks">
+      <b>OneVision (Stream C.xml)</b> <span class="hj">– GPS-forskyvinga kan ikkje endrast inne i OneVision, så Geoscan skriv ho i fila.</span>
+      <div id="scinfo" class="hj" style="margin:6px 0">Les …</div>
+      <button type="button" class="b" id="scknapp" onclick="skrivStreamc()" style="display:none">Skriv Geoscan-måla til OneVision</button>
+      <span class="hj" id="scmeld"></span>
+    </div>
   </div>
   <div class="k"><h2>Retting og lagring</h2>
     <div class="felt">
@@ -384,6 +398,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <label><span>Caster (adresse)</span><input name="caster" autocomplete="off"></label>
       <label><span>Port</span><input name="ntrip_port" type="number"></label>
       <label><span>Mountpoint <button type="button" class="b gra" style="padding:2px 10px;margin-left:6px" onclick="hentMounts()">Hent liste frå casteren</button></span>
+        <select id="mvel" onchange="velMount(this.value)" style="display:none;margin-bottom:4px"></select>
         <input name="mountpoint" autocomplete="off" list="mlist" placeholder="vel frå lista eller skriv"><datalist id="mlist"></datalist>
         <span class="hj" id="mmeld" style="display:block;margin-top:3px"></span></label>
       <label><span>Brukarnamn</span><input name="brukar" autocomplete="off"></label>
@@ -653,7 +668,7 @@ api("api/tema").then(r=>{if(r.tema)setTema(r.tema)}).catch(()=>{});
 
 // ---------- live-kart på Status ----------
 // ---------- skannestripa (0.9.17): kva radaren dekkjer, midt på radaren (ikkje på antenna) ----------
-let STRIPE=[0.77,0.96],visStripe=true;
+let STRIPE=[0.96,0],visStripe=true;
 try{const v=localStorage.getItem("geoscan_stripe");if(v!==null)visStripe=v=="1"}catch(e){}
 const STRIPE_INNE={stroke:false,fillColor:"#29b6f6",fillOpacity:.38,interactive:false},
       STRIPE_UTE={stroke:false,fillColor:"#29b6f6",fillOpacity:.13,interactive:false};
@@ -661,14 +676,20 @@ const STRIPE_INNE={stroke:false,fillColor:"#29b6f6",fillOpacity:.38,interactive:
 function stripeBit(a,b,hw){const my=111132.95,mx=111319.49*Math.cos(a[0]*Math.PI/180);
   const dx=(b[1]-a[1])*mx,dy=(b[0]-a[0])*my,l=Math.hypot(dx,dy);if(l<0.02||l>5)return null;
   const nx=-dy/l*hw,ny=dx/l*hw,o=(p,t)=>[p[0]+t*ny/my,p[1]+t*nx/mx];return [o(a,1),o(b,1),o(b,-1),o(a,-1)]}
-function leggStripe(lag,rend,a,b){for(const [hw,st] of [[STRIPE[1]/2,STRIPE_UTE],[STRIPE[0]/2,STRIPE_INNE]]){
+function leggStripe(lag,rend,a,b){for(const [hw,st] of [[STRIPE[1]/2,STRIPE_UTE],[STRIPE[0]/2,STRIPE_INNE]]){if(!(hw>0))continue;
   const q=stripeBit(a,b,hw);if(q)L.polygon(q,Object.assign({renderer:rend},st)).addTo(lag)}}
 function settStripe(v){visStripe=v;try{localStorage.setItem("geoscan_stripe",v?"1":"0")}catch(e){}
   document.querySelectorAll(".stripeval").forEach(e=>e.checked=v);
   for(const [m,l] of [[lkart,lstripe],[kart,lagStripe]])if(m&&l){if(v)l.addTo(m);else m.removeLayer(l)}
   if(lmerke&&lsistUt)lmerke.setLatLng(vognPos())}
-{const f=()=>document.querySelectorAll(".stripeval").forEach(e=>e.checked=visStripe);
+{const f=()=>{document.querySelectorAll(".stripeval").forEach(e=>e.checked=visStripe);const a=$("lautop");if(a)a.checked=autoPause};
   if(document.readyState=="loading")document.addEventListener("DOMContentLoaded",f);else f()}
+// Auto-pause (0.9.18, ønske frå Norman): ikkje teikn stripe når vogna står, eller svingar kraftig (snur og rangerar)
+const AP_FART=0.15,AP_SVING=20,AP_KNEKK=35;let autoPause=true,lforrRt=null,lforrB=null,lpausa=false;
+try{const v=localStorage.getItem("geoscan_autopause");if(v!==null)autoPause=v=="1"}catch(e){}
+function settAutoPause(v){autoPause=v;try{localStorage.setItem("geoscan_autopause",v?"1":"0")}catch(e){}}
+const retning=(a,b)=>{const dy=(b[0]-a[0])*111320,dx=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);return Math.atan2(dx,dy)*180/Math.PI};
+const vinkelSkil=(a,b)=>{let d=Math.abs(a-b)%360;return d>180?360-d:d};
 let lstripe=null,lstripeRend=null,lforrR=null,lnstripe=0,lsistUt=null,lsistR=null,lagStripe=null,stripeRend=null;
 // Vogna står midt på radaren når stripa blir vist (då ligg ho oppå stripa), elles på punktet som blir sendt ut
 const vognPos=()=>visStripe&&lsistR?lsistR:lsistUt;
@@ -708,20 +729,32 @@ function nullstillLive(){if(lspor)lspor.clearLayers();if(lstripe)lstripe.clearLa
 let lteikn=true;
 function pauseLive(){lteikn=!lteikn;lforr=null;lforrR=null;const b=$("lpause");b.textContent=lteikn?"⏸ Pause sporet":"▶ Teikn sporet";
   b.style.background=lteikn?"":"var(--var)";b.style.color=lteikn?"":"#000"}
-async function hentMounts(){const f=$("iform");set("mmeld","Hentar liste frå casteren …","var");
+// Mountpoint: lista blir henta av seg sjølv når Innstillingar blir opna (0.9.18, ønske frå Norman), og kan veljast i ein meny
+function velMount(v){if(!v)return;const el=$("iform").elements.mountpoint;el.value=v;el.dispatchEvent(new Event("change",{bubbles:true}))}
+async function hentMounts(stille){const f=$("iform");if(stille&&!f.elements.caster.value)return;set("mmeld","Hentar liste frå casteren …","var");
   try{const r=await post("api/kjeldetabell",{caster:f.elements.caster.value,ntrip_port:f.elements.ntrip_port.value,
       brukar:f.elements.brukar.value,passord:f.elements.passord.value});
-    $("mlist").innerHTML=r.mounts.map(m=>`<option value="${esc(m.mountpoint)}">${esc([m.name,m.format,m.systems,m.km!=null?m.km+" km":""].filter(Boolean).join(" · "))}</option>`).join("");
-    set("mmeld",`✓ ${r.mounts.length} mountpoints frå ${r.caster}. Klikk i feltet og vel frå lista${r.mounts.length&&r.mounts[0].km!=null?" (nærmaste øvst)":""}.`,"ok");
-    f.elements.mountpoint.focus()}
+    const tekst=m=>[m.mountpoint,m.name,m.format,m.systems,m.km!=null?m.km+" km":""].filter(Boolean).join(" · ");
+    $("mlist").innerHTML=r.mounts.map(m=>`<option value="${esc(m.mountpoint)}">${esc(tekst(m))}</option>`).join("");
+    const no=f.elements.mountpoint.value,mv=$("mvel");
+    mv.innerHTML=`<option value="">– vel mountpoint frå casteren (${r.mounts.length}) –</option>`+
+      r.mounts.map(m=>`<option value="${esc(m.mountpoint)}"${m.mountpoint==no?" selected":""}>${esc(tekst(m))}</option>`).join("");
+    mv.style.display=r.mounts.length?"block":"none";
+    set("mmeld",`✓ ${r.mounts.length} mountpoints frå ${r.caster}${r.mounts.length&&r.mounts[0].km!=null?" (nærmaste øvst)":""}.`+
+      (no&&!r.mounts.some(m=>m.mountpoint==no)?` ⚠ «${no}» finst ikkje på casteren.`:""),no&&!r.mounts.some(m=>m.mountpoint==no)?"var":"ok");
+    if(!stille)mv.focus()}
   catch(e){set("mmeld","✗ "+e.message,"feil")}}
 const avst=(a,b)=>{const dy=(b[0]-a[0])*111320,dx=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);return Math.hypot(dx,dy)};
 function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
   const ut=[p.lat_ut,p.lon_ut],inn=[p.lat,p.lon],c=FIXFARGE(p.fix),rm=p.lat_r!=null?[p.lat_r,p.lon_r]:null;
   lsistUt=ut;lsistR=rm;
-  if(!lteikn||!rm)lforrR=null;
-  else if(!lforrR||avst(lforrR,rm)>0.1){if(lforrR&&avst(lforrR,rm)<5){leggStripe(lstripe,lstripeRend,lforrR,rm);
-      if(++lnstripe>4000){const g=lstripe.getLayers();lstripe.removeLayer(g[0]);lstripe.removeLayer(g[1]);lnstripe--}}
+  if(!lteikn||!rm){lforrR=null;lforrB=null}
+  else if(!lforrR||avst(lforrR,rm)>0.1){const d=lforrR?avst(lforrR,rm):0,dt=lforrR&&p.t!=null&&lforrRt!=null?p.t-lforrRt:null,
+      b=lforrR?retning(lforrR,rm):null,sving=lforrB!=null&&b!=null&&dt>0?vinkelSkil(b,lforrB)/dt:0;
+    lpausa=autoPause&&lforrR&&((dt>0&&d/dt<AP_FART)||sving>AP_SVING);
+    lforrB=b;lforrRt=p.t;
+    if(lforrR&&d<5&&!lpausa){leggStripe(lstripe,lstripeRend,lforrR,rm);
+      {const g=lstripe.getLayers();while(g.length>6000)lstripe.removeLayer(g.shift())}}
     lforrR=rm}
   if(!lteikn){lforr=null}
   else if(!lforr||avst(lforr,ut)>0.15){if(lforr&&avst(lforr,ut)<50){
@@ -737,7 +770,7 @@ function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
   lsist=ut;if(lforsteZoom){lkart.setView(ut,19);lforsteZoom=false}else if(lfolg)lkart.panTo(ut,{animate:false});
   const fl=avst(inn,ut);
   $("liveinfo").innerHTML=`${(FIX[p.fix]||["FIX "+p.fix])[0]} · ${p.kurs==null?"kurs –":"kurs "+F(p.kurs,0)+"°"} · `+
-    (p.korrigert?`krenging ${F(p.krenging,1)}° · stamp ${F(p.stamp,1)}° · `:"")+`retta punkt ${F(fl*100,0)} cm frå mottakarposisjonen`}
+    (p.korrigert?`krenging ${F(p.krenging,1)}° · stamp ${F(p.stamp,1)}° · `:"")+`retta punkt ${F(fl*100,0)} cm frå mottakarposisjonen`+(lpausa?' · <b class="var">stripe pausa (står eller snur)</b>':"")}
 function setGrunn(){if(grunn)kart.removeLayer(grunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
   grunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(kart);grunn.bringToBack();
   let feil=0;grunn.on("tileerror",()=>{if(++feil>3)$("kartfeil").style.display="block"});grunn.on("tileload",()=>{feil=0;$("kartfeil").style.display="none"})}
@@ -752,8 +785,8 @@ async function visSpor(fil){initKart();lagSpor.clearLayers();lagStripe.clearLaye
   for(let i=1;i<p.length;i++){const ci=farge(p[i][2],p[i][3]);seg.push([p[i][0],p[i][1]]);
     if(ci!=c||i==p.length-1){L.polyline(seg,{color:c,weight:4,opacity:.9}).addTo(lagSpor);seg=[[p[i][0],p[i][1]]];c=ci}all.push([p[i][0],p[i][1]])}
   // skannestripa langs midten av radaren (lat_radar/lon_radar i loggen, eller rekna ut frå kursen for eldre loggar)
-  let fr=null;for(const q of p){if(q[4]==null){fr=null;continue}const r=[q[4],q[5]];
-    if(!fr||avst(fr,r)>0.1){if(fr)leggStripe(lagStripe,stripeRend,fr,r);fr=r}}
+  let fr=null,fb=null;for(const q of p){if(q[4]==null){fr=null;fb=null;continue}const r=[q[4],q[5]];
+    if(!fr||avst(fr,r)>0.25){if(fr){const bb=retning(fr,r);if(fb==null||vinkelSkil(bb,fb)<AP_KNEKK)leggStripe(lagStripe,stripeRend,fr,r);fb=bb}fr=r}}
   kart.fitBounds(L.latLngBounds(all.length?all:[[p[0][0],p[0][1]]]).pad(.15))}
 function geoTilKart(gj,stil){const lag=L.geoJSON(gj,{style:stil,pointToLayer:(f,ll)=>L.circleMarker(ll,Object.assign({radius:5},stil(f)))});
   lag.eachLayer(l=>{const pr=l.feature.properties||{};l.bindTooltip(esc([pr.id,pr.layer,pr.description].filter(Boolean).join(" · ")||"objekt")+
@@ -1224,9 +1257,32 @@ let innst=null,lsTimer=null,lsEndra=false,lsKoyrer=false,lsIgjen=false;
 const klokke=t=>t?String(t).slice(11,19):"";
 function lsVis(t,c){const e=$("lagrestatus");e.classList.remove("ok","var","feil");if(c)e.classList.add(c);$("lstekst").textContent=t;
   $("lsomstart").style.display=lsEndra?"inline-block":"none"}
+// GPS-oppsett: set NTRIP og «R12i rettar masta sjølv» etter valet, og forklar kva det betyr
+const GPS_OPPSETT={geoscan_ntrip:{ntrip_pa:true,mottakar_kompenserer:true,t:"Snowman Geoscan hentar korreksjonane og sender dei til R12i. Trimble Access skal vere lukka. Utan IMU sender R12i antenneposisjonen ($GNGGA)."},
+  access:{ntrip_pa:false,mottakar_kompenserer:true,t:"Trimble Access hentar korreksjonane og slår på IMU-en. Kople Access til R12i over Bluetooth, så Geoscan har USB. Geoscan hentar ikkje NTRIP, og reknar ikkje om det R12i alt har retta ($INGGA)."},
+  raa:{ntrip_pa:false,mottakar_kompenserer:false,t:"Geoscan sender antenneposisjonen vidare som han kjem, utan korreksjonar frå Geoscan. Til feilsøking, eller når korreksjonane kjem ein annan veg."}};
+function visGpsForkl(v){const o=GPS_OPPSETT[v];$("gpsforkl").textContent=o?o.t:""}
+function velGpsOppsett(v){const o=GPS_OPPSETT[v],f=$("iform");if(!o)return;
+  for(const k of ["ntrip_pa","mottakar_kompenserer"]){const el=f.elements[k];if(el&&el.checked!=o[k]){el.checked=o[k];el.dispatchEvent(new Event("change",{bubbles:true}))}}
+  visGpsForkl(v)}
+// ---------- Stream C.xml: GPS-forskyvinga i OneVision (0.9.18) ----------
+let SC=null;const xyzTekst=o=>o?`x ${F(o.x,2)} · y ${F(o.y,2)} · z ${F(o.z,2)} m`:"–";
+async function lastStreamc(){try{SC=await api("api/streamc")}catch(e){$("scinfo").textContent="Kunne ikkje lese: "+e.message;return}
+  if(!SC.funne){$("scinfo").textContent=SC.melding;$("scknapp").style.display="none";return}
+  $("scinfo").innerHTML=`I fila no: <b>${xyzTekst(SC.noverande)}</b> (${esc(SC.fil)})<br>`+
+    (SC.ulik?`<span class="var">Geoscan-måla gir: <b>${xyzTekst(SC.forslag)}</b> (x blir ikkje endra, forteiknet på y blir halde)</span>`
+            :`<span class="ok">✓ Stemmer med Geoscan (sida ${F(Math.abs(SC.forslag.y),2)} m, mast ${F(SC.forslag.z,2)} m)</span>`);
+  $("scknapp").style.display=SC.ulik?"inline-block":"none"}
+async function skrivStreamc(){if(!SC||!SC.funne)return;
+  if(!confirm(`Skrive GPS-forskyvinga til OneVision?\n\n${SC.fil}\n\nFør:  ${SC.xyz}\nEtter: ${SC.forslag.xyz}\n\nDet blir teke kopi av fila først. Windows kan spørje om administratorløyve. Start OneVision på nytt etterpå.`))return;
+  set("scmeld","Skriv …","var");
+  try{const r=await post("api/streamc",{xyz:SC.forslag.xyz});
+    set("scmeld","✓ Skrive"+(r.admin?" (med administratorløyve)":"")+". Kopi: "+r.kopi.split(/[\\/]/).pop()+(r.onevision_koyrer?". OneVision er open – start han på nytt.":""),"ok");lastStreamc()}
+  catch(e){set("scmeld","✗ "+e.message,"feil")}}
 async function lastInnst(){try{innst=await api("api/innstillingar")}catch(e){return}const f=$("iform");
   for(const [k,v] of Object.entries(innst)){const el=f.elements[k];if(!el)continue;
     if(el.type=="checkbox")el.checked=!!v;else el.value=(typeof v=="number"?String(v).replace(".",","):v)}
+  visGpsForkl(innst.gps_oppsett);lastStreamc();if(!innst.demo)hentMounts(true);
   f.elements.passord.value="";$("ipw").textContent=innst.har_passord?"(lagra)":"(ikkje sett)";
   f.elements.token.value="";$("itok").textContent=innst.har_token?"(lagra)":"(ikkje sett)";
   $("plist").innerHTML=innst.porter.map(p=>`<option value="${esc(p.port)}">${esc(p.skildring)}</option>`).join("");
@@ -1243,6 +1299,7 @@ async function autoLagre(felt){if(lsKoyrer){lsIgjen=true;return}lsKoyrer=true;ls
     const n=Object.keys(fe).length;
     lsVis(n?`⚠ Lagra kl. ${klokke(r.lagra)} i ${r.fil} – men ikkje: ${Object.values(fe).join("; ")}`
            :`✓ Lagra kl. ${klokke(r.lagra)} i ${r.fil} · gjeld etter omstart`,n?"var":"ok");
+    if(felt&&["mast","hogre"].includes(felt.name))lastStreamc();
     if(felt&&!fe[felt.name]){felt.classList.add("lagra-ok");setTimeout(()=>felt.classList.remove("lagra-ok"),1800)}
     if(d.passord&&document.activeElement!=f.elements.passord){f.elements.passord.value=""}
     if(d.token&&document.activeElement!=f.elements.token){f.elements.token.value=""}

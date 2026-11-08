@@ -168,6 +168,9 @@ def start(app, port=8088, lan=False):
                                        "sjekk_svar": INS.meldingar()["sjekk_svar"]})
                 if path == "/api/meldingar":
                     return self._send(INS.meldingar())
+                if path == "/api/streamc":
+                    import streamc as SC
+                    return self._send(SC.status(dict(app.cfg, **INN._read(app.cfg_path))))
                 if path == "/api/onevision":
                     import onevision_filer as OVF          # målefilene frå OneVision, nyaste først
                     return self._send(OVF.finn(app.cfg))
@@ -337,8 +340,17 @@ def start(app, port=8088, lan=False):
                     if not OVF.er_funnen(app.cfg, sti):
                         return self._err("fann ikkje målefila (berre .svy i OneVision-mappene kan hentast)")
                     src = Path(sti)
-                    fn = INS.fil_lagre(src.name, src.read_bytes(), "eksport")
+                    fn = INS.fil_lagre(src.name, src.read_bytes(), "eksport", gjenbruk=True)
                     return self._send({"ok": True, "fil": fn, "namn": src.name})
+                if path == "/api/streamc":
+                    import streamc as SC                  # skriv GPS-forskyvinga til OneVision (Stream C.xml)
+                    d = json.loads(self._body() or b"{}")
+                    try:
+                        r = SC.skriv(dict(app.cfg, **INN._read(app.cfg_path)), d.get("xyz") or None)
+                    except (RuntimeError, ValueError, OSError) as e:
+                        return self._err(str(e))
+                    r["ok"] = True
+                    return self._send(r)
                 if path == "/api/rett":
                     d = json.loads(self._body() or b"{}")
                     src = HER / "innsendt" / "filer" / INS.safe_name(d.get("fil", ""))
