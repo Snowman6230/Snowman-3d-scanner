@@ -735,13 +735,20 @@ async function lastOV(manuell){let r;try{r=await api("api/onevision")}catch(e){$
   $("ovinfo").textContent=ovFiler.length+" måling"+(ovFiler.length==1?"":"ar")+" funne i "+[...new Set(r.mapper)].join(" · ");
   // Automatisk: er ingenting lasta inn, blir den nyaste målinga med objekt brukt (etter at ei lagra økt har fått gjenopprette seg)
   if(!ovAuto&&!manuell){ovAuto=true;setTimeout(()=>{if(!siste&&!gjenopprettar){const i=ovFiler.findIndex(f=>f.objekt);if(i>=0){$("ovval").value=String(i);brukOV()}}},1500)}}
+// GPS-forskyvinga OneVision brukte i denne målinga (Data/Stream C.xml), mot Geoscan: sida 0,6 m og mastehøgda
+function ovGps(f){if(!f.gps_xyz)return"";const [x,y,z]=f.gps_xyz,sp=innst&&innst.hogre!=null?Math.abs(+innst.hogre):null,
+    mh=innst&&innst.mast!=null?+innst.mast:null;
+  const avvik=(sp!=null&&Math.abs(Math.abs(y)-sp)>0.05)||(mh!=null&&Math.abs(z-mh)>0.05);
+  return `<br>GPS-forskyving i OneVision for denne målinga: x ${F(x,2)} · y ${F(y,2)} · z ${F(z,2)} m`+
+    (avvik?` <b class="var">– stemmer ikkje med Geoscan (sida ${sp==null?"–":F(sp,2)} m, mast ${mh==null?"–":F(mh,2)} m). Sjå Stream C.xml.</b>`:` <span class="ok">✓</span>`)}
 async function brukOV(){const f=ovFiler[+$("ovval").value];if(!f)return;const m=$("rmeld");
   m.className="melding";m.textContent="Hentar "+f.namn+" frå OneVision …";
   try{const up=await post("api/onevision/hent",{sti:f.sti});ovIBruk=f.sti;
     m.textContent="Rettar …";
     const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde]});
     visResultat(r,f.namn);m.textContent="";lastResFiler();
-    $("ovinfo").textContent="I bruk: "+f.namn+" ("+ovDato(f.dato)+", "+(f.objekt??"?")+" objekt) frå "+f.mappe;
+    if(!innst)try{innst=await api("api/innstillingar")}catch(e){}
+    $("ovinfo").innerHTML="I bruk: "+esc(f.namn)+" ("+ovDato(f.dato)+", "+(f.objekt??"?")+" objekt) frå "+esc(f.mappe)+ovGps(f);
     [...$("ovval").options].forEach((o,i)=>o.textContent=o.textContent.replace(" (i bruk)","")+(i==+$("ovval").value?" (i bruk)":""))}
   catch(err){m.className="melding feil";m.textContent="Kunne ikkje hente målinga: "+err.message}}
 async function rettFil(f){const m=$("rmeld");

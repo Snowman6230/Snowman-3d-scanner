@@ -1018,3 +1018,14 @@ def test_onevision_filer_nyaste_forst(tmp_path):
     assert r["filer"][0]["dato"] == "2026-11-08" and r["filer"][0]["nr"] == 2
     assert OVF.er_funnen({"onevision_mappe": str(rot)}, r["filer"][0]["sti"])
     assert not OVF.er_funnen({"onevision_mappe": str(rot)}, str(rot / "anna.txt"))
+
+
+def test_onevision_filer_gps_xyz_per_maaling(tmp_path):
+    """Vogneoppsettet per måling (Survey_…/Data/Stream C.xml) blir lese saman med .svy."""
+    import onevision_filer as OVF
+    m = tmp_path / "Projects" / "Survey_2026.11.08_001"
+    (m / "Data").mkdir(parents=True)
+    (m / "Survey_2026.11.08_001.svy").write_text("<Survey></Survey>")
+    (m / "Data" / "Stream C.xml").write_text('<Cfg><GPS Name="g" xyz="0.13;0.42;1.9"/></Cfg>')
+    f = OVF.finn({"onevision_mappe": str(tmp_path / "Projects")})["filer"][0]
+    assert f["gps_xyz"] == [0.13, 0.42, 1.9]

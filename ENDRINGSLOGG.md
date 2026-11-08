@@ -2,6 +2,11 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.12 – 8. november 2026
+- OneVision lagrar kvar måling som `Projects/Survey_…/Survey_….svy`, med vogneoppsettet i `Data/Stream C.xml`
+  (sett hos Norman 8.11). Når ei måling blir teken i bruk under Resultat, viser Geoscan GPS-forskyvinga (x, y, z)
+  OneVision brukte i akkurat den målinga, og åtvarar om sida eller mastehøgda ikkje stemmer med Geoscan.
+
 ## 0.9.11 – 8. november 2026
 - Resultat finn målingane frå OneVision sjølv (`Survey_ÅÅÅÅ.MM.DD_NNN … .svy`, nytt `onevision_filer.py`). Lista
   «Måling frå OneVision» viser alle, nyaste først, med dato, nummer og tal objekt. Er ingenting lasta inn, blir den

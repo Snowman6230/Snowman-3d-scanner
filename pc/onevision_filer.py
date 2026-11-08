@@ -1,9 +1,14 @@
 # Snowman Geoscan – Alpindata HP Brunstad Sørensen. Copyright © 2026. Alle rettar reserverte.
 """Finn målefilene frå OneVision (Survey_ÅÅÅÅ.MM.DD_NNN … .svy) automatisk, nyaste først.
 
-OneVision lagrar kvar måling i arbeidsmappa som er vald i «New Project» (hos Norman 8.11.2026:
-E:/Dokumenter/OneVision/Projects/). Prosjektnamnet er Survey_<dato>_<nr>, og objekta ligg i .svy-fila.
-Vi veit ikkje sikkert om .svy ligg rett i Projects eller i ei undermappe per måling, så vi leitar tre nivå ned.
+OneVision lagrar kvar måling i arbeidsmappa som er vald i «New Project» (hos Norman Dokumenter/OneVision/Projects).
+Strukturen (sett hos Norman 8.11.2026):
+    Projects/Survey_2026.11.08_001/Survey_2026.11.08_001.svy     objekta (<Targets>)
+                                  /GPSLog_Scan_1.nmea             NMEA som OneVision tok imot
+                                  /Data/Stream C.xml              vogneoppsettet (GPS xyz) for denne målinga
+                                  /Data/PRC_*.scan, RAW_*.scan, Swath_0001.pos, TS_0001_*
+                                  /Logs/
+Vi leitar tre nivå ned, så ei anna plassering går òg.
 
 Mapper som blir leita i (dei som finst):
   1. «onevision_mappe» i innstillingane, om ho er sett
@@ -91,6 +96,15 @@ def info(sti, med_objekt=False):
     d = {"sti": str(sti), "namn": sti.name, "mappe": str(sti.parent), "dato": dato,
          "nr": int(m.group(4)) if m else None, "endra": time.strftime("%Y-%m-%d %H:%M", time.localtime(st.st_mtime)),
          "mtime": st.st_mtime, "kb": round(st.st_size / 1024)}
+    # OneVision lagrar ein kopi av vogneoppsettet per måling (Survey_…/Data/Stream C.xml, sett hos Norman 8.11.2026).
+    # GPS-forskyvinga (xyz) som vart brukt i akkurat denne målinga, er nyttig å sjå mot Geoscan-innstillingane.
+    try:
+        import finn_utstyr as FU
+        ov = FU.les_onevision([sti.parent / "Data" / "Stream C.xml"])
+        if ov and "x" in ov:
+            d["gps_xyz"] = [ov["x"], ov["y"], ov["z"]]
+    except Exception:
+        pass
     if med_objekt:
         d["objekt"] = tal_objekt(sti)
     return d
