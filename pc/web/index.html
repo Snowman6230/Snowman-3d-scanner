@@ -135,7 +135,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="var(--linje)" stroke-width="2"/>
       <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="var(--for)"/><line x1="0" y1="10" x2="0" y2="-28" stroke="var(--svak)" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="var(--tekst)"/></g></svg></div>
     <div class="k"><div class="l">Retting no</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
-    <div class="k"><div class="l">NTRIP</div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div></div>
+    <div class="k"><div class="l">NTRIP</div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div><div class="s" id="koord" style="margin-top:6px;font-family:var(--mono,monospace)"></div></div>
   </div>
   <div class="k" style="margin-top:12px">
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><div class="l" style="margin:0">Kart – live</div>
@@ -476,6 +476,12 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
   set("djup",s.djupnfeil_25==null?"":"objekt på "+F(radarDjupn,1)+" m: "+F(s.djupnfeil_25,0)+" cm (blir retta under Resultat)");
   const n=s.ntrip;set("ntrip",n.tilstand,n.tilstand=="tilkopla"?"ok":n.tilstand=="av"?"":"feil");
   set("nmeld",n.tilstand=="tilkopla"?(n.protokoll+" · "+F(n.byte/1024,0)+" kB · alder "+(n.alder==null?"–":F(n.alder,0)+" s")):n.melding);
+  const pk=k.pos;
+  if(pk&&pk.E!=null){const m=v=>v==null?"–":v.toFixed(2).replace(".",",")+" m";
+    $("koord").innerHTML=`UTM ${pk.sone}: E ${pk.E.toFixed(2).replace(".",",")} · N ${pk.N.toFixed(2).replace(".",",")}<br>`+
+      (pk.h_nn!=null?`H ${m(pk.h_nn)} NN2000`+(pk.h_bakke!=null&&pk.h_bakke!==pk.h_nn?` · bakke ${m(pk.h_bakke)}`:""):`h ${m(pk.h_ell)} (ellipsoide)`)+
+      `<br><span class="hj">punktet som blir sendt til OneVision</span>`}
+  else $("koord").textContent="";
   const ist=s.innstat||{};
   $("portar").textContent=Object.entries(s.inn).map(([p,v])=>{const a=ist[p];let t="inn "+p+": "+v;
       if(a&&a.kva=="gnss")t+=` · $${a.talker||"??"}GGA (${a.talker=="IN"?"stangspiss, IMU":"antenne"}) · ${a.hz==null?"–":F(a.hz,a.hz<2?1:0)} Hz · fix ${a.fix} · ${a.sats} sat`;

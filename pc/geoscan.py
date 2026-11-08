@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.8"
+VERSJON = "0.9.9"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -169,6 +169,18 @@ class Korrigerar:
         st["pos"] = {"lat": round(lat, 8), "lon": round(lon, 8), "lat_ut": round(la, 8), "lon_ut": round(lo, 8),
                      "fix": gga["q"], "kurs": st["kurs"], "stamp": st["stamp"], "krenging": st["krenging"],
                      "korrigert": st["korrigert"], "t": round(now if now is not None else time.time(), 2)}
+        # Koordinatane til punktet som blir sendt til OneVision (UTM/EUREF89 og høgd), til kontroll på Status
+        try:
+            z = self.zone or K.zone_of(lo)
+            E, Nn = K.utm_forward(la, lo, z)
+            mast = self.lever[2] if cfg.get("utgang") == "rett_antenne" else 0.0
+            h_nn = None if (h2 is None or n_geo is None) else h2 - n_geo
+            st["pos"].update({"sone": z, "E": round(E, 3), "N": round(Nn, 3),
+                              "h_ell": None if h2 is None else round(h2, 3),
+                              "h_nn": None if h_nn is None else round(h_nn, 3),
+                              "h_bakke": None if h_nn is None else round(h_nn - mast, 3)})
+        except Exception:
+            pass
         self._log(gga, lat, lon, la, lo, h2, n_geo, pitch, roll, hdg, d0, now)
         return out
 

@@ -2,6 +2,11 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.9 – 8. november 2026
+- Status → NTRIP-kortet viser no koordinatane til punktet som blir sendt til OneVision: UTM (E, N, sone) og høgd
+  i NN2000 (og bakkehøgd under radaren når «rett antenne» er valt). Då ser ein med ein gong at posisjon, korreksjonar
+  og geoide verkar. Ønske frå Hans Petter etter test 8.11.
+
 ## 0.9.8 – 8. november 2026
 - Stripa om ugyldig GitHub-nøkkel blir ikkje lenger vist øvst på sida. Repoet er ope i testperioden, og
   oppdateringane går utan nøkkel, så meldinga forstyrra berre testen. Det står no som ei lita linje under
