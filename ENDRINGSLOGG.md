@@ -2,6 +2,21 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.17 – 8. november 2026
+- Skannestripe på karta (Status → Kart – live og Resultat → Kart): stripa radaren dekkjer, 77 cm (dei ytste spora i
+  Stream C, ±0,383 m) med eit lysare felt ut til 96 cm (det IDS oppgir). Ho ligg midt på radaren, ikkje på antenna:
+  med «rett antenne» blir midten rekna ut frå antenneposisjonen, kursen og spakarmen. Før låg sporet i Geoscan
+  0,6 m ved sida av stripa i OneVision og bytte side når ein snudde. Brytar «Vis skannestripe» på begge karta
+  (hugsa i nettlesaren). Når stripa blir vist, står vogna midt på radaren.
+- Loggen har to nye kolonnar, `lat_radar` og `lon_radar` (midten av radaren). For eldre loggar blir stripa rekna
+  ut frå kursen med spakarmen som står no. Nye innstillingar `skannebreidd` (0,77) og `skannebreidd_ytre` (0,96).
+- Feil retta: ein generell CSS-regel (`svg{margin:6px auto 0}`) flytta alt Leaflet teiknar med SVG – spor, objekt og
+  vogn – 6 pikslar sørover på karta. Ved stor zoom var det få cm, ved liten zoom fleire meter.
+- Tekstane for spakarmen under Vogn og mast er retta så dei stemmer med koden: «Masta (antenna) til høgre for
+  midten av radaren (minus = venstre)» og «… framfor midten av radaren (minus = bak)». Verdiane er uendra
+  (−0,6 = antenna 0,6 m til venstre). Før stod det motsett, og eit positivt tal for «radaren framfor masta» ville
+  ha gitt feil forteikn.
+
 ## 0.9.16 – 8. november 2026
 - Melding til Norman om versjon 0.9.15 (QH/QV og GST i R12i) og oversikt over 0.9.8–0.9.14. Ingen kodeendring.
 

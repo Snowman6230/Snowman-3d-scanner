@@ -65,6 +65,8 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .verktoy{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .verktoy select{width:auto}
 svg{display:block;margin:6px auto 0}
+/* Leaflet teiknar spor og vogn med SVG: utan dette vart alt flytta 6 px nedover (sør) på karta (retta i 0.9.17) */
+.leaflet-container svg{margin:0;max-width:none}
 .leaflet-container{font:inherit}
 .overlay{position:fixed;inset:0;background:rgba(5,10,14,.82);z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px}
 .modal{max-width:640px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid var(--linje);
@@ -144,6 +146,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><div class="l" style="margin:0">Kart – live</div>
       <span class="verktoy" style="gap:10px">
         <label class="hj"><input type="checkbox" id="lfolg" checked onchange="lfolg=this.checked;if(lfolg&&lsist)lkart.panTo(lsist)"> Følg vogna</label>
+        <label class="hj" title="Stripa radaren dekkjer: 77 cm (dei ytste spora), lysare ut til 96 cm. Ligg midt på radaren, ikkje på antenna."><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
         <label class="hj"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
         <button class="b gra" id="lpause" onclick="pauseLive()" title="Stopp teikninga når du snur og rangerer – vogna blir framleis vist, og loggen held fram">⏸ Pause sporet</button>
         <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
@@ -152,7 +155,9 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
           <option value="flyfoto">Flyfoto</option><option value="osm">OpenStreetMap</option></select></span></div>
     <div id="livekart" style="height:380px;border-radius:10px;overflow:hidden"></div>
     <div class="hj" id="liveinfo" style="margin-top:6px">Ventar på posisjon frå mottakaren …</div>
-    <div class="hj">Vogna står på den retta posisjonen (det som blir sendt til OneVision) og snur seg etter køyreretninga.
+    <div class="hj"><span style="color:#29b6f6">■</span> Skannestripa er det radaren dekkjer: 77 cm, lysare ut til 96 cm, midt på radaren.
+      Når ho blir vist, står vogna midt på radaren, elles på punktet som blir sendt til OneVision. Strekane er punktet som blir
+      sendt til OneVision (med «rett antenne» er det antenna, 0,6 m ved sida av stripa). Vogna snur seg etter køyreretninga.
       GPS-prikken på vogna har farge etter fix: <span class="ok">grøn = RTK FIX</span> · <span class="var">gul = FLOAT/DGPS</span> · <span class="feil">raud = GPS</span>.
       ○ Open ring = posisjonen frå mottakaren. Sporet har farge etter hellinga.</div></div>
   <div class="k"><div class="verktoy" style="justify-content:space-between"><div class="l" style="margin:0">Portar</div>
@@ -198,7 +203,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   </div>
   <div class="k">
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
-      <span><button class="b gra" id="tbtn" onclick="startTverr()" disabled title="Last inn ei eksportfil med objekt først">✚ Tverrsnitt</button>
+      <span><label class="hj" style="display:inline-flex;align-items:center;gap:6px;margin-right:8px" title="Stripa radaren dekkjer: 77 cm (dei ytste spora), lysare ut til 96 cm"><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
+      <button class="b gra" id="tbtn" onclick="startTverr()" disabled title="Last inn ei eksportfil med objekt først">✚ Tverrsnitt</button>
       <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
       <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Kart:
         <select id="kartlag" class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
@@ -220,6 +226,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div id="kart"></div>
     <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel. Prøv eit anna kart i menyen.</div>
     <div class="forkl">
+      <span><i style="background:rgba(41,182,246,.55)"></i>skannestripe 77 cm (lys: 96 cm)</span>
       <span><i style="background:#3ecf74"></i>helling under 1°</span><span><i style="background:#c6d83a"></i>1–3°</span>
       <span><i style="background:#f2b33d"></i>3–6°</span><span><i style="background:#ef5b5b"></i>over 6°</span>
       <span><i style="background:#6b7780"></i>utan hellingsdata</span>
@@ -353,8 +360,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div class="k"><h2>Vogn og mast</h2>
     <div class="felt">
       <label><span>Mastehøgd (m), frå antennemerket til underkant radar</span><input name="mast" inputmode="decimal"></label>
-      <label><span>Midten av radaren framfor masta (m)</span><input name="fram" inputmode="decimal"></label>
-      <label><span>Midten av radaren til høgre for masta (m)</span><input name="hogre" inputmode="decimal"></label>
+      <label><span>Masta (antenna) framfor midten av radaren (m, minus = bak)</span><input name="fram" inputmode="decimal"></label>
+      <label><span>Masta (antenna) til høgre for midten av radaren (m, minus = venstre)</span><input name="hogre" inputmode="decimal"></label>
       <label><span>Kva blir sendt til OneVision</span><select name="utgang">
         <option value="rett_antenne">«rett antenne» – OneVision-oppsettet står som før (tilrådd)</option>
         <option value="referansepunkt">referansepunktet på radaren – sett antennehøgda i OneVision til 0</option></select></label>
@@ -474,7 +481,7 @@ function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.
 let radarDjupn=2.5,avslutta=false;
 const FIX={0:["INGEN","feil"],1:["GPS","feil"],2:["DGPS","var"],4:["RTK FIX","ok"],5:["RTK FLOAT","var"],6:["INS","var"],9:["SBAS","var"]};
 async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
-  const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;
+  const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;if(s.stripe)STRIPE=s.stripe;
   OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);visUst(s.oppdatering);
   if(fane!="status")return;
   if(k.pos)oppdaterLive(k.pos,k);
@@ -587,7 +594,8 @@ const KARTLAG={
     att:"Flyfoto © Esri, Maxar, Earthstar Geographics og GIS User Community"},
   osm:{url:"https://tile.openstreetmap.org/{z}/{x}/{y}.png",nat:19,att:"© OpenStreetMap-bidragsytarar"}};
 function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView([62.39,6.58],12);
-  setGrunn();lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
+  setGrunn();stripeRend=L.canvas({padding:.5});lagStripe=L.layerGroup();if(visStripe)lagStripe.addTo(kart);
+  lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
   L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt());
   hentKartlag()}
 let kartlagHenta=null;
@@ -644,6 +652,26 @@ try{const t=localStorage.getItem("geoscan_tema");if(t)setTema(t)}catch(e){}
 api("api/tema").then(r=>{if(r.tema)setTema(r.tema)}).catch(()=>{});
 
 // ---------- live-kart på Status ----------
+// ---------- skannestripa (0.9.17): kva radaren dekkjer, midt på radaren (ikkje på antenna) ----------
+let STRIPE=[0.77,0.96],visStripe=true;
+try{const v=localStorage.getItem("geoscan_stripe");if(v!==null)visStripe=v=="1"}catch(e){}
+const STRIPE_INNE={stroke:false,fillColor:"#29b6f6",fillOpacity:.38,interactive:false},
+      STRIPE_UTE={stroke:false,fillColor:"#29b6f6",fillOpacity:.13,interactive:false};
+// Firkanten for eitt stykke av stripa mellom to punkt på midtlina (a, b = [lat, lon]), hw = halve breidda i m
+function stripeBit(a,b,hw){const my=111132.95,mx=111319.49*Math.cos(a[0]*Math.PI/180);
+  const dx=(b[1]-a[1])*mx,dy=(b[0]-a[0])*my,l=Math.hypot(dx,dy);if(l<0.02||l>5)return null;
+  const nx=-dy/l*hw,ny=dx/l*hw,o=(p,t)=>[p[0]+t*ny/my,p[1]+t*nx/mx];return [o(a,1),o(b,1),o(b,-1),o(a,-1)]}
+function leggStripe(lag,rend,a,b){for(const [hw,st] of [[STRIPE[1]/2,STRIPE_UTE],[STRIPE[0]/2,STRIPE_INNE]]){
+  const q=stripeBit(a,b,hw);if(q)L.polygon(q,Object.assign({renderer:rend},st)).addTo(lag)}}
+function settStripe(v){visStripe=v;try{localStorage.setItem("geoscan_stripe",v?"1":"0")}catch(e){}
+  document.querySelectorAll(".stripeval").forEach(e=>e.checked=v);
+  for(const [m,l] of [[lkart,lstripe],[kart,lagStripe]])if(m&&l){if(v)l.addTo(m);else m.removeLayer(l)}
+  if(lmerke&&lsistUt)lmerke.setLatLng(vognPos())}
+{const f=()=>document.querySelectorAll(".stripeval").forEach(e=>e.checked=visStripe);
+  if(document.readyState=="loading")document.addEventListener("DOMContentLoaded",f);else f()}
+let lstripe=null,lstripeRend=null,lforrR=null,lnstripe=0,lsistUt=null,lsistR=null,lagStripe=null,stripeRend=null;
+// Vogna står midt på radaren når stripa blir vist (då ligg ho oppå stripa), elles på punktet som blir sendt ut
+const vognPos=()=>visStripe&&lsistR?lsistR:lsistUt;
 let lkart=null,lgrunn=null,lspor=null,lmerke=null,lraa=null,lpil=null,lfolg=true,lsist=null,lforr=null,lnseg=0,lforsteZoom=true;
 const FIXFARGE=q=>q==4?"#19e07a":(q==5||q==2||q==9||q==6)?"#f2b33d":"#ef5b5b";
 // Georadarvogna frå logoen sett ovanfrå: raud radarkasse, hjul, handtak bak, GNSS-antenne 0,6 m til venstre.
@@ -671,13 +699,14 @@ function stilVogn(){const el=lmerke&&lmerke.getElement();if(!el)return;const v=e
   const g=el.querySelector(".gpsprikk");if(g)g.setAttribute("fill",lvogn.farge)}
 function initLive(){if(lkart||typeof L=="undefined")return;lkart=L.map("livekart",{zoomControl:true}).setView([62.39,6.58],12);
   lkart.on("zoomend",()=>{if(lmerke){lmerke.setIcon(vognIkon());stilVogn()}});
-  lspor=L.layerGroup().addTo(lkart);L.control.scale({imperial:false}).addTo(lkart);
+  lspor=L.layerGroup().addTo(lkart);lstripeRend=L.canvas({padding:.5});lstripe=L.layerGroup();if(visStripe)lstripe.addTo(lkart);
+  L.control.scale({imperial:false}).addTo(lkart);
   lkart.on("dragstart",()=>{lfolg=false;$("lfolg").checked=false});hentKartlag()}
 function setLiveGrunn(){if(!lkart)return;if(lgrunn)lkart.removeLayer(lgrunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
   lgrunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(lkart);lgrunn.bringToBack()}
-function nullstillLive(){if(lspor)lspor.clearLayers();lforr=null;lnseg=0}
+function nullstillLive(){if(lspor)lspor.clearLayers();if(lstripe)lstripe.clearLayers();lforr=null;lforrR=null;lnseg=0;lnstripe=0}
 let lteikn=true;
-function pauseLive(){lteikn=!lteikn;lforr=null;const b=$("lpause");b.textContent=lteikn?"⏸ Pause sporet":"▶ Teikn sporet";
+function pauseLive(){lteikn=!lteikn;lforr=null;lforrR=null;const b=$("lpause");b.textContent=lteikn?"⏸ Pause sporet":"▶ Teikn sporet";
   b.style.background=lteikn?"":"var(--var)";b.style.color=lteikn?"":"#000"}
 async function hentMounts(){const f=$("iform");set("mmeld","Hentar liste frå casteren …","var");
   try{const r=await post("api/kjeldetabell",{caster:f.elements.caster.value,ntrip_port:f.elements.ntrip_port.value,
@@ -688,7 +717,12 @@ async function hentMounts(){const f=$("iform");set("mmeld","Hentar liste frå ca
   catch(e){set("mmeld","✗ "+e.message,"feil")}}
 const avst=(a,b)=>{const dy=(b[0]-a[0])*111320,dx=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);return Math.hypot(dx,dy)};
 function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
-  const ut=[p.lat_ut,p.lon_ut],inn=[p.lat,p.lon],c=FIXFARGE(p.fix);
+  const ut=[p.lat_ut,p.lon_ut],inn=[p.lat,p.lon],c=FIXFARGE(p.fix),rm=p.lat_r!=null?[p.lat_r,p.lon_r]:null;
+  lsistUt=ut;lsistR=rm;
+  if(!lteikn||!rm)lforrR=null;
+  else if(!lforrR||avst(lforrR,rm)>0.1){if(lforrR&&avst(lforrR,rm)<5){leggStripe(lstripe,lstripeRend,lforrR,rm);
+      if(++lnstripe>4000){const g=lstripe.getLayers();lstripe.removeLayer(g[0]);lstripe.removeLayer(g[1]);lnstripe--}}
+    lforrR=rm}
   if(!lteikn){lforr=null}
   else if(!lforr||avst(lforr,ut)>0.15){if(lforr&&avst(lforr,ut)<50){
       L.polyline([lforr,ut],{color:farge(Math.hypot(p.stamp||0,p.krenging||0),p.korrigert),weight:4,opacity:.9,interactive:false}).addTo(lspor);
@@ -697,8 +731,8 @@ function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
   const ringF=document.body.classList.contains("dagslys")?"#000000":"#cfd8dc";
   if(!lraa)lraa=L.circleMarker(inn,{radius:7,color:ringF,weight:2,fill:false,interactive:false}).addTo(lkart);else{lraa.setLatLng(inn);lraa.setStyle({color:ringF})}
   lvogn={kurs:p.kurs,farge:c};
-  if(!lmerke){lmerke=L.marker(ut,{interactive:false,zIndexOffset:1000,icon:vognIkon()}).addTo(lkart)}
-  else lmerke.setLatLng(ut);
+  if(!lmerke){lmerke=L.marker(vognPos(),{interactive:false,zIndexOffset:1000,icon:vognIkon()}).addTo(lkart)}
+  else lmerke.setLatLng(vognPos());
   stilVogn();
   lsist=ut;if(lforsteZoom){lkart.setView(ut,19);lforsteZoom=false}else if(lfolg)lkart.panTo(ut,{animate:false});
   const fl=avst(inn,ut);
@@ -713,10 +747,13 @@ async function velKartlag(v){if(!KARTLAG[v])return;kartlag=v;if(kart)setGrunn();
   catch(e){set("kartlagmeld","✗ ikkje lagra","feil")}}
 const farge=(t,k)=>!k?"#6b7780":t<1?"#3ecf74":t<3?"#c6d83a":t<6?"#f2b33d":"#ef5b5b";
 let visteSpor=null;
-async function visSpor(fil){initKart();lagSpor.clearLayers();visteSpor=fil;lagreOkt();let p;try{p=await api("api/spor?fil="+encodeURIComponent(fil))}catch(e){return}
+async function visSpor(fil){initKart();lagSpor.clearLayers();lagStripe.clearLayers();visteSpor=fil;lagreOkt();let p;try{p=await api("api/spor?fil="+encodeURIComponent(fil))}catch(e){return}
   if(!p.length)return;let seg=[[p[0][0],p[0][1]]],c=farge(p[0][2],p[0][3]);const all=[];
   for(let i=1;i<p.length;i++){const ci=farge(p[i][2],p[i][3]);seg.push([p[i][0],p[i][1]]);
     if(ci!=c||i==p.length-1){L.polyline(seg,{color:c,weight:4,opacity:.9}).addTo(lagSpor);seg=[[p[i][0],p[i][1]]];c=ci}all.push([p[i][0],p[i][1]])}
+  // skannestripa langs midten av radaren (lat_radar/lon_radar i loggen, eller rekna ut frå kursen for eldre loggar)
+  let fr=null;for(const q of p){if(q[4]==null){fr=null;continue}const r=[q[4],q[5]];
+    if(!fr||avst(fr,r)>0.1){if(fr)leggStripe(lagStripe,stripeRend,fr,r);fr=r}}
   kart.fitBounds(L.latLngBounds(all.length?all:[[p[0][0],p[0][1]]]).pad(.15))}
 function geoTilKart(gj,stil){const lag=L.geoJSON(gj,{style:stil,pointToLayer:(f,ll)=>L.circleMarker(ll,Object.assign({radius:5},stil(f)))});
   lag.eachLayer(l=>{const pr=l.feature.properties||{};l.bindTooltip(esc([pr.id,pr.layer,pr.description].filter(Boolean).join(" · ")||"objekt")+

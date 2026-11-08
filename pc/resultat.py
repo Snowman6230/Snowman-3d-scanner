@@ -15,6 +15,7 @@ import math
 import time
 from pathlib import Path
 
+import helling as H
 import koordinat as K
 import korriger_objekt as KO
 import svy_objekt as SVY
@@ -57,8 +58,10 @@ def okter(loggdir):
     return out
 
 
-def spor(path, maks=6000):
-    """Sporet frå ei loggfil til kartet, tynna ut til maks punkt: [lat, lon, helling (grader), 1/0 retta]."""
+def spor(path, maks=6000, lever=None, utgang=None):
+    """Sporet frå ei loggfil til kartet, tynna ut til maks punkt:
+    [lat, lon, helling (grader), 1/0 retta, lat_radar, lon_radar]. Midten av radaren (skannestripa) står i loggen
+    frå 0.9.17. I eldre loggar blir han rekna ut frå kursen med spakarmen og utgangen som står no (lever, utgang)."""
     pts = []
     for ix, r in _rows(path):
         lat, lon = KO.num(r[ix["lat_ut"]]), KO.num(r[ix["lon_ut"]])
@@ -66,7 +69,14 @@ def spor(path, maks=6000):
             continue
         k = r[ix["korrigert"]] == "1"
         tilt = math.hypot(KO.num(r[ix["stamp"]]) or 0, KO.num(r[ix["krenging"]]) or 0) if k else 0.0
-        pts.append([round(lat, 8), round(lon, 8), round(tilt, 1), 1 if k else 0])
+        if "lat_radar" in ix and len(r) > ix["lon_radar"] and r[ix["lat_radar"]]:
+            lr, lo_r = KO.num(r[ix["lat_radar"]]), KO.num(r[ix["lon_radar"]])
+        elif lever is not None and "kurs" in ix:
+            lr, lo_r = H.radarmidt(lat, lon, KO.num(r[ix["kurs"]]), lever, utgang)
+        else:
+            lr = lo_r = None
+        pts.append([round(lat, 8), round(lon, 8), round(tilt, 1), 1 if k else 0,
+                    None if lr is None else round(lr, 8), None if lo_r is None else round(lo_r, 8)])
     step = max(1, len(pts) // maks)
     return pts[::step]
 

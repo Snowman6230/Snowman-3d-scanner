@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.16"
+VERSJON = "0.9.17"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -42,6 +42,8 @@ STANDARD = {
     "mottakar_kompenserer": False,
     "djupn_sanntid": 0.0,
     "radar_djupn": 2.5,
+    "skannebreidd": 0.77,        # m, mellom dei ytste spora i Stream C (±0,383 m, .svy) – stripa på karta
+    "skannebreidd_ytre": 0.96,   # m, skannebreidda IDS oppgir – lysare felt utanfor
     "onevision_mappe": "",       # arbeidsmappa i OneVision (tom = finn sjølv, sjå onevision_filer.py)
     "sone": "32",
     "hoegd": "nn2000",
@@ -61,7 +63,10 @@ STANDARD = {
 
 
 LOGG_HOVUD = ("tid;fix;lat_inn;lon_inn;lat_ut;lon_ut;sone;E_ut;N_ut;h_nn2000_ut;h_bakke;korrigert;stamp;krenging;kurs;"
-              "kurskjelde;djupn_sanntid;forskyving_cm")
+              "kurskjelde;djupn_sanntid;forskyving_cm;lat_radar;lon_radar")
+
+
+radarmidt = H.radarmidt     # midten av radaren (skannestripa) – sjå helling.py
 
 
 def dist_en(la1, lo1, la2, lo2):
@@ -184,10 +189,12 @@ class Korrigerar:
         else:
             out = N.rewrite(fields, la, lo, dh=None if h2 is None else h2 - h_in)
         st["forskyving_cm"] = round(off * 100, 1) if st["korrigert"] else None
+        lat_r, lon_r = self.radarmidt(la, lo, st["kurs"])
         # Live-kartet på Status: posisjonen frå mottakaren og den retta posisjonen som blir sendt til OneVision
         st["pos"] = {"lat": round(lat, 8), "lon": round(lon, 8), "lat_ut": round(la, 8), "lon_ut": round(lo, 8),
                      "fix": gga["q"], "kurs": st["kurs"], "stamp": st["stamp"], "krenging": st["krenging"],
-                     "korrigert": st["korrigert"], "t": round(now if now is not None else time.time(), 2)}
+                     "korrigert": st["korrigert"], "t": round(now if now is not None else time.time(), 2),
+                     "lat_r": None if lat_r is None else round(lat_r, 8), "lon_r": None if lon_r is None else round(lon_r, 8)}
         # Koordinatane til punktet som blir sendt til OneVision (UTM/EUREF89 og høgd), til kontroll på Status
         try:
             z = self.zone or K.zone_of(lo)
@@ -200,8 +207,14 @@ class Korrigerar:
                               "h_bakke": None if h_nn is None else round(h_nn - mast, 3)})
         except Exception:
             pass
-        self._log(gga, lat, lon, la, lo, h2, n_geo, pitch, roll, hdg, d0, now)
+        self._log(gga, lat, lon, la, lo, h2, n_geo, pitch, roll, hdg, d0, now, lat_r, lon_r)
         return out
+
+    def radarmidt(self, la, lo, kurs):
+        """Midten av radaren (midt i skannestripa), til stripa på karta. Med «rett antenne» er punktet ut antenna,
+        og radaren ligg spakarmen (fram, høgre) bak/ved sida av ho. Med «referansepunkt» er punktet ut alt
+        midten av radaren. Utan kurs veit vi ikkje kva veg vogna står: None."""
+        return radarmidt(la, lo, kurs, self.lever, self.cfg.get("utgang"))
 
     def _point(self, lat, lon, h, lever, hdg, pitch, roll, d0):
         """Punktet som blir sendt ut: masta retta (referansepunkt eller rett antenne), og om djupn_sanntid er sett,
@@ -230,7 +243,7 @@ class Korrigerar:
             off = (e0 * e0 + n0 * n0) ** 0.5
         return la, lo, h2, off
 
-    def _log(self, gga, lat, lon, la, lo, h2, n_geo, pitch, roll, hdg, d0, now):
+    def _log(self, gga, lat, lon, la, lo, h2, n_geo, pitch, roll, hdg, d0, now, lat_r=None, lon_r=None):
         """Loggen er grunnlaget for å rette objekta etterpå (korriger_objekt.py): kvar posisjon som gjekk til
         OneVision, i UTM, med helling og kurs."""
         if not self.logfile:
@@ -247,7 +260,8 @@ class Korrigerar:
             f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))}.{int(t * 1000) % 1000:03d};{gga['q']};"
             f"{lat:.9f};{lon:.9f};{la:.9f};{lo:.9f};{z};{E:.3f};{Nn:.3f};{h_nn};{h_bakke};"
             f"{1 if st['korrigert'] else 0};{pitch:.2f};{roll:.2f};{hdg:.1f};{st['kurskjelde']};{d0:g};"
-            f"{st['forskyving_cm'] if st['forskyving_cm'] is not None else ''}\n")
+            f"{st['forskyving_cm'] if st['forskyving_cm'] is not None else ''};"
+            f"{'' if lat_r is None else f'{lat_r:.9f}'};{'' if lon_r is None else f'{lon_r:.9f}'}\n")
         self.logfile.flush()
 
 
@@ -483,6 +497,7 @@ class App:
         return {"korr": k, "ntrip": n, "inn": dict(self.state), "innstat": self.innstat(),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"], "kasta": o["kasta"]} for o in self.ut.ports],
+                "stripe": [float(self.cfg.get("skannebreidd") or 0.77), float(self.cfg.get("skannebreidd_ytre") or 0.96)],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25, "radar_djupn": rd,
                 "namn": NAMN, "produsent": PRODUSENT, "signatur": SIGNATUR,
                 "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}

@@ -165,3 +165,16 @@ def tilt_from(hel, cfg, now=None):
     if abs(pitch) > MAX_TILT or abs(roll) > MAX_TILT:
         return None
     return pitch, roll, a["src"]
+
+
+def radarmidt(la, lo, kurs, lever, utgang):
+    """Snowman Geoscan (ikkje frå Snødjupne): midten av radaren, midt i skannestripa, frå punktet som blir sendt ut.
+    Spakarmen er antenna sett frå radaren (fram, høgre), så med «rett antenne» er radaren = antenna − spakarmen
+    dreia etter kursen. Med «referansepunkt» er punktet ut alt midten av radaren. Utan kurs: (None, None)."""
+    if kurs is None or la is None or lo is None:
+        return None, None
+    if utgang != "rett_antenne":
+        return la, lo
+    dE, dN, _ = offset_enu((float(lever[0]), float(lever[1]), 0.0), kurs, 0.0, 0.0)
+    my, mx = meter_per_grad(la)
+    return la - dN / my, lo - dE / mx

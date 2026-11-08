@@ -2,6 +2,13 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-08-v0917-stripe",
+   "dato": "2026-11-08",
+   "versjon": "0.9.17",
+   "tittel": "Versjon 0.9.17: skannestripa på kartet – ligg der radaren faktisk skannar",
+   "tekst": "Hei Norman! Nytt i versjon 0.9.17:\n\nSKANNESTRIPE PÅ KARTET (versjon 0.9.17)\n• Både på Status (Kart – live) og Resultat ser du no stripa radaren dekkjer: 77 cm (mellom dei ytste spora), med eit lysare felt ut til 96 cm.\n• Stripa ligg midt på radaren, ikkje på antenna. Før låg sporet i Geoscan 0,6 m ved sida av stripa i OneVision og bytte side når du snudde. No skal kartet i Geoscan sjå ut som C-scan i OneVision.\n• Ser du glipper mellom stripene, er det ikkje skanna der. Hald under 75 cm mellom midtlinjene.\n• Slå stripa av eller på med «Vis skannestripe» over kartet.\n\nRETTA I VERSJON 0.9.17\n• Spor og vogn låg litt for langt sør på karta (ein feil i teikninga). Det er retta.\n• Tekstane under Innstillingar → Vogn og mast er gjort tydelegare: «Masta (antenna) til høgre for midten av radaren (minus = venstre)». −0,6 står rett som før. Står masta ca. 0,4 m BAK midten av radaren, skriv du −0,4 i feltet «framfor».\n\nHelsing Hans Petter"
+  },
+  {
    "id": "2026-11-08-v0915-qhqv",
    "dato": "2026-11-08",
    "versjon": "0.9.16",

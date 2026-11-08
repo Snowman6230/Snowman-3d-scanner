@@ -1055,3 +1055,17 @@ def test_gst_noyaktigheit():
     gst = N.build(["GPGST", "120000.00", "0.02", "0.012", "0.009", "35.0", "0.030", "0.040", "0.020"])
     assert k.handle(gst) == [gst]
     assert k.status["noy"]["qh_cm"] == 5.0 and k.status["noy"]["qv_cm"] == 2.0
+
+
+def test_radarmidt_rett_antenne():
+    """Antenna 0,6 m til venstre for radaren (høgre = −0,6): midten av radaren ligg 0,6 m til høgre for antenna.
+    Køyrer vogna mot nord, er høgre aust."""
+    import helling as H2
+    la, lo = 62.4, 6.6
+    lr, lor = H2.radarmidt(la, lo, 0.0, (0.0, -0.6, 1.8), "rett_antenne")
+    my, mx = H2.meter_per_grad(la)
+    assert abs((lor - lo) * mx - 0.6) < 0.005 and abs((lr - la) * my) < 0.005
+    lr, lor = H2.radarmidt(la, lo, 180.0, (0.0, -0.6, 1.8), "rett_antenne")   # mot sør: høgre er vest
+    assert abs((lor - lo) * mx + 0.6) < 0.005
+    assert H2.radarmidt(la, lo, 0.0, (0.0, -0.6, 1.8), "referansepunkt") == (la, lo)
+    assert H2.radarmidt(la, lo, None, (0.0, -0.6, 1.8), "rett_antenne") == (None, None)
