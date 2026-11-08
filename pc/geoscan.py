@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.14"
+VERSJON = "0.9.15"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -109,6 +109,9 @@ class Korrigerar:
             self.status["feil_sjekksum"] += 1
             return []
         with self.lock:
+            if line[3:6] == "GST":          # nøyaktigheit (1 σ) frå mottakaren, som QH/QV i Xsite
+                self._gst(line)
+                return [line]
             if self.hel.feed(line, now):
                 return [line]
             fields = N.split(line)
@@ -120,6 +123,17 @@ class Korrigerar:
                 return [line]
             return [self._correct(fields, k, pos, now)]
 
+    def _gst(self, line):
+        """$--GST,tid,rms,σmaj,σmin,orient,σlat,σlon,σhøgd: standardavvik i meter (1 σ). Vi viser QH = √(σlat²+σlon²)
+        og QV = σhøgd i cm. R12i sender GST når han er slått på for porten (I/O Configuration → NMEA → GST)."""
+        f = line.split("*")[0].split(",")
+        try:
+            la, lo, al = float(f[6]), float(f[7]), float(f[8])
+        except (IndexError, ValueError):
+            return
+        self.status["noy"] = {"qh_cm": round(math.hypot(la, lo) * 100, 1), "qv_cm": round(al * 100, 1),
+                              "t": time.time()}
+
     def _correct(self, fields, k, pos, now):
         lat, lon = pos
         cfg, st = self.cfg, self.status
@@ -128,6 +142,10 @@ class Korrigerar:
             self.talker = (fields[0] or "")[:2].upper()
             self.komp_aktiv = self.komp and self.talker == "IN"
             st.update(fix=gga["q"], sats=gga["sats"])
+            try:
+                st["hdop"] = float(fields[8])
+            except (IndexError, ValueError):
+                st["hdop"] = None
             self.hel.add_position(lat, lon, now)
         tilt = H.tilt_from(self.hel, cfg, now)
         hdg, hsrc = self.hel.heading(cfg)
@@ -459,6 +477,9 @@ class App:
         if k.get("korrigert") and k.get("stamp") is not None:
             t = math.radians(math.hypot(k["stamp"], k["krenging"]))
             d25 = round(rd * math.sin(t) * 100, 1)
+        ny = k.get("noy")
+        if ny:
+            k["noy"] = dict(ny, alder=round(time.time() - ny["t"], 1))
         return {"korr": k, "ntrip": n, "inn": dict(self.state), "innstat": self.innstat(),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"], "kasta": o["kasta"]} for o in self.ut.ports],

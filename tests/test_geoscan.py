@@ -1044,3 +1044,14 @@ def test_resultat_utan_helling(tmp_path):
         r = RES.rett_eksport(f, [], tmp_path / "ut", helling=helling)
         assert r["merknad"] and r["helling"] is False and r["sone"] == 32
         assert r["tabell"][0]["djupn_etter"]["snitt"] == 0.85
+
+
+def test_gst_noyaktigheit():
+    """NMEA GST gir QH (horisontal) og QV (vertikal) i cm, som i Xsite. Linja går vidare urørt."""
+    import copy
+    import geoscan as G
+    cfg = copy.deepcopy(G.STANDARD); cfg["logg"] = None
+    k = G.Korrigerar(cfg)
+    gst = N.build(["GPGST", "120000.00", "0.02", "0.012", "0.009", "35.0", "0.030", "0.040", "0.020"])
+    assert k.handle(gst) == [gst]
+    assert k.status["noy"]["qh_cm"] == 5.0 and k.status["noy"]["qv_cm"] == 2.0

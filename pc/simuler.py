@@ -52,7 +52,8 @@ class Mottakar:
         gga = N.build(["INGGA", hh, la, ha, lo, ho, "4", "18", "0.7", f"{self.alt:.3f}", "M", f"{self.sep:.3f}", "M",
                        "1.0", "0001"])
         pashr = N.build(["PASHR", hh, f"{hdg:.2f}", "T", f"{roll:.2f}", f"{pitch:.2f}", "", "0.02", "0.02", "0.05", "2", "1"])
-        return [pashr, gga]
+        gst = N.build(["GNGST", hh, "0.02", "0.012", "0.009", "35.0", "0.010", "0.009", "0.018"])   # QH ≈ 1,3 cm, QV 1,8 cm
+        return [pashr, gga, gst]
 
     def serve(self, port, stop):
         srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

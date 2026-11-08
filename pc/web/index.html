@@ -133,7 +133,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 <!-- ================= STATUS ================= -->
 <section id="f-status" class="fane aktiv">
   <div class="rad">
-    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div></div>
+    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div><div class="s" id="noy" style="margin-top:6px;font-size:17px"></div></div>
     <div class="k"><div class="l">Helling</div><div class="v" id="hell">–</div><div class="s" id="hsrc"></div>
       <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="var(--linje)" stroke-width="2"/>
       <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="var(--for)"/><line x1="0" y1="10" x2="0" y2="-28" stroke="var(--svak)" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="var(--tekst)"/></g></svg></div>
@@ -480,6 +480,11 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
   if(k.pos)oppdaterLive(k.pos,k);
   const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
   set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
+  // Nøyaktigheit (1 σ) frå GST, som QH/QV i Xsite: grøn under 3 cm, gul under 10 cm, raud over
+  {const q=k.noy,ok=q&&q.alder!=null&&q.alder<5,kl=v=>v<3?"ok":v<10?"var":"feil";
+   $("noy").innerHTML=ok?`<b class="${kl(q.qh_cm)}">QH ${F(q.qh_cm,1)} cm</b> · <b class="${kl(q.qv_cm)}">QV ${F(q.qv_cm,1)} cm</b>`:
+     (k.hdop!=null?`HDOP ${F(k.hdop,1)} · `:"")+`<span class="hj">QH/QV: slå på GST i R12i (USB → NMEA)</span>`;
+   $("noy").title="QH = horisontal og QV = vertikal nøyaktigheit (1 σ, standardavvik) som mottakaren sjølv reknar ut, frå NMEA GST"}
   if(k.korrigert){set("hell",(k.krenging>0?"+":"")+F(k.krenging,1)+"°",Math.abs(k.krenging)>5||Math.abs(k.stamp)>5?"var":"ok");
     set("hsrc","krenging · stamp "+F(k.stamp,1)+"° · "+k.hellingskjelde);$("vogn").setAttribute("transform","rotate("+k.krenging+" 0 24)")}
   else{set("hell","–","var");set("hsrc",k.melding);$("vogn").setAttribute("transform","")}

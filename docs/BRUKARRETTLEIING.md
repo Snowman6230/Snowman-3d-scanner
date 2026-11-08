@@ -253,3 +253,10 @@ han gjerne inn med ein gong. Manglar nøkkelen når repoet er lukka, seier progr
 
 Alt som skjer, blir lagra i `pc\logg`. Lag ei pakke under **Send inn** og send henne til Hans Petter, så kan han
 sjå nøyaktig kva som skjedde.
+
+
+## Nøyaktigheit (QH/QV)
+
+Under Fix på Status står **QH** (horisontal) og **QV** (vertikal) nøyaktigheit i cm, slik R12i sjølv reknar ho ut
+(1 σ, NMEA GST), same som QH/QV i Xsite. Grønt under 3 cm, gult under 10 cm, raudt over. Står det «slå på GST», må
+GST setjast til same rate som GGA i webgrensesnittet til R12i: I/O Configuration → Port Configuration → USB → NMEA.

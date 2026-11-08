@@ -2,6 +2,13 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.15 – 8. november 2026
+- Status → Fix viser no nøyaktigheita frå mottakaren, som QH/QV i Novatron Xsite: **QH** (horisontal) og **QV**
+  (vertikal) i cm, 1 σ, frå NMEA GST. Fargen er grøn under 3 cm, gul under 10 cm og raud over. Utan GST blir HDOP
+  vist, med eit hint om å slå på GST i R12i (I/O Configuration → USB → NMEA → GST). GST går ikkje vidare til
+  OneVision (berre GGA). Ønske frå Norman 8.11.
+- Simulatoren sender GST, så QH/QV kan prøvast i demo.
+
 ## 0.9.14 – 8. november 2026
 - «Finn utstyr» og com0com-dialogen kunne bli høgare enn skjermen på Panasonic-nettbrettet. Då forsvann ✕ og
   knappane, og dialogen kunne verken lukkast eller rullast. No får ingen dialog bli høgare enn skjermen. Han
