@@ -20,6 +20,13 @@ Kagholvegen (29.11.2022), og 9. november 2026 med testpakka frå Norman 8.11.
 | 15 | **Held R12i fram med `$INGGA` når Trimble Access blir lukka?** 8.11 kom `$INGGA` ut på USB medan IMU-en var slått på frå demoutgåva av Access (sjå avklart 16). Felttesten 7.11 gav `$GNGGA` (antenne, IMU ikkje i bruk). Norman: «Access reknar ut når det blir brukt, men streaming ut elles trur eg er i fasepunktet til antenna.» Krev IMU-justering utan Access? Gir `$INGGA` spissen eller antenna? | Utan IMU-retta posisjon blir masta ikkje retta for helling: ca. 16 cm feil per 5° med 1,8 m mast. | Ekstra hellingsmålar på ramma (punkt 3) er den sikre vegen |
 | 9 | **Kompasset i georadaren.** Norman: radaren har ein sensor som viser mot nord, og kompasset går inn i skannedataa. 7.11: «trur den blir lagra i OneVision». Kvar ligg kursen i filene (.scan, .data eller .index), og er han magnetisk eller sann nord? | Kursen trengst for å vende hellinga rett når kvart sweep skal rettast (punkt 8). Kompass kan òg bli forstyrra av stål. | Kurs frå GNSS-sporet |
 
+## Planlagt og moglege opsjonar
+
+| # | Kva | Status |
+|---|---|---|
+| P1 | **0.9.19: bakgrunnsfiler i kartet** (ønske frå Norman 8.11). DXF og KOF blir viste på Status og Resultat, med eit val for kva filer og lag som skal visast. DWG må lagrast som DXF. IFC kan kome seinare. Test helst med ei ekte fil frå Norman (t.d. `…M.dxf` på skrivebordet hans). | Neste versjon |
+| P2 | **Opsjon: automatisk opplasting av testpakkar til eit privat GitHub-repo.** Geoscan lastar opp pakka (zip og eit kort samandrag) til t.d. `Snowman6230/geoscan-innsending` under `innsendt/<maskin>/<dato_tid>/`, med knappen «Send til utviklar» og eventuelt «Send automatisk når økta blir avslutta». Nøkkelen (fine-grained token, berre «Contents: write» på det eine repoet) blir lagra berre lokalt på PC-en, som NTRIP-passordet. Utviklaren (Claude) hentar og analyserer pakkane på førespurnad, eller med ei planlagd oppgåve kvar morgon. Pakkane må **ikkje** inn i hovudrepoet, som er ope, fordi dei har GPS-loggar frå arbeidsstadene. Store radardata (`.scan`, ca. 16 MB kvar) bør vere valfrie; GitHub tek filer opp til 100 MB. Det går ikkje an å sende rett inn i ein Claude-chat. | Mogleg. Krev at Norman er med på det, og at Hans Petter opprettar repoet og nøkkelen |
+
 ## Avklart
 
 | # | Spørsmål | Svar | Dato / kjelde |
