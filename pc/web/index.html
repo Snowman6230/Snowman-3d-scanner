@@ -186,7 +186,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   </div>
   <div class="k">
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
-      <span><button class="b gra" id="tbtn" onclick="startTverr()" style="display:none">✚ Tverrsnitt</button>
+      <span><button class="b gra" id="tbtn" onclick="startTverr()" disabled title="Last inn ei eksportfil med objekt først">✚ Tverrsnitt</button>
       <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
       <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Kart:
         <select id="kartlag" class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
@@ -195,16 +195,15 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
           <option value="flyfoto">Flyfoto (Esri)</option>
           <option value="osm">OpenStreetMap</option></select>
         <span id="kartlagmeld" class="ok"></span></label></span></div>
-    <div id="grav" class="k" style="display:none;background:var(--kort2);margin:0 0 10px;padding:10px 12px">
+    <div id="grav" class="k" style="background:var(--kort2);margin:0 0 10px;padding:10px 12px">
       <div class="verktoy" style="gap:12px">
         <b>Grav nedover:</b>
         <input type="range" id="gdjupn" min="0" max="300" step="1" value="0" style="flex:1;min-width:180px">
         <span style="font-variant-numeric:tabular-nums;min-width:74px;font-weight:700;font-size:18px" id="gtekst">0 cm</span>
         <button class="b gra" id="gspel" onclick="spelGrav()">▶ Spel av</button>
-        <button class="b gra" onclick="slaGravAv()">Vis alt</button>
+        <button class="b gra" id="galt" onclick="slaGravAv()">Vis alt</button>
       </div>
-      <div class="hj" style="margin-top:4px" id="ginfo">Dra for å grave nedover centimeter for centimeter. Objekt som ligg på denne djupna (±5 cm)
-        lyser opp, det som ligg grunnare blir blekt, og det som ligg djupare er enno skjult.</div>
+      <div class="hj" style="margin-top:4px" id="ginfo"></div>
     </div>
     <div id="kart"></div>
     <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel. Prøv eit anna kart i menyen.</div>
@@ -744,8 +743,8 @@ function visResultat(r,namn){initKart();lagObj.clearLayers();siste=r;segs=[];val
           .on("click",e=>{L.DomEvent.stopPropagation(e);if(tverrModus){tverrKlikk(e);return}velObjekt(fi);visPos(fi,idx,null)}).addTo(lagObj)}
       k+=ll.length})});
   if(alle.length)kart.fitBounds(L.latLngBounds(alle).pad(.4));
-  $("dbtn").style.display=r.etter?"inline-block":"none";$("tbtn").style.display=r.etter?"inline-block":"none";lukkTverr();
-  const dmx=Math.max(0,...segs.map(x=>Math.max(x.a??0,x.b??0)));$("grav").style.display=segs.length&&dmx>0?"block":"none";
+  $("dbtn").style.display=r.etter?"inline-block":"none";lukkTverr();
+  const dmx=Math.max(0,...segs.map(x=>Math.max(x.a??0,x.b??0)));verktoyTilstand(!!r.etter&&segs.length>0,dmx>0);
   $("gdjupn").max=Math.ceil(Math.max(dmx,radarDjupn)*100)+10;djupnTekst=false;$("dbtn").textContent="Vis djupn på kartet";if(lagDjupn)lagDjupn.clearLayers();
   const maks=Math.max(0,...r.tabell.map(t=>+t.maks_endring_cm||0));
   const djupast=Math.max(0,...r.tabell.map(t=>t.djupn_etter?t.djupn_etter.maks:0));
@@ -766,6 +765,16 @@ function bytDjupnTekst(){if(!siste||!siste.etter)return;djupnTekst=!djupnTekst;l
       ln.forEach((p,j)=>{if((j%steg==0||j==ln.length-1)&&d1[k+j]!=null)
         L.tooltip({permanent:true,direction:"top",className:"djl",offset:[0,-4]}).setLatLng([p[1],p[0]]).setContent(fm(d1[k+j])+" m").addTo(lagDjupn)});k+=ln.length})})}
 // ---------- grav nedover (djupnesnitt av objekta) ----------
+// Tverrsnitt og «Grav nedover» står alltid synlege, men er grå til ei eksportfil med objekt (og djupn) er lasta inn.
+const GINFO="Dra for å grave nedover centimeter for centimeter. Objekt som ligg på denne djupna (±5 cm) lyser opp, "+
+  "det som ligg grunnare blir blekt, og det som ligg djupare er enno skjult.";
+let verkObj=false,verkDjupn=false;
+function verktoyTilstand(harObj,harDjupn){verkObj=harObj;verkDjupn=harDjupn;const t=$("tbtn"),g=harObj&&harDjupn;
+  t.disabled=!harObj;t.title=harObj?"Klikk to punkt på kartet, A og B, på tvers av grøfta":"Last inn ei eksportfil med objekt først";
+  ["gdjupn","gspel","galt"].forEach(i=>$(i).disabled=!g);$("grav").style.opacity=g?"1":".6";
+  $("ginfo").innerHTML=g?GINFO:harObj?"Objekta i fila har inga djupn, så det er ingenting å grave ned til.":
+    "<b>Last inn ei eksportfil med objekt først</b> (knappen «Vel eksportfil …» over). Merk røyr og kablar i OneVision "+
+    "(Targets), og vel .svy-fila for målinga. Då blir «Grav nedover» og «✚ Tverrsnitt» aktive."}
 const SNITT=0.05;   // ±5 cm
 let lagSnitt=null;
 function grav(cm){const d=cm/100;lagreOkt();$("gtekst").textContent=cm+" cm";gravPa=true;if(lagFor)lagFor.setStyle({opacity:0,fillOpacity:0});
@@ -783,12 +792,13 @@ function grav(cm){const d=cm/100;lagreOkt();$("gtekst").textContent=cm+" cm";gra
 function slaGravAv(stille){gravPa=false;lagreOkt();if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}
   if(lagSnitt)lagSnitt.clearLayers();segs.forEach(x=>x.lag.setStyle({opacity:1,fillOpacity:1}));
   if(lagFor)lagFor.setStyle({opacity:.9,fillOpacity:.6});
-  if(!stille){$("gdjupn").value=0;$("gtekst").textContent="0 cm";$("ginfo").textContent="Dra for å grave nedover centimeter for centimeter."}
+  if(!stille){$("gdjupn").value=0;$("gtekst").textContent="0 cm";verktoyTilstand(verkObj,verkDjupn)}
   const l=document.getElementById("psnitt");if(l)l.remove()}
 function spelGrav(){if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av";return}
   const g=$("gdjupn");if(+g.value>=+g.max)g.value=0;$("gspel").textContent="⏸ Pause";
   gravTimer=setInterval(()=>{g.value=+g.value+1;grav(+g.value);if(+g.value>=+g.max){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}},60)}
 $("gdjupn").addEventListener("input",e=>grav(+e.target.value));
+verktoyTilstand(false,false);
 let profilY=null;
 function teiknSnittIProfil(d){const svg=$("psvg");if(!profilY)return;let l=document.getElementById("psnitt");
   if(!l){l=document.createElementNS("http://www.w3.org/2000/svg","g");l.id="psnitt";svg.appendChild(l)}

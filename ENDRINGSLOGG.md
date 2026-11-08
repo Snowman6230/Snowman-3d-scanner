@@ -2,6 +2,11 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.10 – 8. november 2026
+- Resultat: «✚ Tverrsnitt» og «Grav nedover» står no alltid over kartet. Før var dei gøymde til ei eksportfil med
+  objekt var lasta inn, og Norman fann dei ikkje. No er dei grå med ei forklaring om å laste inn `.svy`-fila frå
+  OneVision først, og blir aktive når objekta (med djupn) er lasta.
+
 ## 0.9.9 – 8. november 2026
 - Status → NTRIP-kortet viser no koordinatane til punktet som blir sendt til OneVision: UTM (E, N, sone) og høgd
   i NN2000 (og bakkehøgd under radaren når «rett antenne» er valt). Då ser ein med ein gong at posisjon, korreksjonar

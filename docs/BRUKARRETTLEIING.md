@@ -143,6 +143,9 @@ Fana **Resultat**:
   30 m). Det styrer «Grav nedover», og kva djupn Status reknar feilen for. Fargeskalaen går til over 5 m.
 - **Bakgrunnskart:** vel i menyen «Kart» over kartet – fargekart eller gråtonekart frå Kartverket, flyfoto
   (Esri) eller OpenStreetMap. Flyfoto viser kantsteinar og kummar. Valet blir hugsa («✓ lagra»).
+- **Tverrsnitt og Grav nedover står alltid over kartet, men er grå** til du har lasta inn ei eksportfil med objekt
+  («Vel eksportfil …»). Merk røyr og kablar i OneVision (Targets) og vel `.svy`-fila for målinga. «Grav nedover»
+  krev i tillegg at objekta har djupn.
 - **Tverrsnitt på valfri stad:**
   1. Trykk **✚ Tverrsnitt**, og klikk to punkt på kartet, A og B, til dømes på tvers av ei grøft.
   2. Under kartet kjem eit snitt ned i bakken langs lina A–B. Det viser kvar røyr og kablar kryssar, og kor djupt
