@@ -2,6 +2,13 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-08-v0915-qhqv",
+   "dato": "2026-11-08",
+   "versjon": "0.9.16",
+   "tittel": "Versjon 0.9.15: nøyaktigheit QH/QV under Fix – slå på GST i R12i",
+   "tekst": "Hei Norman! Her er det nye i versjon 0.9.15. Du får det når du oppdaterer (Innstillingar → Oppdatering → «Sjå etter ny versjon no»). Øvst ved namnet skal det då stå v0.9.16 – den versjonen har berre denne meldinga i tillegg.\n\nNØYAKTIGHEIT (QH/QV) – versjon 0.9.15\nUnder Fix på Status står no nøyaktigheita frå R12i, slik QH og QV gjer på Xsite:\n• QH = feilen sidevegs, QV = feilen i høgda, i cm (eitt standardavvik, rekna ut av mottakaren sjølv).\n• Grøn under 3 cm, gul under 10 cm, raud over 10 cm.\n• Det går ikkje vidare til OneVision – OneVision får berre GGA som før.\n\nDette må du gjere i R12i éin gong:\n1. Opne webgrensesnittet (192.168.142.1) → I/O Configuration → Port Configuration.\n2. Vel USB og NMEA.\n3. Set GST til same rate som GGA (10 Hz) og trykk OK.\nTil GST er på, står det «HDOP … · QH/QV: slå på GST i R12i» på same plass.\n\nANNA SOM ER NYTT I DAG (0.9.8–0.9.14)\n• 0.9.8: Meldinga om GitHub-nøkkel kjem ikkje lenger under testen.\n• 0.9.9: NTRIP-kortet viser koordinatane som blir sendt til OneVision (UTM E/N og høgd i NN2000).\n• 0.9.10–0.9.12: Resultat finn OneVision-målingane dine sjølv (Survey_ÅÅÅÅ.MM.DD_NNN). Vel måling i lista og trykk «Bruk denne». Geoscan viser òg GPS-forskyvinga OneVision brukte i målinga og åtvarar om ho ikkje stemmer.\n• 0.9.13: Kryss for «Rett for helling». Utan helling (R12i utan IMU) blir objekta viste som i OneVision i staden for feilmelding.\n• 0.9.14: «Finn utstyr» passar skjermen, kan rullast og lukkast med ✕ eller Esc.\n\nHugs: forskyvinga i OneVision (Stream C.xml, xyz) skal vere 0.6 til sida og same mastehøgd som i Geoscan.\n\nHelsing Hans Petter"
+  },
+  {
    "id": "2026-11-07-finn-utstyr-2",
    "dato": "2026-11-07",
    "versjon": "0.9.7",

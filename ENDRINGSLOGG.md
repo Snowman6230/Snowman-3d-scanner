@@ -2,6 +2,9 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.16 – 8. november 2026
+- Melding til Norman om versjon 0.9.15 (QH/QV og GST i R12i) og oversikt over 0.9.8–0.9.14. Ingen kodeendring.
+
 ## 0.9.15 – 8. november 2026
 - Status → Fix viser no nøyaktigheita frå mottakaren, som QH/QV i Novatron Xsite: **QH** (horisontal) og **QV**
   (vertikal) i cm, 1 σ, frå NMEA GST. Fargen er grøn under 3 cm, gul under 10 cm og raud over. Utan GST blir HDOP

@@ -34,7 +34,8 @@ Når Hans Petter gir deg ei pakke:
 1. Les `SJEKKLISTE.txt`, `SVAR.txt`, `filer/`, `logg/` og `system.json`. Rådata (`logg/raa_*.nmea`) kan
    spelast av med `python pc/geoscan.py --fil …`.
 2. Flytt svar på opne spørsmål til «Avklart» i `docs/OPNE-SPORSMAL.md`, og rett innstillingar og kode.
-3. **Svar Norman** med ei ny melding øvst i `pc/meldingar.json`. Ho skal ha `id` (unik), `dato`, `versjon`,
+3. **Svar Norman** med ei ny melding øvst i `pc/meldingar.json`. Meldinga skal **alltid nemne versjonsnummeret**
+   (i tittelen og ved kvar endring i teksten), slik at Norman ser kva versjon han må ha. Ho skal ha `id` (unik), `dato`, `versjon`,
    `tittel` og `tekst`, og `sjekk` med svar per punkt (`{"n2": {"tekst": "…", "prov_att": true}}`).
 4. Auk `VERSJON`, skriv i `ENDRINGSLOGG.md`, test og push. Norman ser tittelen på meldinga i
    «Ny versjon»-lina. Etter oppdateringa ser han meldinga øvst og svara ved punkta i sjekklista.
