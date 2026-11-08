@@ -22,6 +22,8 @@ Kagholvegen (29.11.2022), og 9. november 2026 med testpakka frå Norman 8.11.
 
 ## Planlagt og moglege opsjonar
 
+Heile planen fram mot 1.0 og vidare (versjon 2–4) står i [VEGKART.md](VEGKART.md).
+
 | # | Kva | Status |
 |---|---|---|
 | P1 | **0.9.19: bakgrunnsfiler i kartet** (ønske frå Norman 8.11). DXF og KOF blir viste på Status og Resultat, med eit val for kva filer og lag som skal visast. DWG må lagrast som DXF. IFC kan kome seinare. Test helst med ei ekte fil frå Norman (t.d. `…M.dxf` på skrivebordet hans). | Neste versjon |
