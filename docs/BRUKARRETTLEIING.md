@@ -86,8 +86,9 @@ kopla saman inne i PC-en (Geoscan skriv på den eine, OneVision les den andre).
 
 **Utan com0com** kan testen likevel gjerast: OneVision les R12i direkte (Bluetooth port 1, som før), og Geoscan
 les USB (COM23) og loggar hellinga. Objekta blir då retta etterpå under Resultat i staden for i sanntid.
-   - **Mastehøgd:** mål frå bakken (underkanten av radaren) opp til **undersida av hurtigfestet** på R12i, same
-     som stanghøgda i Trimble Access («Målt til: Undersiden av hurtig feste»). Vogna 9.11.2026: 1,808 m.
+   - **Mastehøgd:** frå spissen av stonga (i GPS-støtta på ramma) opp til **undersida av hurtigfestet** på R12i, same
+     som stanghøgda i Trimble Access («Målt til: Undersiden av hurtig feste»). Vogna 9.11.2026: 1,808 m. Spissen
+     står 0,09 m over bakken.
    - **Frå undersida av hurtigfestet til fasesenteret:** 0,179 m for R12i (står som standard). Geoscan legg
      dette til mastehøgda, sidan posisjonen frå R12i gjeld fasesenteret inne i antenna. Høgda til fasesenteret
      (1,808 + 0,179 = 1,987 m) er det som skal stå som z i `Stream C.xml` for OneVision.
@@ -103,6 +104,11 @@ Skann i OneVision som vanleg. Snowman Geoscan må vere i gang heile tida, og vin
 Kvar skanning blir lagra med posisjon og helling.
 
 ## 5. Sjå resultatet
+
+Frå 0.9.21 les Geoscan objekta frå `.svy`-fila, og frå mappa **Exports** i målemappa (DXF eller ESRI Shapefile frå
+«Target Export» i OneVision) når `.svy`-fila ikkje har objekt. Har den nyaste målinga ingen objekt, seier Geoscan det,
+i staden for å velje ei eldre måling. Bakkehøgda frå loggen blir brukt til å rekne høgda over havet òg når Geoscan
+ikkje har retta for helling (R12i med IMU).
 
 Fana **Resultat**:
 
@@ -270,15 +276,42 @@ GST setjast til same rate som GGA i webgrensesnittet til R12i: I/O Configuration
 
 Øvst under Innstillingar vel du kva slags posisjon som kjem frå mottakaren:
 - **R12i utan Trimble Access** – Snowman Geoscan hentar NTRIP. Trimble Access skal vere lukka.
-- **R12i med Trimble Access** – Access hentar NTRIP og slår på IMU-en. Kople Access til R12i over Bluetooth, så
-  Geoscan har USB. Geoscan hentar ikkje NTRIP.
+- **R12i med Trimble Access (IMU)** – Access hentar NTRIP og slår på IMU-en. Kople Access til R12i over Bluetooth,
+  så Geoscan har USB. Geoscan hentar ikkje NTRIP. Frå 0.9.21 sender Geoscan punktet frå R12i **urørt** til OneVision
+  (spissen av stonga, `$INGGA`). Berre høgda blir gjort om til NN2000 med geoiden frå Kartverket. Stanghøgda i
+  Access og mastehøgda i Geoscan skal begge vere 1,808 m. Fell IMU-en ut og R12i sender `$GNGGA`, måler Geoscan
+  hoppet i høgd: hoppar ho om lag 2 m, sender R12i antenna, og Geoscan trekkjer frå mast + 0,179. Held ho seg,
+  er stanghøgda alt trekt frå, og Geoscan endrar ingenting. Masta blir då ikkje retta for helling sidevegs.
 - **Berre rådata** – antenneposisjonen blir send vidare utan korreksjonar frå Geoscan.
 
 ## GPS-forskyvinga i OneVision (frå 0.9.18)
 
-OneVision kan ikkje endre GPS-forskyvinga sjølv. Under Innstillingar → Vogn og mast viser Geoscan kva som står i
-`Stream C.xml`, og kva det bør vere etter Geoscan-måla. Trykk **Skriv Geoscan-måla til OneVision**. Geoscan tek
-kopi først, og Windows kan spørje om administratorløyve. Start OneVision på nytt etterpå.
+OneVision kan ikkje endre GPS-forskyvinga sjølv. Ho står i `Program Files (x86)\IDSGeoRadar\OneVision\config\Stream C.xml`.
+Frå 0.9.21 skriv du tala direkte under Innstillingar → Vogn og mast, med ei skisse av vogna ovanfrå og frå sida:
+- **x** – spissen av stonga framfor enkoderen i det venstre bakhjulet (origo i OneVision): **0,13**
+- **y** – spissen av stonga sidevegs frå midten av radaren: **0,42** (IDS-malen for GPS-støtta bak til venstre har +0,42)
+- **z** – spissen av stonga over bakken: **0,09** (spissen står i støtta på ramma)
+
+Med «R12i med Trimble Access (IMU)» skal OneVision trekkje frå nettopp z (0,09). I dei andre oppsetta sender Geoscan
+antenna, og då blir z rekna som 0,09 + mast + 0,179. Geoscan viser kva OneVision skal trekkje frå.
+Trykk **Skriv Geoscan-måla til OneVision**. Geoscan tek kopi først, og Windows kan spørje om administratorløyve.
+Start OneVision på nytt etterpå. Geoscan viser òg kva tal OneVision brukte i den nyaste målinga
+(`Survey_…\Data\Stream C.xml`), og åtvarar viss Windows har ein skjult kopi av fila i VirtualStore.
+
+## Kvalitetsvakt (frå 0.9.21)
+
+Øvst i Geoscan kjem det ei **raud stripe**, eit pip og (viss du slår det på) eit varsel i Windows når:
+- IMU-en er borte – R12i sender `$GNGGA` i staden for `$INGGA`
+- RTK FIX er tapt (FLOAT, DGPS eller GPS)
+- QH er over 5 cm eller QV over 8 cm
+- det ikkje har kome posisjonar på 2 s
+
+Varselet kjem etter 1 s og går bort 2 s etter at feilen er borte. Geoscan sender likevel vidare til OneVision, fordi
+OneVision stoppar opptaket når GPS-en forsvinn. Trykk **🔔 Varsel i Windows** éin gong for å la nettlesaren vise
+varsel òg når Geoscan ligg bak OneVision. **🔊 Lyd** slår pipet av og på.
+I Resultat blir sporet **oransje** der IMU-en var borte, og objekt målte der får «⚠ utan IMU» i tabellen.
+
+Ei **gul stripe** viser feil i oppsettet, til dømes mastehøgd 0 med «R12i med Trimble Access (IMU)».
 
 
 ## Bakgrunn i kartet (frå 0.9.19)
@@ -287,6 +320,12 @@ Trykk **🗺 Bakgrunn** over kartet (Status eller Resultat) og **Legg til fil �
 landmålaren blir viste under sporet. Vel koordinatsystem (UTM 32 er vanleg, NTM for mange byggjeprosjekt), eller
 la Geoscan finne det sjølv. Hak av eller på for kvar fil og kvart lag. Ligg teikninga feil, prøv eit anna
 koordinatsystem i lista. DWG må lagrast som DXF først.
+
+Frå 0.9.21:
+- **Farge** per fil, så like teikningar (til dømes fire trekkerøyr i raudt) kan skiljast.
+- **Høgd (Z)** i teikninga blir teken vare på og vist når du held over ei linje.
+- I Resultat viser kolonnen **Mot innmålt** kor langt kvart objekt ligg frå næraste innmålte linje, sidevegs og i
+  høgd (objekt − innmålt), i cm. Berre synlege filer og lag blir brukte. Over 3 m blir ikkje rekna med.
 
 ## Trimble Access: PJK under Fix (frå 0.9.19)
 

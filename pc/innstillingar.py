@@ -38,7 +38,10 @@ def hent(cfg_path, cfg):
         "imu_baud": inn[1].get("baud", 115200) if len(inn) > 1 else 115200,
         "onevision": (cfg.get("ut_seriell") or [{}])[0].get("port", "") if cfg.get("ut_seriell") else "",
         "tcp_port": cfg.get("tcp_port", 5000),
-        "mast": s.get("opp", 1.8), "apc_tillegg": cfg.get("apc_tillegg", 0.179), "fram": s.get("fram", 0.0), "hogre": s.get("hogre", 0.0),
+        "mast": s.get("opp", 1.8), "apc_tillegg": cfg.get("apc_tillegg", 0.179),
+        "spiss_over_bakken": cfg.get("spiss_over_bakken", 0.09),
+        "streamc_x": (cfg.get("streamc_xy") or [0.13, 0.42])[0], "streamc_y": (cfg.get("streamc_xy") or [0.13, 0.42])[1],
+        "fram": s.get("fram", 0.0), "hogre": s.get("hogre", 0.0),
         "mottakar_kompenserer": bool(cfg.get("mottakar_kompenserer")),
         "gps_oppsett": gps_oppsett(cfg),
         "utgang": cfg.get("utgang", "rett_antenne"),
@@ -151,6 +154,9 @@ def lagre(cfg_path, d, streng=True):
                       "hogre": tal("hogre", -3, 3, "høgre", gs.get("hogre", 0.0)),
                       "opp": tal("mast", 0, 5, "mastehøgd", gs.get("opp", 1.8))}
     cfg["apc_tillegg"] = tal("apc_tillegg", 0, 0.5, "hurtigfeste → fasesenter", cfg.get("apc_tillegg", 0.179))
+    cfg["spiss_over_bakken"] = tal("spiss_over_bakken", 0, 1, "spissen over bakken", cfg.get("spiss_over_bakken", 0.09))
+    xy = cfg.get("streamc_xy") or [0.13, 0.42]
+    cfg["streamc_xy"] = [tal("streamc_x", -3, 3, "x i Stream C", xy[0]), tal("streamc_y", -3, 3, "y i Stream C", xy[1])]
     if d.get("gps_oppsett") in GPS_OPPSETT:          # valet styrer NTRIP og «R12i rettar masta sjølv»
         if d["gps_oppsett"] != gps_oppsett(cfg):     # berre når valet blir endra – kryssa kan justerast etterpå
             d.update(GPS_OPPSETT[d["gps_oppsett"]])

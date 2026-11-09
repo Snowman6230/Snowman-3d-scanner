@@ -350,6 +350,21 @@ def start(app, port=8088, lan=False):
                     if not OVF.er_funnen(app.cfg, sti):
                         return self._err("fann ikkje målefila (berre .svy i OneVision-mappene kan hentast)")
                     src = Path(sti)
+                    import svy_objekt as SVY
+                    try:
+                        epsg, obj = SVY.les_svy(src)
+                    except Exception:
+                        epsg, obj = None, [None]
+                    if not obj:                    # tom <Targets>: objekta frå Exports-mappa (0.9.21)
+                        import onevision_eksport as OE
+                        sone = int(str(epsg)[-2:]) if epsg and str(epsg)[-2:].isdigit() else None
+                        gj = OE.les(src, sone)
+                        if gj:
+                            namn = src.stem + "_Exports.geojson"
+                            fn = INS.fil_lagre(namn, json.dumps(gj).encode("utf-8"), "eksport", gjenbruk=True)
+                            return self._send({"ok": True, "fil": fn, "namn": namn, "kjelde": "Exports"})
+                        return self._err(f"{src.name} har ingen objekt – verken i .svy-fila eller i mappa Exports. "
+                                         "Merk røyra i OneVision og lagre, eller eksporter dei (Target Export).")
                     fn = INS.fil_lagre(src.name, src.read_bytes(), "eksport", gjenbruk=True)
                     return self._send({"ok": True, "fil": fn, "namn": src.name})
                 if path in ("/api/bakgrunn", "/api/bakgrunn/endre", "/api/bakgrunn/slett"):
@@ -365,8 +380,14 @@ def start(app, port=8088, lan=False):
                         if path == "/api/bakgrunn/slett":
                             return self._send({"ok": BG.slett(d.get("id", ""))})
                         return self._send({"ok": True, "fil": BG.endre(d.get("id", ""), d.get("synleg"), d.get("crs"),
-                                                                        d.get("skjulte_lag"), us, lon)})
+                                                                        d.get("skjulte_lag"), us, lon, d.get("farge"))})
                     except (ValueError, OSError) as e:
+                        return self._err(str(e))
+                if path == "/api/avvik":
+                    import bakgrunn as BG                 # avvik frå objekta til næraste innmålte linje (0.9.21)
+                    try:
+                        return self._send({"avvik": BG.avvik(json.loads(self._body() or b"{}"))})
+                    except (ValueError, KeyError, TypeError) as e:
                         return self._err(str(e))
                 if path == "/api/streamc":
                     import streamc as SC                  # skriv GPS-forskyvinga til OneVision (Stream C.xml)

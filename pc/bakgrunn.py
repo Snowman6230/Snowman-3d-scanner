@@ -56,6 +56,26 @@ def gjett_crs(bbox, utm_sone=32, lon=None):
 
 # ---------------- DXF ----------------
 
+class Pkt(tuple):
+    """(x, y) som kan bere høgda i .z (0.9.21). Oppfører seg som eit vanleg (x, y)-par elles."""
+    z = None
+
+
+def _pz(x, y, z=None):
+    p = Pkt((x, y))
+    if z is not None:
+        p.z = z
+    return p
+
+
+def _z(d, k):
+    try:
+        v = float(d[k])
+    except (KeyError, ValueError):
+        return None
+    return v if v != 0.0 else None          # 0 betyr som regel «ingen høgd» i 2D-teikningar
+
+
 def _par(tekst):
     li = tekst.splitlines()
     for i in range(0, len(li) - 1, 2):
@@ -117,14 +137,14 @@ def _geometri(liste):
             d.setdefault(k, v)
         lag, farge = d.get(8, "0"), int(_f(d, 62, 256))
         if typ == "LINE":
-            ut.append(("L", lag, farge, [(_f(d, 10), _f(d, 20)), (_f(d, 11), _f(d, 21))], None))
+            ut.append(("L", lag, farge, [_pz(_f(d, 10), _f(d, 20), _z(d, 30)), _pz(_f(d, 11), _f(d, 21), _z(d, 31))], None))
         elif typ == "LWPOLYLINE":
-            pkt, x = [], None
+            pkt, x, el = [], None, _z(d, 38)       # LWPOLYLINE har éi høgd for heile lina (kode 38)
             for k, v in kv:
                 if k == 10:
                     x = float(v)
                 elif k == 20 and x is not None:
-                    pkt.append((x, float(v)))
+                    pkt.append(_pz(x, float(v), el))
                     x = None
             if int(_f(d, 70)) & 1 and pkt:
                 pkt.append(pkt[0])
@@ -135,7 +155,7 @@ def _geometri(liste):
             i += 1
             while i < len(liste) and liste[i][0] == "VERTEX":
                 vd = dict(liste[i][1])
-                pkt.append((_f(vd, 10), _f(vd, 20)))
+                pkt.append(_pz(_f(vd, 10), _f(vd, 20), _z(vd, 30)))
                 i += 1
             if lukka and pkt:
                 pkt.append(pkt[0])
@@ -143,7 +163,7 @@ def _geometri(liste):
                 ut.append(("L", lag, farge, pkt, None))
             continue                       # SEQEND (eller neste entitet) blir handsama i neste runde
         elif typ == "POINT":
-            ut.append(("P", lag, farge, [(_f(d, 10), _f(d, 20))], None))
+            ut.append(("P", lag, farge, [_pz(_f(d, 10), _f(d, 20), _z(d, 30))], None))
         elif typ == "CIRCLE":
             ut.append(("L", lag, farge, _bue(_f(d, 10), _f(d, 20), _f(d, 40), 0, 360), None))
         elif typ == "ARC":
@@ -259,7 +279,8 @@ def les_kof(tekst):
         x_nord, y_aust = tal[ix], tal[iy]
         tekstar = [t for j, t in enumerate(tok[:ix]) if tal[j] is None or j < ix]
         tema = tekstar[1] if len(tekstar) > 1 else (tekstar[0] if tekstar else "KOF")
-        punkt = (y_aust, x_nord)
+        z = tal[iy + 1] if iy + 1 < len(tal) and tal[iy + 1] is not None and abs(tal[iy + 1]) < 1000 else None
+        punkt = _pz(y_aust, x_nord, z)
         if line is not None:
             line.append(punkt)
             tema_line = tema_line or tema
@@ -325,9 +346,11 @@ def til_geojson(geo, lagfarge, crs, skala=1.0):
         aci = farge if farge not in (0, 256) else lagfarge.get(lag, 7)
         col = ACI.get(abs(aci), STANDARDFARGE)
         ll = []
-        for x, y in pkt:
+        for pt in pkt:
+            x, y = pt
             la, lo = f(x * skala, y * skala)
-            ll.append([round(lo, 8), round(la, 8)])
+            z = getattr(pt, "z", None)
+            ll.append([round(lo, 8), round(la, 8)] + ([round(z * skala, 3)] if z is not None else []))
         n += len(ll)
         if n > MAKS_PUNKT:
             break
@@ -365,6 +388,7 @@ def legg_til(namn, data, crs="auto", utm_sone=32, lon=None):
 
 
 def _gjer_om(m, utm_sone=32, lon=None):
+    """Les fila på nytt og skriv GeoJSON (lon, lat og høgd der teikninga har det)."""
     geo, lagfarge = tolk(DIR / m["id"])
     bb = bbox(geo)
     skala = 1.0
@@ -378,17 +402,23 @@ def _gjer_om(m, utm_sone=32, lon=None):
     for ft in gj["features"]:
         p = ft["properties"]
         lag.setdefault(p["lag"], {"n": 0, "farge": p["farge"]})["n"] += 1
+    med_z = sum(1 for ft in gj["features"] for c in ([ft["geometry"]["coordinates"]] if ft["geometry"]["type"] == "Point"
+                                                       else ft["geometry"]["coordinates"]) if len(c) > 2)
     m.update(crs_brukt=crs, merknad=merk, lag=lag, tal=len(gj["features"]), avkorta=gj["avkorta"],
-             skala=skala, gjort=time.strftime("%Y-%m-%d %H:%M"))
+             skala=skala, gjort=time.strftime("%Y-%m-%d %H:%M"), med_z=med_z, z_versjon=2)
     return m
 
 
-def endre(fid, synleg=None, crs=None, skjulte_lag=None, utm_sone=32, lon=None):
+def endre(fid, synleg=None, crs=None, skjulte_lag=None, utm_sone=32, lon=None, farge=None):
     alle = liste()
     for m in alle:
         if m["id"] == fid:
             if synleg is not None:
                 m["synleg"] = bool(synleg)
+            if farge is not None:            # éin farge for heile fila (0.9.21). Tom = fargane i teikninga
+                if farge and not re.fullmatch(r"#[0-9a-fA-F]{6}", farge):
+                    raise ValueError("ugyldig farge")
+                m["farge"] = farge or None
             if skjulte_lag is not None:
                 m["skjulte_lag"] = [str(x) for x in skjulte_lag]
             if crs is not None and crs != m.get("crs"):
@@ -412,6 +442,87 @@ def slett(fid):
 
 
 def geojson(fid):
-    if not any(m["id"] == fid for m in liste()):
+    alle = liste()
+    m = next((m for m in alle if m["id"] == fid), None)
+    if m is None:
         raise ValueError("fann ikkje bakgrunnsfila")
+    if m.get("z_versjon", 1) < 2 and (DIR / fid).is_file():
+        # Filer lagde før 0.9.21 vart lagra utan høgd (Z). Gjer dei om på nytt med same koordinatsystem.
+        try:
+            m["crs"] = m.get("crs_brukt") or m.get("crs")
+            _gjer_om(m)
+            _lagre_meta(alle)
+        except Exception:
+            pass
     return (DIR / (fid + ".geojson")).read_text(encoding="utf-8")
+
+
+def _avstand_seg(px, py, ax, ay, bx, by):
+    vx, vy = bx - ax, by - ay
+    L2 = vx * vx + vy * vy
+    t = 0.0 if L2 == 0 else max(0.0, min(1.0, ((px - ax) * vx + (py - ay) * vy) / L2))
+    return math.hypot(px - (ax + t * vx), py - (ay + t * vy)), t
+
+
+def avvik(objekt_gj, maks=3.0):
+    """Avviket frå kvart objekt (GeoJSON i lon/lat, med «hoegd_nn2000_m» per punkt) til næraste innmålte linje i
+    dei synlege bakgrunnsfilene: sidevegs (m) og i høgd (objekt − innmålt, m) der begge har høgd. 0.9.21."""
+    linjer = []
+    for m in liste():
+        if not m.get("synleg", True):
+            continue
+        try:
+            gj = json.loads(geojson(m["id"]))
+        except Exception:
+            continue
+        skjult = set(m.get("skjulte_lag") or [])
+        for ft in gj.get("features", []):
+            if ft["geometry"]["type"] != "LineString" or ft["properties"].get("lag") in skjult:
+                continue
+            linjer.append((m["namn"], ft["properties"].get("lag", ""), ft["geometry"]["coordinates"]))
+    if not linjer:
+        return []
+    lat0 = None
+    for ft in objekt_gj.get("features", []):
+        c = ft["geometry"]["coordinates"]
+        lat0 = (c[1] if ft["geometry"]["type"] == "Point" else c[0][1])
+        break
+    if lat0 is None:
+        return []
+    my, mx = 111132.0, 111320.0 * math.cos(math.radians(lat0))
+    xy = lambda c: (c[0] * mx, c[1] * my)
+    segs = []
+    for namn, lag, cs in linjer:
+        for a, b in zip(cs, cs[1:]):
+            segs.append((namn, lag, xy(a), xy(b), a[2] if len(a) > 2 else None, b[2] if len(b) > 2 else None))
+    ut = []
+    for i, ft in enumerate(objekt_gj.get("features", [])):
+        g = ft["geometry"]
+        pts = [g["coordinates"]] if g["type"] == "Point" else g["coordinates"]
+        hs = (ft.get("properties") or {}).get("hoegd_nn2000_m") or []
+        best = {}
+        sid, dz = [], []
+        for j, c in enumerate(pts):
+            px, py = xy(c)
+            beste = None
+            for namn, lag, A, B, za, zb in segs:
+                d, t = _avstand_seg(px, py, A[0], A[1], B[0], B[1])
+                if beste is None or d < beste[0]:
+                    zl = None if za is None or zb is None else za + t * (zb - za)
+                    beste = (d, namn, lag, zl)
+            if beste is None or beste[0] > maks:
+                continue
+            sid.append(beste[0])
+            best[(beste[1], beste[2])] = best.get((beste[1], beste[2]), 0) + 1
+            h = hs[j] if j < len(hs) else None
+            if h is not None and beste[3] is not None:
+                dz.append(h - beste[3])
+        if not sid:
+            ut.append({"nr": i, "fil": None})
+            continue
+        (fil, lag), _ = max(best.items(), key=lambda kv: kv[1])
+        mid = lambda v: sorted(v)[len(v) // 2]
+        ut.append({"nr": i, "fil": fil, "lag": lag, "punkt": len(sid), "sidevegs_cm": round(mid(sid) * 100, 1),
+                   "sidevegs_maks_cm": round(max(sid) * 100, 1),
+                   "hoegd_cm": None if not dz else round(mid(dz) * 100, 1)})
+    return ut

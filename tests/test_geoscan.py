@@ -216,7 +216,7 @@ def test_oydelagd_versjon_blir_ikkje_lagd_inn(tmp_path):
 
 def _logg_med_helling(tmp_path, roll=5.0):
     cfg = dict(G.STANDARD, hoegd="nn2000", utgang="rett_antenne", logg=str(tmp_path / "logg"),
-               apc_tillegg=0, spakarm={"fram": 0, "hogre": 0, "opp": 1.4}, sone="32")
+               apc_tillegg=0, spiss_over_bakken=0, spakarm={"fram": 0, "hogre": 0, "opp": 1.4}, sone="32")
     k = G.Korrigerar(cfg)
     pashr = N.build(["PASHR", "120000.00", "90.0", "T", f"{roll:.2f}", "0.00", "", "", "", "", "2", "1"])
     k.handle(pashr, now=1000.0)
@@ -373,7 +373,8 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         hb, ho, d1 = pr["bakke_nn2000_m"][0], pr["hoegd_nn2000_m"][0], pr["djupn_retta_m"][0]
         assert hb is not None and abs(ho - (hb - d1)) < 0.002
         # simulert antenne − mast. Toleransen dekkjer sidearmen (0,6 m) i ±6° krenging: 0,6 · sin 6° ≈ 6 cm
-        assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - G.STANDARD["spakarm"]["opp"] - G.STANDARD["apc_tillegg"])) < 0.1
+        assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - G.STANDARD["spakarm"]["opp"] - G.STANDARD["apc_tillegg"]
+                   - G.STANDARD["spiss_over_bakken"])) < 0.1
         csvraw = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read()
         assert csvraw.startswith(b"\xef\xbb\xbf")            # BOM, så Excel les æøå og – rett
         csvtxt = csvraw.decode("utf-8-sig")
@@ -945,7 +946,7 @@ def test_finn_utstyr_skann_og_forslag():
                         {"fil": "Stream C.xml", "xyz": "0.13;0.42;1,9", "x": 0.13, "y": 0.42, "z": 1.9, "komma_feil": True})
     assert f["mottakar"] == "COM5" and f["onevision"] == "COM34"               # IN (IMU) og 10 Hz føre GN 1 Hz
     assert any("fleire portar" in a for a in atv) and any("komma" in a for a in atv)
-    assert any("Antennehøgda (z) i OneVision er 1.9" in a and "1.98" in a for a in atv) and any("Sideforskyvinga" in a for a in atv)
+    assert any("GPS-forskyvinga i OneVision" in a for a in atv)
     f, atv = FU.forslag({"COM3": res["COM3"]})
     assert f["mottakar"] == "COM3" and any("antenneposisjon" in a for a in atv) and any("5 Hz" in a for a in atv)
 
@@ -1092,19 +1093,21 @@ def test_gps_oppsett_set_ntrip_og_komp(tmp_path):
 
 
 def test_streamc_skriv_gps_xyz(tmp_path):
-    """Geoscan skriv sida (|høgre|, forteiknet i fila blir halde) og høgda til fasesenteret (mast + 0,179) til
-    Stream C.xml. x blir ikkje rørt."""
+    """0.9.21: x og y som målt (standard 0.13;0.42), z = det OneVision skal trekkje frå: 0,09 når Geoscan sender
+    spissen urørt (Access/IMU), spissen + mast + 0,179 når Geoscan sender antenna."""
     import streamc as SC
     f = tmp_path / "Stream C.xml"
-    f.write_bytes(b'\xef\xbb\xbf<Radar><GPSs Count="1"><GPS Type="0" xyz="0.13;0.42;1.9"/></GPSs></Radar>')
-    cfg = {"spakarm": {"fram": -0.4, "hogre": -0.6, "opp": 1.808}}
+    f.write_bytes(b'\xef\xbb\xbf<Radar><GPSs Count="1"><GPS Type="0" xyz="0.13;0.6;1.987"/></GPSs></Radar>')
+    cfg = {"gps_oppsett": "access", "spakarm": {"fram": -0.38, "hogre": -0.42, "opp": 1.808}, "spiss_over_bakken": 0.09}
     st = SC.status(cfg, [f])
-    assert st["ulik"] and st["forslag"]["xyz"] == "0.13;0.6;1.987"
+    assert st["ulik"] and st["forslag"]["xyz"] == "0.13;0.42;0.09"
     r = SC.skriv(cfg, stiar=[f], reserve=tmp_path / "res")
-    assert r["for"] == "0.13;0.42;1.9" and r["etter"] == "0.13;0.6;1.987"
-    assert f.read_bytes().startswith(b"\xef\xbb\xbf") and b'xyz="0.13;0.6;1.987"' in f.read_bytes()
+    assert r["for"] == "0.13;0.6;1.987" and r["etter"] == "0.13;0.42;0.09"
+    assert f.read_bytes().startswith(b"\xef\xbb\xbf") and b'xyz="0.13;0.42;0.09"' in f.read_bytes()
     assert list(tmp_path.glob("Stream C.xml.bak_*"))
     assert not SC.status(cfg, [f])["ulik"]
+    assert SC.forslag(dict(cfg, gps_oppsett="raa", utgang="rett_antenne"))["xyz"] == "0.13;0.42;2.077"
+    assert SC.forslag(dict(cfg, streamc_xy=[0.1, -0.42]))["xyz"] == "0.1;-0.42;0.09"
     import pytest
     with pytest.raises(ValueError):
         SC.ny_tekst('<GPS xyz="1;2;3"/>', "0,6;1;2")
@@ -1122,7 +1125,8 @@ def test_bakkehogd_med_hurtigfeste_til_fasesenter():
     gga = N.build(["GNGGA", "075200.00", "6218.0000000", "N", "00636.0000000", "E", "4", "13", "0.7",
                    f"{h_nn_ant:.3f}", "M", f"{n:.3f}", "M", "1.0", "0000"])
     k.handle(gga, now=1.0)
-    assert abs(k.status["pos"]["h_bakke"] - 64.359) < 0.005
+    # Access viser spissen av stonga (64,359). Spissen står i støtta 9 cm over bakken (Norman 9.11.2026).
+    assert abs(k.status["pos"]["h_bakke"] - (64.359 - 0.09)) < 0.005
     assert H.spakarm(dict(cfg, apc_tillegg=0))[2] == 1.808
 
 
@@ -1207,3 +1211,130 @@ def test_bakgrunn_gjett_ntm():
     import bakgrunn as BG
     crs, merk = BG.gjett_crs(((104000.0, 1490000.0), (104200.0, 1490300.0)), 32, lon=6.58)
     assert crs == "ntm6" and merk
+
+
+def test_access_imu_urort_og_gn_hopp():
+    """0.9.21: «R12i med Trimble Access (IMU)» sender spissen urørt (berre høgda i NN2000). Når R12i byter til
+    $GNGGA, måler Geoscan hoppet: ca. mast + 0,179 m → antenna, trekk frå. Ca. 0 → stanghøgda alt trekt frå."""
+    base = dict(G.STANDARD, logg=None, hoegd="nn2000", gps_oppsett="access", mottakar_kompenserer=True,
+                spakarm={"fram": -0.38, "hogre": -0.42, "opp": 1.808}, apc_tillegg=0.179, spiss_over_bakken=0.09)
+    n = GEOID.n(N.coord_in("6223.4000000", "N"), N.coord_in("00634.8000000", "E"))
+    for hopp, venta in ((1.987, 1.987), (0.0, 0.0)):
+        k = G.Korrigerar(dict(base))
+        ut = N.parse_gga(N.split(k.handle(_gga("IN", alt="150.000"), now=1.0)[0]))
+        g0 = N.parse_gga(N.split(_gga("IN", alt="150.000")))
+        assert abs(ut["lat"] - g0["lat"]) < 1e-9 and abs(ut["lon"] - g0["lon"]) < 1e-9     # ingen flytting
+        tupp = 150.0 + 44.775 - n                                                           # spissen i NN2000
+        assert abs(ut["alt"] - tupp) < 0.002
+        assert abs(k.status["pos"]["h_bakke"] - (tupp - 0.09)) < 0.002
+        ut2 = N.parse_gga(N.split(k.handle(_gga("GN", alt=f"{150.0 + hopp:.3f}"), now=1.1)[0]))
+        assert abs(k.gn_red["m"] - venta) < 1e-6 and k.gn_red["kjelde"].startswith("målt")
+        assert abs(ut2["alt"] - tupp) < 0.002                                               # framleis spissen
+    # utan målt hopp: antatt antenna
+    k = G.Korrigerar(dict(base))
+    ut = N.parse_gga(N.split(k.handle(_gga("GN", alt="151.987"), now=1.0)[0]))
+    assert abs(ut["alt"] - (150.0 + 44.775 - n)) < 0.002 and k.gn_red["kjelde"].startswith("antatt")
+
+
+def test_vakt_imu_rtk_med_hysterese():
+    k = G.Korrigerar(dict(G.STANDARD, logg=None, gps_oppsett="access", mottakar_kompenserer=True))
+    for i in range(5):
+        k.handle(_gga("IN"), now=1.0 + i * 0.1)
+    assert not k.vakt.aktive(1.4)
+    for i in range(12):                                  # 1,2 s med $GNGGA → IMU-varsel
+        k.handle(_gga("GN"), now=2.0 + i * 0.1)
+    akt = k.vakt.aktive(3.1)
+    assert [a["kva"] for a in akt] == ["imu"] and k.vakt.nr == 1 and "$GNGGA" in akt[0]["tekst"]
+    for i in range(10):                                  # 1 s med IN – framleis aktivt (2 s før det går bort)
+        k.handle(_gga("IN"), now=3.2 + i * 0.1)
+    assert k.vakt.aktive(4.1)
+    for i in range(15):
+        k.handle(_gga("IN"), now=4.2 + i * 0.1)
+    assert not k.vakt.aktive(5.6)
+    assert "Mastehøgda" not in " ".join(k.oppsett_varsel())
+    k2 = G.Korrigerar(dict(G.STANDARD, logg=None, gps_oppsett="access", spakarm={"fram": 0, "hogre": 0, "opp": 0}))
+    assert any("Mastehøgda står på 0" in v for v in k2.oppsett_varsel())
+
+
+def _skriv_shp_linjez(sti, linjer):
+    """Minimal PolyLineZ-shapefil (type 13) med .dbf, til test av lesaren for OneVision-eksport."""
+    import struct as S
+    rec = b""
+    for i, pts in enumerate(linjer, 1):
+        xs, ys, zs = [p[0] for p in pts], [p[1] for p in pts], [p[2] for p in pts]
+        body = S.pack("<i4d2i", 13, min(xs), min(ys), max(xs), max(ys), 1, len(pts)) + S.pack("<i", 0)
+        body += b"".join(S.pack("<2d", p[0], p[1]) for p in pts) + S.pack("<2d", min(zs), max(zs))
+        body += b"".join(S.pack("<d", z) for z in zs) + S.pack("<2d", 0, 0) + b"".join(S.pack("<d", 0) for _ in pts)
+        rec += S.pack(">2i", i, len(body) // 2) + body
+    hdr = S.pack(">7i", 9994, 0, 0, 0, 0, 0, (100 + len(rec)) // 2) + S.pack("<2i", 1000, 13) + S.pack("<8d", *[0] * 8)
+    sti.write_bytes(hdr + rec)
+    felt = S.pack("<11sc4xBB14x", b"NAME", b"C", 10, 0)
+    hl = 32 + 32 + 1
+    dbf = S.pack("<B3BIHH20x", 3, 126, 11, 9, len(linjer), hl, 11) + felt + b"\x0d"
+    for i in range(len(linjer)):
+        dbf += b" " + f"Feature{i + 1}".ljust(10).encode()
+    sti.with_suffix(".dbf").write_bytes(dbf + b"\x1a")
+
+
+def test_onevision_exports_shp_og_dxf(tmp_path):
+    import onevision_eksport as OE
+    import onevision_filer as OVF
+    svy = tmp_path / "Survey_2026.11.09_006" / "Survey_2026.11.09_006.svy"
+    (svy.parent / "Exports").mkdir(parents=True)
+    svy.write_text("<Project SVY=\"3\"><Survey><Targets/></Survey></Project>")
+    _skriv_shp_linjez(svy.parent / "Exports" / "targets.shp",
+                      [[(377755.0, 6909215.0, -1.04), (377756.0, 6909216.0, -1.08)]])
+    (svy.parent / "Exports" / "t.dxf").write_text("\n".join(["0", "SECTION", "2", "ENTITIES", "0", "LINE", "8", "R",
+        "10", "377757.0", "20", "6909217.0", "30", "-1.2", "11", "377758.0", "21", "6909218.0", "31", "-1.3",
+        "0", "ENDSEC", "0", "EOF"]))
+    gj = OE.les(svy, 32)
+    assert len(gj["features"]) == 2 and gj["crs"]["properties"]["name"].endswith("25832")
+    f0 = next(f for f in gj["features"] if f["properties"]["kjelde"] == "targets.shp")
+    assert f0["properties"]["NAME"] == "Feature1" and f0["geometry"]["coordinates"][0] == [377755.0, 6909215.0, 1.04]
+    assert OVF.tal_objekt(svy) == 2 and OVF.info(svy)["eksport"] == ["t.dxf", "targets.shp"]
+
+
+def test_bakgrunn_z_farge_og_avvik(tmp_path, monkeypatch):
+    import bakgrunn as BG
+    import json as _json
+    monkeypatch.setattr(BG, "DIR", tmp_path / "bg")
+    dxf = "\n".join(["0", "SECTION", "2", "ENTITIES", "0", "POLYLINE", "8", "40 trekke", "66", "1", "70", "8",
+                     "0", "VERTEX", "8", "40 trekke", "10", "377751.47", "20", "6909208.07", "30", "62.44",
+                     "0", "VERTEX", "8", "40 trekke", "10", "377763.93", "20", "6909226.93", "30", "62.64",
+                     "0", "SEQEND", "0", "ENDSEC", "0", "EOF"])
+    m = BG.legg_til("40.dxf", dxf.encode(), "utm32")
+    gj = _json.loads(BG.geojson(m["id"]))
+    c = gj["features"][0]["geometry"]["coordinates"]
+    assert m["med_z"] == 2 and c[0][2] == 62.44
+    assert BG.endre(m["id"], farge="#22aa44")["farge"] == "#22aa44"
+    import koordinat as KK
+    # objekt 0,10 m vest for midten av lina, 5 cm under ho
+    mx, my = (377751.47 + 377763.93) / 2 - 0.10, (6909208.07 + 6909226.93) / 2
+    la, lo = KK.utm_inverse(mx, my, 32)
+    a = BG.avvik({"features": [{"geometry": {"type": "Point", "coordinates": [lo, la]},
+                                "properties": {"hoegd_nn2000_m": [62.49]}}]})
+    assert a[0]["fil"] == "40.dxf" and 6 < a[0]["sidevegs_cm"] < 10 and abs(a[0]["hoegd_cm"] + 5) < 1
+
+
+def test_resultat_utan_helling_hoegd_og_imu(tmp_path):
+    """Access/IMU: loggen har ingen hellingsretta rader, men bakkehøgd og IMU per punkt blir brukt (0.9.21)."""
+    import korriger_objekt as KO
+    import koordinat as KK
+    cfg = dict(G.STANDARD, logg=str(tmp_path / "logg"), hoegd="nn2000", gps_oppsett="access",
+               mottakar_kompenserer=True, sone="32")
+    k = G.Korrigerar(cfg)
+    k.handle(_gga("IN"), now=1.0)
+    k.handle(_gga("GN", alt="151.987"), now=1.1)
+    k.logfile.close()
+    log = next((tmp_path / "logg").glob("*.csv"))
+    g = N.parse_gga(N.split(_gga("IN")))
+    E, Nn = KK.utm_forward(g["lat"], g["lon"], 32)
+    gj = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
+          "geometry": {"type": "Point", "coordinates": [E, Nn, 1.2]}}]}
+    lg = KO.Logg([log], 32)
+    assert not lg.rows and lg.alle
+    KO.correct_geojson(gj, lg, "djupn", 1.0)
+    pr = gj["features"][0]["properties"]
+    hb = 150.0 + 44.775 - GEOID.n(g["lat"], g["lon"]) - 0.09
+    assert abs(pr["bakke_nn2000_m"][0] - hb) < 0.01 and abs(pr["hoegd_nn2000_m"][0] - (hb - 1.2)) < 0.01
+    assert pr.get("utan_imu") in (None, "1/1")

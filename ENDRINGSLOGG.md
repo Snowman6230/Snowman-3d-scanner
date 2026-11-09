@@ -2,6 +2,32 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.21 – 9. november 2026
+Etter Holetomta test 2 og svar frå Norman: spissen av stonga står i GPS-støtta på ramma, 0,09 m over bakken, og er
+0-punktet. Med Trimble Access og IMU skal Geoscan ikkje endre noko – OneVision flyttar frå spissen til radaren.
+- **«R12i med Trimble Access (IMU)» sender punktet urørt** (`$INGGA` = spissen). Berre høgda blir gjort om til NN2000
+  med geoiden frå Kartverket (R12i brukar ein annan geoide – 9.11 var skilnaden 0,44 m). Bakkehøgda = spissen −
+  `spiss_over_bakken` (ny innstilling, standard 0,09 m), òg i dei andre oppsetta.
+- **Tap av IMU:** når R12i byter til `$GNGGA`, måler Geoscan hoppet i høgd (RTK FIX begge sider, under 2 s). Ca.
+  mast + 0,179 → R12i sender antenna, og det blir trekt frå. Ca. 0 → stanghøgda er alt trekt frå (Norman meiner det),
+  og ingenting blir endra. Før første byte blir antenna rekna med (9.11 kl. 08:52 med IMU av: `$GNGGA` 1,98 m over Access).
+- **Kvalitetsvakt** (`Vakt`): IMU borte, RTK FIX tapt, QH > 5 / QV > 8 cm, data eldre enn 2 s. Aktiv etter 1 s, borte
+  2 s etter. Raud stripe øvst på alle faner, pip (Web Audio) og varsel i Windows (Notification). Geoscan held fram med
+  å sende, fordi OneVision stoppar opptaket når GPS-en forsvinn (OneVision 2.0-manualen). Gul stripe for faste feil i
+  oppsettet (mast 0 eller fasesenter 0 med Access/IMU). Loggen har nye kolonnar `talker;imu;varsel`.
+- **Stream C-boksen:** felt for x (0,13), y (0,42) og z (spissen over bakken, 0,09), med skisse av vogna ovanfrå og frå
+  sida (mål frå Stream C-manualen). z til OneVision blir rekna ut frå oppsettet (`streamc.z_for`). Geoscan viser kva
+  OneVision brukte i den nyaste målinga (`Survey_…/Data/Stream C.xml`) og åtvarar om ein skjult kopi i VirtualStore.
+  Forslaget blir ikkje lenger rekna frå mastehøgda.
+- **Resultat:** objekt frå mappa `Exports` (DXF og ESRI Shapefile frå «Target Export», nytt `onevision_eksport.py`) når
+  `<Targets>` i `.svy` er tom. Har den nyaste målinga ingen objekt, seier Geoscan det i staden for å velje ei eldre i
+  stillheit (det skjedde ved Holetomta: Resultat viste 7.11 frå 40 m lenger nord). Bakkehøgda frå alle loggrader blir
+  brukt til høgda over havet òg utan hellingsretting. Sporet er oransje der IMU-en var borte, og objekt målte der blir merkte.
+- **Bakgrunn:** farge per fil, høgd (Z) frå DXF (POLYLINE/VERTEX, LINE, POINT, LWPOLYLINE-elevasjon) og KOF. Filer lagde
+  før 0.9.21 blir gjorde om på nytt med Z. Ny kolonne «Mot innmålt» i Resultat: avvik til næraste innmålte linje,
+  sidevegs og i høgd (`bakgrunn.avvik`, `/api/avvik`).
+- Statussida utan rulling er flytta til 0.9.22.
+
 ## 0.9.20 – 9. november 2026
 - **Bakken kom 18 cm for høgt** (skjermbilete frå Norman 9.11 kl. 08:52): Geoscan og Trimble Access var samde på
   1 cm i nord, aust og antennehøgd (66,34 m), men Geoscan viste bakken 64,53 m og Access 64,359 m. Mastehøgda er

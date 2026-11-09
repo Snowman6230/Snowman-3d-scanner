@@ -39,6 +39,8 @@ pre{white-space:pre-wrap;color:var(--svak);font-size:13px;margin:0}
 .sjsvar{grid-column:1/-1;background:var(--kort2);border-left:3px solid var(--blaa);padding:6px 10px;border-radius:6px;font-size:13px}
 .sjsvar.prov{border-left-color:var(--var)}
 .banner{border-radius:10px;padding:12px 14px;margin:10px 0 0;font-weight:600}
+.vaktb{position:sticky;top:0;z-index:2000;background:#c62828;color:#fff;border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4);font-size:17px}
+.vaktb .vline+.vline{margin-top:3px}
 .demo{background:#5a1f1f}
 .oppd{border:1px solid var(--var);background:var(--kort)}
 button.b,label.b,a.b{display:inline-block;text-decoration:none;background:var(--blaa);color:#06121e;border:0;border-radius:7px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
@@ -109,6 +111,10 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <span class="hj" id="oktinfo" style="text-align:right"></span>
       <button class="b gra" id="temaknapp" onclick="bytTema()" title="Byt mellom mørk skjerm og høg kontrast for sollys">☀ Dagslys</button>
       <button class="b gra" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button></div></div>
+  <div id="vakt" class="banner vaktb" style="display:none"><div style="display:flex;gap:12px;align-items:flex-start"><b style="font-size:22px">⚠</b><div id="vakttekst" style="flex:1"></div>
+    <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="b gra" id="vaktlyd" onclick="bytVaktLyd()" title="Lyd når eit nytt varsel kjem">🔊 Lyd på</button>
+    <button class="b gra" id="vaktwin" onclick="slaPaWinVarsel()" style="display:none" title="Varsel i Windows, òg når Geoscan ligg bak OneVision">🔔 Varsel i Windows</button></span></div></div>
+  <div id="oppsettvarsel" class="banner oppd" style="display:none;border-color:var(--var)"></div>
   <div id="demo" class="banner demo" style="display:none">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
     <button class="b" id="obtn" style="margin-left:8px;background:var(--var)" onclick="oppdater()">Oppdater no</button>
@@ -202,6 +208,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
         <select id="rsone"><option value="">frå fila</option><option>32</option><option>33</option><option>35</option></select></label>
     </div>
     <div class="melding" id="rmeld"></div>
+    <div class="hj" id="sporimu" style="display:none;margin-top:4px"><span style="display:inline-block;width:22px;height:4px;background:#ff6d00;vertical-align:middle"></span> Oransje spor: målt medan IMU-en var borte ($GNGGA) – usikker sidevegs.</div>
   </div>
   <div class="k">
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
@@ -281,7 +288,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <div class="hj" style="flex-basis:100%">«Lag rapport» tek med dei valde objekta, eller alle om ingen er valde. Klikk på eit objekt på kartet eller kryss av i tabellen for å velje det (klikk igjen for å fjerne). Valde objekt får ein kvit kant på kartet.</div>
     </div>
     <div class="tabell"><table id="rtab"><thead><tr><th></th><th>#</th><th>Id</th><th>Lag</th><th>Type</th><th>Skildring</th>
-      <th class="n">Djupn før (m)</th><th class="n">Djupn etter (m)</th><th class="n">Maks flytta</th><th class="n">Punkt retta</th></tr></thead><tbody></tbody></table></div>
+      <th class="n">Djupn før (m)</th><th class="n">Djupn etter (m)</th><th class="n">Maks flytta</th><th class="n">Punkt retta</th><th class="n" title="Avvik til næraste innmålte linje i bakgrunnsfilene (sidevegs / høgd)">Mot innmålt</th></tr></thead><tbody></tbody></table></div>
     <div id="profil" style="display:none;margin-top:14px">
       <div class="verktoy" style="justify-content:space-between"><h2 id="ptittel" style="margin:0"></h2>
         <span><button class="b gra" onclick="lagRapport([profilFi])">📄 Rapport</button>
@@ -351,7 +358,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div class="k"><h2>GPS-oppsett</h2>
     <div class="felt"><label><span>Kva slags posisjon kjem frå mottakaren?</span><select name="gps_oppsett" onchange="velGpsOppsett(this.value)">
       <option value="geoscan_ntrip">R12i utan Trimble Access – Snowman Geoscan hentar NTRIP (stanghøgd = mastehøgd)</option>
-      <option value="access">R12i med Trimble Access – Access hentar NTRIP og rettar med IMU</option>
+      <option value="access">R12i med Trimble Access (IMU) – Access hentar NTRIP og rettar masta, Geoscan sender punktet urørt</option>
       <option value="raa">Berre rådata – antenneposisjonen, ingen NTRIP frå Geoscan</option></select></label></div>
     <p class="hj" id="gpsforkl" style="margin-top:6px"></p>
   </div>
@@ -369,7 +376,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <span class="hj">Skannar alle portane, finn mottakaren, hellingsmålaren og porten til OneVision, og føreslår oppsettet.</span></p></div>
   <div class="k"><h2>Vogn og mast</h2>
     <div class="felt">
-      <label><span>Mastehøgd (m), frå bakken til undersida av hurtigfestet på R12i (same som stanghøgda i Trimble Access)</span><input name="mast" inputmode="decimal"></label>
+      <label><span>Mastehøgd (m), frå spissen av stonga til undersida av hurtigfestet på R12i (same som stanghøgda i Trimble Access, 1,808)</span><input name="mast" inputmode="decimal"></label>
       <label><span>Frå undersida av hurtigfestet til fasesenteret i antenna (m, R12i: 0,179)</span><input name="apc_tillegg" inputmode="decimal"></label>
       <label><span>Masta (antenna) framfor midten av radaren (m, minus = bak)</span><input name="fram" inputmode="decimal"></label>
       <label><span>Masta (antenna) til høgre for midten av radaren (m, minus = venstre)</span><input name="hogre" inputmode="decimal"></label>
@@ -379,7 +386,17 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     </div>
     <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="mottakar_kompenserer">R12i rettar masta sjølv (tilt på, stanghøgd = mastehøgd)</label></p>
     <div class="k" style="background:var(--kort2);margin-top:10px" id="scboks">
-      <b>OneVision (Stream C.xml)</b> <span class="hj">– GPS-forskyvinga kan ikkje endrast inne i OneVision, så Geoscan skriv ho i fila.</span>
+      <b>OneVision (Stream C.xml)</b> <span class="hj">– GPS-forskyvinga kan ikkje endrast inne i OneVision, så Geoscan skriv ho i fila.
+      OneVision flyttar sjølv punktet frå spissen av stonga til radaren med desse tala.</span>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:8px">
+        <div class="felt" style="flex:1;min-width:260px">
+          <label><span><b>x</b> – spissen av stonga framfor enkoderen i venstre bakhjul (m)</span><input name="streamc_x" inputmode="decimal"></label>
+          <label><span><b>y</b> – spissen av stonga sidevegs frå midten av radaren (m). IDS-malen for støtta bak til venstre: +0,42</span><input name="streamc_y" inputmode="decimal"></label>
+          <label><span><b>z</b> – spissen av stonga over bakken (m). Spissen står i støtta på ramma: 0,09</span><input name="spiss_over_bakken" inputmode="decimal"></label>
+          <div class="hj" id="sczforkl" style="margin-top:4px"></div>
+        </div>
+        <div id="scskisse" style="flex:0 0 auto"></div>
+      </div>
       <div id="scinfo" class="hj" style="margin:6px 0">Les …</div>
       <button type="button" class="b" id="scknapp" onclick="skrivStreamc()" style="display:none">Skriv Geoscan-måla til OneVision</button>
       <span class="hj" id="scmeld"></span>
@@ -512,7 +529,7 @@ function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.
 let radarDjupn=2.5,avslutta=false;
 const FIX={0:["INGEN","feil"],1:["GPS","feil"],2:["DGPS","var"],4:["RTK FIX","ok"],5:["RTK FLOAT","var"],6:["INS","var"],9:["SBAS","var"]};
 async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
-  const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;if(s.stripe)STRIPE=s.stripe;
+  const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;if(s.stripe)STRIPE=s.stripe;visVakt(s.vakt);
   OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);visUst(s.oppdatering);
   if(fane!="status")return;
   if(k.pos)oppdaterLive(k.pos,k);
@@ -567,6 +584,25 @@ let venter=false;
 function ventOmstart(){if(venter)return;venter=true;setTimeout(function sjekk(){fetch("status").then(r=>r.json()).then(s=>{
   if(!s.oppdatering.omstart)location.reload();else setTimeout(sjekk,1500)}).catch(()=>setTimeout(sjekk,1500))},2500)}
 setInterval(tikk,1000);tikk();
+// ---------- kvalitetsvakt (0.9.21): raud stripe, lyd og varsel i Windows ----------
+let vaktNr=null,vaktLyd=(()=>{try{return localStorage.getItem("geoscan_vaktlyd")!=="av"}catch(e){return true}})(),lydCtx=null;
+function bytVaktLyd(){vaktLyd=!vaktLyd;try{localStorage.setItem("geoscan_vaktlyd",vaktLyd?"pa":"av")}catch(e){}
+  $("vaktlyd").textContent=vaktLyd?"🔊 Lyd på":"🔇 Lyd av";if(vaktLyd)pip()}
+function pip(){try{lydCtx=lydCtx||new (window.AudioContext||window.webkitAudioContext)();if(lydCtx.state=="suspended")lydCtx.resume();
+  [0,0.25,0.5].forEach(t=>{const o=lydCtx.createOscillator(),g=lydCtx.createGain();o.type="square";o.frequency.value=880;
+    g.gain.setValueAtTime(0.15,lydCtx.currentTime+t);g.gain.setValueAtTime(0,lydCtx.currentTime+t+0.15);
+    o.connect(g);g.connect(lydCtx.destination);o.start(lydCtx.currentTime+t);o.stop(lydCtx.currentTime+t+0.16)})}catch(e){}}
+document.addEventListener("click",()=>{try{lydCtx=lydCtx||new (window.AudioContext||window.webkitAudioContext)();lydCtx.resume()}catch(e){}},{once:true});
+function slaPaWinVarsel(){if(!("Notification" in window))return;Notification.requestPermission().then(()=>visVakt(null))}
+function visVakt(v){const wb=$("vaktwin");if("Notification" in window)wb.style.display=Notification.permission=="granted"?"none":"inline-block";
+  $("vaktlyd").textContent=vaktLyd?"🔊 Lyd på":"🔇 Lyd av";if(!v)return;
+  const a=v.aktive||[];$("vakt").style.display=a.length?"block":"none";
+  $("vakttekst").innerHTML=a.map(x=>`<div class="vline">${esc(x.tekst)}${x.sekund>2?` <span style="font-weight:400">(${x.sekund} s)</span>`:""}</div>`).join("");
+  const o=v.oppsett||[];$("oppsettvarsel").style.display=o.length?"block":"none";
+  $("oppsettvarsel").innerHTML=o.map(t=>"⚠ "+esc(t)).join("<br>")+(o.length?` <a href="#" onclick="visFane('innst');return false" style="color:var(--var)">Innstillingar</a>`:"");
+  if(vaktNr!==null&&v.nr>vaktNr&&a.length){if(vaktLyd)pip();
+    try{if("Notification" in window&&Notification.permission=="granted")new Notification("Snowman Geoscan – åtvaring",{body:a.map(x=>x.tekst).join("\n"),tag:"geoscan-vakt",requireInteraction:true})}catch(e){}}
+  vaktNr=v.nr}
 // ---------- økt: lagre alt og halde fram der ein slapp (pc/okt.py) ----------
 let OKT=null,gjenopprettar=false,oktTimer=null;
 function uiTilstand(){return{fane,valde:[...valde],spor:visteSpor,valt:[...valt],profil:profilVist&&$("profil").style.display!="none"?profilFi:null,
@@ -806,8 +842,9 @@ async function velKartlag(v){if(!KARTLAG[v])return;kartlag=v;if(kart)setGrunn();
 const farge=(t,k)=>!k?"#6b7780":t<1?"#3ecf74":t<3?"#c6d83a":t<6?"#f2b33d":"#ef5b5b";
 let visteSpor=null;
 async function visSpor(fil){initKart();lagSpor.clearLayers();lagStripe.clearLayers();visteSpor=fil;lagreOkt();let p;try{p=await api("api/spor?fil="+encodeURIComponent(fil))}catch(e){return}
-  if(!p.length)return;let seg=[[p[0][0],p[0][1]]],c=farge(p[0][2],p[0][3]);const all=[];
-  for(let i=1;i<p.length;i++){const ci=farge(p[i][2],p[i][3]);seg.push([p[i][0],p[i][1]]);
+  if(!p.length)return;const fa=q=>q[6]===0?"#ff6d00":farge(q[2],q[3]);   // oransje: målt utan IMU ($GNGGA), 0.9.21
+  let seg=[[p[0][0],p[0][1]]],c=fa(p[0]);const all=[];if(p.some(q=>q[6]===0))$("sporimu").style.display="inline";
+  for(let i=1;i<p.length;i++){const ci=fa(p[i]);seg.push([p[i][0],p[i][1]]);
     if(ci!=c||i==p.length-1){L.polyline(seg,{color:c,weight:4,opacity:.9}).addTo(lagSpor);seg=[[p[i][0],p[i][1]]];c=ci}all.push([p[i][0],p[i][1]])}
   // skannestripa langs midten av radaren (lat_radar/lon_radar i loggen, eller rekna ut frå kursen for eldre loggar)
   let fr=null,fb=null;for(const q of p){if(q[4]==null){fr=null;fb=null;continue}const r=[q[4],q[5]];
@@ -843,13 +880,16 @@ async function lastOV(manuell){let r;try{r=await api("api/onevision")}catch(e){$
   const k=ovFiler.findIndex(f=>f.sti==ovIBruk);v.value=manuell&&gml!==""&&ovFiler[+gml]?gml:String(k>=0?k:0);
   $("ovinfo").textContent=ovFiler.length+" måling"+(ovFiler.length==1?"":"ar")+" funne i "+[...new Set(r.mapper)].join(" · ");
   // Automatisk: er ingenting lasta inn, blir den nyaste målinga med objekt brukt (etter at ei lagra økt har fått gjenopprette seg)
-  if(!ovAuto&&!manuell){ovAuto=true;setTimeout(()=>{if(!siste&&!gjenopprettar){const i=ovFiler.findIndex(f=>f.objekt);if(i>=0){$("ovval").value=String(i);brukOV()}}},1500)}}
-// GPS-forskyvinga OneVision brukte i denne målinga (Data/Stream C.xml), mot Geoscan: sida 0,6 m og høgda til fasesenteret
-function ovGps(f){if(!f.gps_xyz)return"";const [x,y,z]=f.gps_xyz,sp=innst&&innst.hogre!=null?Math.abs(+innst.hogre):null,
-    mh=innst&&innst.mast!=null?+innst.mast+(+(innst.apc_tillegg??0.179)):null;   // fasesenteret: mast + hurtigfeste→APC
-  const avvik=(sp!=null&&Math.abs(Math.abs(y)-sp)>0.05)||(mh!=null&&Math.abs(z-mh)>0.05);
+  // 0.9.21: har den nyaste målinga ingen objekt, blir det sagt tydeleg – Geoscan vel ikkje ei eldre måling i stillheit
+  if(!ovAuto&&!manuell){ovAuto=true;setTimeout(()=>{if(!siste&&!gjenopprettar){const f=ovFiler[0];if(!f)return;
+    if(f.objekt){$("ovval").value="0";brukOV()}
+    else{const m=$("rmeld");m.className="melding var";m.innerHTML=`Den nyaste målinga, <b>${esc(f.namn)}</b> (${ovDato(f.dato)}), har ingen objekt – verken i .svy-fila eller i mappa Exports. `+
+      `Merk røyra i OneVision og lagre, eller eksporter dei (Target Export). Vel ei anna måling i lista viss du vil sjå ei eldre.`}}},1500)}}
+// GPS-forskyvinga OneVision brukte i denne målinga (Data/Stream C.xml), mot Geoscan-måla (x, y og z frå Stream C-boksen)
+function ovGps(f){if(!f.gps_xyz)return"";const [x,y,z]=f.gps_xyz,fs=SC&&SC.forslag;
+  const avvik=fs&&(Math.abs(x-fs.x)>0.02||Math.abs(y-fs.y)>0.02||Math.abs(z-fs.z)>0.02);
   return `<br>GPS-forskyving i OneVision for denne målinga: x ${F(x,2)} · y ${F(y,2)} · z ${F(z,2)} m`+
-    (avvik?` <b class="var">– stemmer ikkje med Geoscan (sida ${sp==null?"–":F(sp,2)} m, antennehøgd ${mh==null?"–":F(mh,2)} m). Sjå Stream C.xml.</b>`:` <span class="ok">✓</span>`)}
+    (avvik?` <b class="var">– stemmer ikkje med Geoscan-måla (${xyzTekst(fs)}). Sjå Innstillingar → Vogn og mast.</b>`:fs?` <span class="ok">✓</span>`:"")}
 async function brukOV(){const f=ovFiler[+$("ovval").value];if(!f)return;const m=$("rmeld");
   m.className="melding";m.textContent="Hentar "+f.namn+" frå OneVision …";
   try{const up=await post("api/onevision/hent",{sti:f.sti});ovIBruk=f.sti;
@@ -857,7 +897,8 @@ async function brukOV(){const f=ovFiler[+$("ovval").value];if(!f)return;const m=
     const r=await post("api/rett",{fil:up.fil,z:$("zmode").value,sone:$("rsone").value,okter:[...valde],helling:$("rhelling").checked});
     sisteFil={fil:up.fil,namn:f.namn};visResultat(r,f.namn);visMerknad(r);lastResFiler();
     if(!innst)try{innst=await api("api/innstillingar")}catch(e){}
-    $("ovinfo").innerHTML="I bruk: "+esc(f.namn)+" ("+ovDato(f.dato)+", "+(f.objekt??"?")+" objekt) frå "+esc(f.mappe)+ovGps(f);
+    if(!SC)try{SC=await api("api/streamc")}catch(e){}
+    $("ovinfo").innerHTML="I bruk: "+esc(f.namn)+" ("+ovDato(f.dato)+", "+(f.objekt??"?")+" objekt"+(up.kjelde=="Exports"?" frå mappa Exports":"")+") frå "+esc(f.mappe)+ovGps(f);
     [...$("ovval").options].forEach((o,i)=>o.textContent=o.textContent.replace(" (i bruk)","")+(i==+$("ovval").value?" (i bruk)":""))}
   catch(err){m.className="melding feil";m.textContent="Kunne ikkje hente målinga: "+err.message}}
 let sisteFil=null;
@@ -908,9 +949,14 @@ function visResultat(r,namn){initKart();lagObj.clearLayers();siste=r;segs=[];val
   const ds=d=>!d?"–":d.min==d.maks?fm(d.snitt):`${fm(d.snitt)} <span class=hj>(${fm(d.min)}–${fm(d.maks)})</span>`;
   const tb=$("rtab").tBodies[0];tb.innerHTML="";r.tabell.forEach((t,fi)=>{const tr=document.createElement("tr");tr.style.cursor="pointer";
     tr.innerHTML=`<td><input type=checkbox data-fi="${fi}" ${valt.has(fi)?"checked":""}></td><td>${t.nr}</td><td>${esc(t.id)}</td><td>${esc(t.lag)}</td><td>${esc(t.type)}</td><td>${esc(t.skildring)}</td>
-    <td class=n>${ds(t.djupn_for)}</td><td class=n><b>${ds(t.djupn_etter)}</b></td><td class=n>${F(+t.maks_endring_cm||0,1)} cm</td><td class=n>${esc(t.retta)}</td>`;
+    <td class=n>${ds(t.djupn_for)}</td><td class=n><b>${ds(t.djupn_etter)}</b></td><td class=n>${F(+t.maks_endring_cm||0,1)} cm</td><td class=n>${esc(t.retta)}${t.utan_imu?` <span class=var title="Punkt målt medan IMU-en var borte ($GNGGA): usikker sidevegs">⚠ utan IMU ${esc(t.utan_imu)}</span>`:""}</td><td class=n id="avv${fi}">–</td>`;
     const cb=tr.querySelector("input");cb.onclick=e=>{e.stopPropagation();velObjekt(fi,cb.checked)};
-    tr.onclick=()=>{visProfil(fi)};tb.appendChild(tr)});oppdaterUtval()}
+    tr.onclick=()=>{visProfil(fi)};tb.appendChild(tr)});oppdaterUtval();lastAvvik()}
+// Avvik frå kvart objekt til næraste innmålte linje i bakgrunnsfilene (0.9.21)
+async function lastAvvik(){if(!siste||!siste.etter)return;let r;try{r=await post("api/avvik",siste.etter)}catch(e){return}
+  (r.avvik||[]).forEach(a=>{const td=$("avv"+a.nr);if(!td)return;
+    td.innerHTML=a.fil?`${F(a.sidevegs_cm,0)} cm${a.hoegd_cm!=null?` / ${a.hoegd_cm>0?"+":""}${F(a.hoegd_cm,0)} cm`:""}`:"–";
+    td.title=a.fil?`${a.fil} · ${a.lag} · ${a.punkt} punkt · sidevegs median ${F(a.sidevegs_cm,1)} cm (maks ${F(a.sidevegs_maks_cm,1)})`+(a.hoegd_cm!=null?` · høgd objekt − innmålt ${F(a.hoegd_cm,1)} cm`:" · ingen høgd å samanlikne"):"Ingen innmålt linje innan 3 m"})}
 function bytDjupnTekst(){if(!siste||!siste.etter)return;djupnTekst=!djupnTekst;lagreOkt();$("dbtn").textContent=djupnTekst?"Skjul djupn på kartet":"Vis djupn på kartet";
   if(!lagDjupn)lagDjupn=L.layerGroup().addTo(kart);lagDjupn.clearLayers();if(!djupnTekst)return;
   siste.etter.features.forEach(f=>{const d1=(f.properties||{}).djupn_retta_m||[];let k=0;
@@ -1284,7 +1330,7 @@ function lsVis(t,c){const e=$("lagrestatus");e.classList.remove("ok","var","feil
   $("lsomstart").style.display=lsEndra?"inline-block":"none"}
 // GPS-oppsett: set NTRIP og «R12i rettar masta sjølv» etter valet, og forklar kva det betyr
 const GPS_OPPSETT={geoscan_ntrip:{ntrip_pa:true,mottakar_kompenserer:true,t:"Snowman Geoscan hentar korreksjonane og sender dei til R12i. Trimble Access skal vere lukka. Utan IMU sender R12i antenneposisjonen ($GNGGA)."},
-  access:{ntrip_pa:false,mottakar_kompenserer:true,t:"Trimble Access hentar korreksjonane og slår på IMU-en. Kople Access til R12i over Bluetooth, så Geoscan har USB. Geoscan hentar ikkje NTRIP, og reknar ikkje om det R12i alt har retta ($INGGA)."},
+  access:{ntrip_pa:false,mottakar_kompenserer:true,t:"Trimble Access hentar korreksjonane og slår på IMU-en. Kople Access til R12i over Bluetooth, så Geoscan har USB. R12i sender spissen av stonga ($INGGA), og Geoscan sender punktet urørt vidare (berre høgda blir gjort om til NN2000). Fell IMU-en ut ($GNGGA), måler Geoscan hoppet i høgd og trekkjer frå mast + 0,179 berre når R12i sender antenna. Stanghøgda i Access skal vere 1,808, og mastehøgda her det same."},
   raa:{ntrip_pa:false,mottakar_kompenserer:false,t:"Geoscan sender antenneposisjonen vidare som han kjem, utan korreksjonar frå Geoscan. Til feilsøking, eller når korreksjonane kjem ein annan veg."}};
 function visGpsForkl(v){const o=GPS_OPPSETT[v];$("gpsforkl").textContent=o?o.t:""}
 function velGpsOppsett(v){const o=GPS_OPPSETT[v],f=$("iform");if(!o)return;
@@ -1302,9 +1348,11 @@ async function bgHent(){try{bgFiler=(await api("api/bakgrunn")).filer}catch(e){b
 function bgLagFor(m){if(!m)return null;const rend=bgPane(m),g=L.layerGroup();
   for(const fl of bgFiler){if(!fl.synleg)continue;const d=bgData[fl.id+"|"+fl.gjort];if(!d)continue;const skjult=new Set(fl.skjulte_lag||[]);
     L.geoJSON(d,{renderer:rend,pane:"bakgrunn",filter:ft=>!skjult.has(ft.properties.lag),
-      style:ft=>({color:ft.properties.farge,weight:1.6,opacity:.9}),
-      pointToLayer:(ft,ll)=>L.circleMarker(ll,{renderer:rend,pane:"bakgrunn",radius:ft.properties.tekst?2:3,color:ft.properties.farge,weight:1,fillOpacity:.8}),
-      onEachFeature:(ft,l)=>l.bindTooltip(esc((ft.properties.tekst?ft.properties.tekst+" · ":"")+ft.properties.lag+" · "+fl.namn),{sticky:true})}).addTo(g)}
+      style:ft=>({color:fl.farge||ft.properties.farge,weight:fl.farge?2.4:1.6,opacity:.9}),
+      pointToLayer:(ft,ll)=>L.circleMarker(ll,{renderer:rend,pane:"bakgrunn",radius:ft.properties.tekst?2:3,color:fl.farge||ft.properties.farge,weight:1,fillOpacity:.8}),
+      onEachFeature:(ft,l)=>{const c=ft.geometry.type=="Point"?[ft.geometry.coordinates]:ft.geometry.coordinates,zs=c.filter(p=>p.length>2).map(p=>p[2]);
+        const ht=zs.length?" · høgd "+(Math.min(...zs)==Math.max(...zs)?F(zs[0],2):F(Math.min(...zs),2)+"–"+F(Math.max(...zs),2))+" m":"";
+        l.bindTooltip(esc((ft.properties.tekst?ft.properties.tekst+" · ":"")+ft.properties.lag+" · "+fl.namn+ht),{sticky:true})}}).addTo(g)}
   return g.addTo(m)}
 function bgTeikn(){for(const [k,m] of [["live",lkart],["res",kart]]){if(bgLag[k]&&m)m.removeLayer(bgLag[k]);bgLag[k]=bgLagFor(m)}
   document.querySelectorAll(".bgknapp").forEach(b=>b.textContent="🗺 Bakgrunn"+(bgFiler.filter(f=>f.synleg).length?` (${bgFiler.filter(f=>f.synleg).length})`:""))}
@@ -1315,8 +1363,10 @@ function visBgListe(){const el=$("bgliste");if(!bgFiler.length){el.innerHTML='<p
     <div class="verktoy" style="gap:8px"><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" ${fl.synleg?"checked":""} onchange="bgEndre(${i},{synleg:this.checked})"> <b>${esc(fl.namn)}</b></label>
       <span class="hj">${fl.tal} element${fl.avkorta?" (avkorta – fila er svært stor)":""}</span><span style="flex:1"></span>
       <select style="width:auto" onchange="bgEndre(${i},{crs:this.value})">${CRS_VAL.map(([v,t])=>`<option value="${v}"${(fl.crs==v)?" selected":""}>${t}</option>`).join("")}</select>
+      <label class="hj" style="display:inline-flex;gap:4px;align-items:center" title="Éin farge for heile fila">Farge <input type="color" value="${fl.farge||"#ff4040"}" style="width:34px;height:26px;padding:0" onchange="bgEndre(${i},{farge:this.value})"></label>
+      ${fl.farge?`<button class="b gra" title="Bruk fargane i teikninga" onclick="bgEndre(${i},{farge:''})">↺</button>`:""}
       <button class="b gra" onclick="bgZoom(${i})">Vis i kartet</button><button class="b gra" onclick="bgSlett(${i})">Slett</button></div>
-    <div class="hj" style="margin-top:4px">Brukar: ${esc(crsTekst(fl.crs_brukt))}${fl.merknad?` · <span class="var">${esc(fl.merknad)}</span>`:""}</div>
+    <div class="hj" style="margin-top:4px">Brukar: ${esc(crsTekst(fl.crs_brukt))}${fl.med_z?` · høgd (Z) i ${fl.med_z} punkt`:""}${fl.merknad?` · <span class="var">${esc(fl.merknad)}</span>`:""}</div>
     <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 14px">${Object.entries(fl.lag||{}).sort().map(([l,v])=>
       `<label class="hj" style="display:inline-flex;gap:5px;align-items:center"><input type="checkbox" ${(fl.skjulte_lag||[]).includes(l)?"":"checked"} data-lag="${esc(l)}" onchange="bgLagVal(${i},this.dataset.lag,this.checked)"><span style="display:inline-block;width:12px;height:12px;background:${v.farge};border-radius:2px"></span>${esc(l)} (${v.n})</label>`).join("")}</div>
   </div>`).join("")}
@@ -1337,11 +1387,43 @@ $("bgfil").onchange=async e=>{const fl=[...e.target.files];e.target.value="";
 // ---------- Stream C.xml: GPS-forskyvinga i OneVision (0.9.18) ----------
 let SC=null;const xyzTekst=o=>o?`x ${F(o.x,2)} · y ${F(o.y,2)} · z ${F(o.z,2)} m`:"–";
 async function lastStreamc(){try{SC=await api("api/streamc")}catch(e){$("scinfo").textContent="Kunne ikkje lese: "+e.message;return}
+  const fs=SC.forslag;if(fs){$("sczforkl").innerHTML=`OneVision skal trekkje frå <b>${F(fs.z,3)} m</b>: ${esc(fs.z_kvifor)}.`;teiknSkisse(fs)}
   if(!SC.funne){$("scinfo").textContent=SC.melding;$("scknapp").style.display="none";return}
-  $("scinfo").innerHTML=`I fila no: <b>${xyzTekst(SC.noverande)}</b> (${esc(SC.fil)})<br>`+
-    (SC.ulik?`<span class="var">Geoscan-måla gir: <b>${xyzTekst(SC.forslag)}</b> (x blir ikkje endra, forteiknet på y blir halde)</span>`
-            :`<span class="ok">✓ Stemmer med Geoscan (sida ${F(Math.abs(SC.forslag.y),2)} m, antennehøgd ${F(SC.forslag.z,2)} m = mast + 0,179 til fasesenteret)</span>`);
-  $("scknapp").style.display=SC.ulik?"inline-block":"none"}
+  let h=`I fila no: <b>${xyzTekst(SC.noverande)}</b> (${esc(SC.fil)})<br>`+
+    (SC.ulik?`<span class="var">Geoscan-måla gir: <b>${xyzTekst(fs)}</b> – trykk knappen for å skrive dei.</span>`:`<span class="ok">✓ Fila stemmer med Geoscan-måla.</span>`);
+  if(SC.brukt_sist)h+=`<br>OneVision brukte <b>${xyzTekst({x:SC.brukt_sist.xyz[0],y:SC.brukt_sist.xyz[1],z:SC.brukt_sist.xyz[2]})}</b> i ${esc(SC.brukt_sist.namn)}`+
+    (SC.brukt_sist.ulik_fila?` <b class="var">– ikkje det same som i fila. Målingar etter at fila vart endra, skal ha dei nye tala.</b>`:` <span class="ok">✓</span>`);
+  if(SC.virtualstore)h+=`<br><b class="${SC.virtualstore.ulik?"feil":"var"}">Windows har ein skjult kopi av fila (VirtualStore): ${esc(SC.virtualstore.xyz)}${SC.virtualstore.ulik?" – ulik den verkelege fila. OneVision kan lese kopien. Slett kopien eller gi han same tal.":""}</b><br><span class="hj">${esc(SC.virtualstore.fil)}</span>`;
+  $("scinfo").innerHTML=h;$("scknapp").style.display=SC.ulik?"inline-block":"none"}
+// Skisse ovanfrå og frå sida (0.9.21): kvar spissen av stonga står i forhold til enkoderen og antennene. Mål frå Stream C-manualen:
+// antenneboksen 120 × 57 × 20 cm, enkoder i venstre bakhjul (origo), antennene V24 på x 0,38 og H10 på x 0,57.
+function teiknSkisse(fs){const S=170,W=360,H=300,ox=W/2,oy=238,X=v=>ox+v*S,Y=v=>oy-v*S;      // ovanfrå: y opp = fram
+  const yv=fs.y,px=ox-yv*S,py=Y(fs.x),bak=Y(0),hjulV=ox-0.62*S,hjulH=ox+0.62*S;           // +y teikna mot venstre (IDS: støtta bak til venstre)
+  let g=`<text x="${ox}" y="14" text-anchor="middle" font-size="12" fill="var(--svak)">Ovanfrå – køyreretning ↑</text>
+  <rect x="${X(-0.6)}" y="${Y(0.77)}" width="${1.2*S}" height="${0.57*S}" rx="4" fill="#6b7a86" opacity=".35" stroke="var(--tekst)"/>
+  <text x="${ox}" y="${Y(0.77)+14}" text-anchor="middle" font-size="11" fill="var(--tekst)">antenneboks 120 × 57 cm</text>
+  <line x1="${X(-0.48)}" x2="${X(0.48)}" y1="${Y(0.38)}" y2="${Y(0.38)}" stroke="#1f6fd1" stroke-width="2"/><text x="${X(0.5)}" y="${Y(0.38)+4}" font-size="10" fill="#1f6fd1">V24 x 0,38</text>
+  <line x1="${X(-0.48)}" x2="${X(0.48)}" y1="${Y(0.57)}" y2="${Y(0.57)}" stroke="#d17a1f" stroke-width="2"/><text x="${X(0.5)}" y="${Y(0.57)+4}" font-size="10" fill="#d17a1f">H10 x 0,57</text>
+  <line x1="${ox}" x2="${ox}" y1="${Y(0.95)}" y2="${bak+30}" stroke="var(--svak)" stroke-dasharray="4 4"/><text x="${ox+4}" y="${bak+28}" font-size="10" fill="var(--svak)">midten av radaren</text>
+  <rect x="${hjulV-9}" y="${bak-16}" width="18" height="32" rx="5" fill="#333"/><rect x="${hjulH-9}" y="${bak-16}" width="18" height="32" rx="5" fill="#333"/>
+  <circle cx="${hjulV}" cy="${bak}" r="5" fill="#e53935"/><text x="${hjulV-12}" y="${bak+4}" text-anchor="end" font-size="10" fill="var(--tekst)">enkoder</text>
+  <line x1="${hjulV}" x2="${hjulH}" y1="${bak}" y2="${bak}" stroke="var(--svak)" stroke-width=".8"/>
+  <line x1="${px}" x2="${px}" y1="${bak}" y2="${py+6}" stroke="#2e7d32" stroke-width="1.5"/><text x="${px+(yv>=0?8:-8)}" y="${(bak+py)/2+4}" text-anchor="${yv>=0?"start":"end"}" font-size="11" font-weight="700" fill="#2e7d32">x ${F(fs.x,2)}</text>
+  <line x1="${ox}" x2="${px+(yv>=0?6:-6)}" y1="${bak+44}" y2="${bak+44}" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#pil)"/><line x1="${px}" x2="${px}" y1="${bak+36}" y2="${bak+52}" stroke="#2e7d32"/>
+  <text x="${(ox+px)/2}" y="${bak+60}" text-anchor="middle" font-size="11" font-weight="700" fill="#2e7d32">y ${F(fs.y,2)}</text>
+  <circle cx="${px}" cy="${py}" r="7" fill="#2e7d32" stroke="#fff" stroke-width="2"/><text x="${px}" y="${py-12}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--tekst)">stong</text>
+  <text x="${X(-0.6)}" y="34" font-size="10" fill="var(--svak)">← venstre (sett bakfrå)</text><text x="${X(0.6)}" y="34" text-anchor="end" font-size="10" fill="var(--svak)">høgre →</text>`;
+  // frå sida: bakken, boksen, støtta og z
+  const W2=170,gy=H-40,sz=110,sx=60,zd=Math.min(Math.max(fs.z,0),1.0);     // z over 1 m blir kutta i teikninga
+  let g2=`<text x="${W2/2}" y="14" text-anchor="middle" font-size="12" fill="var(--svak)">Frå sida</text>
+  <line x1="5" x2="${W2-5}" y1="${gy}" y2="${gy}" stroke="#8a6a4a" stroke-width="3"/><text x="${W2-6}" y="${gy+14}" text-anchor="end" font-size="10" fill="var(--svak)">bakken</text>
+  <rect x="${sx}" y="${gy-0.2*sz*2}" width="${0.57*sz*1.4}" height="${0.2*sz*2}" fill="#6b7a86" opacity=".35" stroke="var(--tekst)"/>
+  <line x1="${sx-14}" x2="${sx-14}" y1="${gy-zd*sz*2}" y2="40" stroke="var(--tekst)" stroke-width="3"/><rect x="${sx-24}" y="28" width="20" height="14" rx="3" fill="#f2c200"/><text x="${sx-30}" y="38" text-anchor="end" font-size="10" fill="var(--tekst)">R12i</text>
+  <circle cx="${sx-14}" cy="${gy-zd*sz*2}" r="5" fill="#2e7d32" stroke="#fff" stroke-width="2"/>
+  <line x1="${sx-34}" x2="${sx-34}" y1="${gy}" y2="${gy-zd*sz*2}" stroke="#2e7d32" stroke-width="1.5"/><text x="${sx-38}" y="${gy-zd*sz}" text-anchor="end" font-size="11" fill="#2e7d32">z ${F(fs.z,2)}</text>`;
+  $("scskisse").innerHTML=`<div style="display:flex;gap:6px;align-items:flex-start"><svg style="margin:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><marker id="pil" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2e7d32"/></marker></defs>${g}</svg>`+
+    `<svg style="margin:0" width="${W2}" height="${H}" viewBox="0 0 ${W2} ${H}">${g2}</svg></div>`+
+    `<div class="hj" style="max-width:${W+W2}px">Grøn prikk = spissen av stonga (0-punktet). Pluss y er teikna mot venstre, slik IDS-malen har det for støtta bak til venstre. Det er ikkje stadfest i felt.</div>`}
 async function skrivStreamc(){if(!SC||!SC.funne)return;
   if(!confirm(`Skrive GPS-forskyvinga til OneVision?\n\n${SC.fil}\n\nFør:  ${SC.xyz}\nEtter: ${SC.forslag.xyz}\n\nDet blir teke kopi av fila først. Windows kan spørje om administratorløyve. Start OneVision på nytt etterpå.`))return;
   set("scmeld","Skriv …","var");
@@ -1368,7 +1450,7 @@ async function autoLagre(felt){if(lsKoyrer){lsIgjen=true;return}lsKoyrer=true;ls
     const n=Object.keys(fe).length;
     lsVis(n?`⚠ Lagra kl. ${klokke(r.lagra)} i ${r.fil} – men ikkje: ${Object.values(fe).join("; ")}`
            :`✓ Lagra kl. ${klokke(r.lagra)} i ${r.fil} · gjeld etter omstart`,n?"var":"ok");
-    if(felt&&["mast","hogre"].includes(felt.name))lastStreamc();
+    if(felt&&["mast","hogre","apc_tillegg","streamc_x","streamc_y","spiss_over_bakken","gps_oppsett","utgang"].includes(felt.name))lastStreamc();
     if(felt&&!fe[felt.name]){felt.classList.add("lagra-ok");setTimeout(()=>felt.classList.remove("lagra-ok"),1800)}
     if(d.passord&&document.activeElement!=f.elements.passord){f.elements.passord.value=""}
     if(d.token&&document.activeElement!=f.elements.token){f.elements.token.value=""}

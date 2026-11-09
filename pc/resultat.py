@@ -60,7 +60,7 @@ def okter(loggdir):
 
 def spor(path, maks=6000, lever=None, utgang=None):
     """Sporet frå ei loggfil til kartet, tynna ut til maks punkt:
-    [lat, lon, helling (grader), 1/0 retta, lat_radar, lon_radar]. Midten av radaren (skannestripa) står i loggen
+    [lat, lon, helling (grader), 1/0 retta, lat_radar, lon_radar, imu (1 = $INGGA, 0 = utan IMU, None = ukjent)]. Midten av radaren (skannestripa) står i loggen
     frå 0.9.17. I eldre loggar blir han rekna ut frå kursen med spakarmen og utgangen som står no (lever, utgang)."""
     pts = []
     for ix, r in _rows(path):
@@ -75,8 +75,11 @@ def spor(path, maks=6000, lever=None, utgang=None):
             lr, lo_r = H.radarmidt(lat, lon, KO.num(r[ix["kurs"]]), lever, utgang)
         else:
             lr = lo_r = None
+        imu = None
+        if "imu" in ix and len(r) > ix["imu"] and r[ix["imu"]] in ("0", "1"):
+            imu = int(r[ix["imu"]])
         pts.append([round(lat, 8), round(lon, 8), round(tilt, 1), 1 if k else 0,
-                    None if lr is None else round(lr, 8), None if lo_r is None else round(lo_r, 8)])
+                    None if lr is None else round(lr, 8), None if lo_r is None else round(lo_r, 8), imu])
     step = max(1, len(pts) // maks)
     return pts[::step]
 
@@ -202,7 +205,9 @@ def rett_eksport(objektfil, loggfiler, utdir, zmode="auto", sone=None, maks_avst
     framleis verkar (8.11.2026, R12i utan IMU)."""
     gj = les_objekt(objektfil)
     zone = sone or KO.geojson_zone(gj)
-    logg = KO.Logg(loggfiler if helling else [], zone)
+    logg = KO.Logg(loggfiler, zone)
+    if not helling:                      # ingen hellingsretting, men bakkehøgd og IMU frå loggen blir brukt
+        logg.rows, logg.grid = [], {}
     merknad = None
     if helling and not logg.rows:
         merknad = ("Loggane har ingen posisjonar med helling, så objekta er viste utan hellingsretting (som i "
@@ -234,7 +239,7 @@ def rett_eksport(objektfil, loggfiler, utdir, zmode="auto", sone=None, maks_avst
         st = lambda v: None if not v else {"min": round(min(v), 2), "maks": round(max(v), 2), "snitt": round(sum(v) / len(v), 2)}
         tabell.append({"nr": i, "id": pr.get("id", i), "lag": pr.get("layer", ""), "type": pr.get("type", ""),
                        "skildring": pr.get("description", ""), "retta": pr.get("helling_retta", ""),
-                       "maks_endring_cm": pr.get("helling_maks_endring_cm", 0),
+                       "maks_endring_cm": pr.get("helling_maks_endring_cm", 0), "utan_imu": pr.get("utan_imu"),
                        "djupn_for": st(f0), "djupn_etter": st(f1)})
     return {"retta_punkt": ok, "utan_logg": miss, "z": zmode, "sone": zone, "filer": filer, "tabell": tabell,
             "helling": bool(logg.rows), "merknad": merknad,

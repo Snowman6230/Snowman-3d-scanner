@@ -73,6 +73,7 @@ class Logg:
     def __init__(self, paths, zone=None):
         """zone: UTM-sona til objekta. Loggposisjonane blir rekna om dit frå lat/lon (loggen kan vere i ei anna sone)."""
         self.rows, self.grid = [], {}
+        self.alle = {}            # alle loggpunkt (òg utan helling): bakkehøgd og om IMU var i bruk ($INGGA), 0.9.21
         for p in paths:
             try:
                 head, rows, _ = read_csv(p)
@@ -82,7 +83,10 @@ class Logg:
             if "korrigert" not in ix:
                 continue
             for r in rows:
-                if len(r) < len(head) or r[ix["korrigert"]] != "1":
+                if len(r) < len(head):
+                    continue
+                self._alle(r, ix, zone)
+                if r[ix["korrigert"]] != "1":
                     continue
                 lat, lon = num(r[ix["lat_ut"]]), num(r[ix["lon_ut"]])
                 z = zone or int(r[ix["sone"]])
@@ -93,6 +97,30 @@ class Logg:
                      "h_bakke": num(r[ix["h_bakke"]]) if "h_bakke" in ix else None}
                 self.rows.append(d)
                 self.grid.setdefault((int(d["E"] // 1), int(d["N"] // 1)), []).append(d)
+
+    def _alle(self, r, ix, zone):
+        lat, lon = num(r[ix["lat_ut"]]), num(r[ix["lon_ut"]])
+        if lat is None or lon is None:
+            return
+        z = zone or int(r[ix["sone"]])
+        E, Nn = K.utm_forward(lat, lon, z)
+        imu = None
+        if "imu" in ix and len(r) > ix["imu"] and r[ix["imu"]] in ("0", "1"):
+            imu = r[ix["imu"]] == "1"
+        d = {"E": E, "N": Nn, "h_bakke": num(r[ix["h_bakke"]]) if "h_bakke" in ix else None, "imu": imu}
+        self.alle.setdefault((int(E // 1), int(Nn // 1)), []).append(d)
+
+    def naer_alle(self, E, N, maxdist=1.0):
+        """Næraste loggpunkt utan krav om helling (bakkehøgd og IMU)."""
+        best, bd = None, maxdist
+        ce, cn = int(E // 1), int(N // 1)
+        for i in (-1, 0, 1):
+            for j in (-1, 0, 1):
+                for r in self.alle.get((ce + i, cn + j), ()):
+                    dd = math.hypot(r["E"] - E, r["N"] - N)
+                    if dd <= bd:
+                        best, bd = r, dd
+        return best
 
     def nearest(self, E, N, t=None, maxdist=1.0, maxtime=2.0):
         if t is not None:
@@ -150,7 +178,7 @@ def correct_geojson(gj, logg, zmode="auto", maxdist=1.0):
         zmode = "hoegd" if pts and all(len(p) > 2 and p[2] > 20 for p in pts) else "djupn"
     ok = miss = 0
     for f in gj.get("features", []):
-        maxch, n_ok, n = 0.0, 0, 0
+        maxch, n_ok, n, utan_imu = 0.0, 0, 0, 0
         d_for, d_etter, flytta = [], [], []      # per punkt: djupn før/etter (m, loddrett under bakken) og flytting
         h_obj, h_bakke = [], []                   # per punkt: høgd NN2000 for objektet og for bakken over det
         for p in _points((f.get("geometry") or {}).get("coordinates")):
@@ -159,11 +187,22 @@ def correct_geojson(gj, logg, zmode="auto", maxdist=1.0):
                 d_for.append(None), d_etter.append(None), flytta.append(None), h_obj.append(None), h_bakke.append(None)
                 continue
             rec, _ = logg.nearest(p[0], p[1], None, maxdist)
+            na = logg.naer_alle(p[0], p[1], maxdist) if getattr(logg, "alle", None) else None
+            if na is not None and na["imu"] is False:
+                utan_imu += 1
             if rec is None or (zmode == "hoegd" and rec.get("h_bakke") is None):
                 miss += 1
-                d0 = round(p[2], 3) if zmode == "djupn" else None
+                # Utan helling i loggen (t.d. R12i med IMU, der Geoscan sender punktet urørt): objektet står urørt,
+                # men bakkehøgda frå loggen gir likevel høgda over havet (0.9.21).
+                hb = None if na is None else na["h_bakke"]
+                if zmode == "djupn":
+                    d0 = round(p[2], 3)
+                    h_obj.append(None if hb is None else round(hb - p[2], 3))
+                else:
+                    d0 = None if hb is None else round(hb - p[2], 3)
+                    h_obj.append(round(p[2], 3))
                 d_for.append(d0), d_etter.append(d0), flytta.append(None)   # urørt: same djupn som før
-                h_obj.append(round(p[2], 3) if zmode == "hoegd" else None), h_bakke.append(None)
+                h_bakke.append(None if hb is None else round(hb, 3))
                 continue
             d = p[2] if zmode == "djupn" else rec["h_bakke"] - p[2]
             E2, N2, dv, ch = correct_object(p[0], p[1], abs(d), rec)
@@ -180,6 +219,8 @@ def correct_geojson(gj, logg, zmode="auto", maxdist=1.0):
         pr["helling_maks_endring_cm"] = round(maxch * 100, 1)
         pr["djupn_for_m"], pr["djupn_retta_m"], pr["flytta_cm"] = d_for, d_etter, flytta
         pr["hoegd_nn2000_m"], pr["bakke_nn2000_m"] = h_obj, h_bakke
+        if utan_imu:
+            pr["utan_imu"] = f"{utan_imu}/{n}"      # punkt målt medan IMU-en var borte ($GNGGA) – usikker sidevegs
     return ok, miss, zmode
 
 

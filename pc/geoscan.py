@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.20"
+VERSJON = "0.9.21"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -44,6 +44,10 @@ STANDARD = {
     "radar_djupn": 2.5,
     "apc_tillegg": 0.179,        # m, undersida av hurtigfestet → fasesenteret i R12i (Access 9.11.2026). Mastehøgda
                                  # er målt til undersida av hurtigfestet, same som stanghøgda i Trimble Access
+    "spiss_over_bakken": 0.09,   # m, spissen av stonga står i GPS-støtta på ramma, 9 cm over bakken (Norman 9.11.2026)
+    "streamc_xy": [0.13, 0.42],  # m, x fram frå enkoderen (venstre bakhjul), y sidevegs – målt av Norman 9.11.2026,
+                                 # same som IDS-malen for standard GPS-støtte (bak til venstre)
+    "vakt": {"qh_cm": 5.0, "qv_cm": 8.0, "alder_s": 2.0},   # grenser for kvalitetsvakta (raud stripe og lyd)
     "skannebreidd": 0.96,        # m, Stream C: IDS oppgir 96 cm, og objekt i .svy (7.11.2026) går ±0,479 m – stripa på karta
     "skannebreidd_ytre": 0.0,    # m, valfritt lysare felt utanfor stripa (0 = ingen)
     "onevision_mappe": "",       # arbeidsmappa i OneVision (tom = finn sjølv, sjå onevision_filer.py)
@@ -65,7 +69,7 @@ STANDARD = {
 
 
 LOGG_HOVUD = ("tid;fix;lat_inn;lon_inn;lat_ut;lon_ut;sone;E_ut;N_ut;h_nn2000_ut;h_bakke;korrigert;stamp;krenging;kurs;"
-              "kurskjelde;djupn_sanntid;forskyving_cm;lat_radar;lon_radar")
+              "kurskjelde;djupn_sanntid;forskyving_cm;lat_radar;lon_radar;talker;imu;varsel")
 
 
 radarmidt = H.radarmidt     # midten av radaren (skannestripa) – sjå helling.py
@@ -81,6 +85,50 @@ def load_cfg(path):
     if path.exists():
         cfg.update(json.loads(path.read_text(encoding="utf-8")))
     return cfg
+
+
+class Vakt:
+    """Kvalitetsvakt (0.9.21): IMU borte, RTK FIX tapt, gamle data og dårleg nøyaktigheit. Eit varsel blir aktivt
+    etter 1 s med feil, og går bort etter 2 s utan, så det ikkje blinkar ved kvart lite brot. «nr» aukar for kvart
+    nytt varsel, så nettlesaren veit når det skal kome lyd og Windows-varsel."""
+    PA, AV = 1.0, 2.0
+    TEKST = {
+        "imu": "IMU borte – R12i sender ${t}GGA (antenna), ikkje $INGGA. Masta blir ikkje retta for helling.",
+        "rtk": "RTK FIX tapt – fix {q} ({namn}). Posisjonen kan vere fleire cm–m feil.",
+        "noy": "Dårleg nøyaktigheit – QH {qh} cm, QV {qv} cm.",
+        "alder": "Ingen nye posisjonar på {s} s – sjekk mottakaren og kabelen.",
+    }
+
+    def __init__(self, cfg):
+        g = cfg.get("vakt") or {}
+        self.qh = float(g.get("qh_cm", 5.0))
+        self.qv = float(g.get("qv_cm", 8.0))
+        self.alder = float(g.get("alder_s", 2.0))
+        self.tilstand = {}               # nøkkel → {"feil_sidan", "ok_sidan", "aktiv", "sidan", "tekst"}
+        self.nr = 0
+
+    def sjekk(self, nokkel, feil, now, tekst=""):
+        t = self.tilstand.setdefault(nokkel, {"feil_sidan": None, "ok_sidan": None, "aktiv": False, "sidan": None})
+        if feil:
+            t["tekst"] = tekst
+            t["ok_sidan"] = None
+            t["feil_sidan"] = t["feil_sidan"] or now
+            if not t["aktiv"] and now - t["feil_sidan"] >= self.PA:
+                t["aktiv"], t["sidan"] = True, now
+                self.nr += 1
+        else:
+            t["feil_sidan"] = None
+            t["ok_sidan"] = t["ok_sidan"] or now
+            if t["aktiv"] and now - t["ok_sidan"] >= self.AV:
+                t["aktiv"] = False
+
+    def aktive(self, now=None):
+        now = time.time() if now is None else now
+        return [{"kva": k, "tekst": v.get("tekst", ""), "sekund": round(now - (v["sidan"] or now))}
+                for k, v in self.tilstand.items() if v["aktiv"]]
+
+
+FIXNAMN = {0: "ingen", 1: "GPS", 2: "DGPS", 4: "RTK FIX", 5: "RTK FLOAT", 6: "rekna"}
 
 
 class Korrigerar:
@@ -100,6 +148,15 @@ class Korrigerar:
         # «mottakar_kompenserer» står på (felttest 7.11: R12i direkte på USB sende $GNGGA – IMU ikkje i bruk).
         self.komp_aktiv = False
         self.talker = None
+        # «R12i med Trimble Access (IMU)»: Geoscan sender punktet frå R12i urørt (berre høgda i NN2000). Spissen av
+        # stonga står i GPS-støtta på ramma, og OneVision flyttar sjølv frå spissen til radaren (Stream C.xml).
+        self.urort = cfg.get("gps_oppsett") == "access"
+        self.spiss = float(cfg.get("spiss_over_bakken", 0.09) or 0.0)
+        # Når IMU-en fell ut og R12i byter til $GNGGA: kor mykje skal trekkjast frå for å kome til spissen?
+        # Antenna (stanghøgd + fasesenter) eller 0 (stanghøgda alt trekt frå). Blir målt ved bytet (sjå _gn_hopp).
+        self.gn_red = {"m": self.lever[2], "kjelde": "antatt (antenna, som utan IMU 9.11 kl. 08:52)"}
+        self.siste_epoke = None          # (talker, h_ell, fix, t) – førre GGA, til å måle hoppet ved IN/GN-byte
+        self.vakt = Vakt(cfg)
         self.epoker = {}                 # UTC-tid → posisjon frå mottakaren (til samanlikning med PJK)
         self.zone = int(cfg["sone"]) if str(cfg.get("sone", "auto")).isdigit() else None
         if cfg.get("logg"):
@@ -209,6 +266,9 @@ class Korrigerar:
             except (IndexError, ValueError):
                 st["hdop"] = None
             self.hel.add_position(lat, lon, now)
+            self._vakt(gga, now)
+        if self.urort:
+            return self._urort(fields, gga, lat, lon, now)
         tilt = H.tilt_from(self.hel, cfg, now)
         hdg, hsrc = self.hel.heading(cfg)
         st.update(kurs=None if hdg is None else round(hdg, 1), kurskjelde=hsrc)
@@ -257,7 +317,8 @@ class Korrigerar:
         try:
             z = self.zone or K.zone_of(lo)
             E, Nn = K.utm_forward(la, lo, z)
-            mast = self.lever[2] if cfg.get("utgang") == "rett_antenne" else 0.0
+            # Bakken: frå antenna ned masta (til spissen i støtta) og vidare spiss_over_bakken (9 cm) ned til bakken
+            mast = (self.lever[2] if cfg.get("utgang") == "rett_antenne" else 0.0) + self.spiss
             h_nn = None if (h2 is None or n_geo is None) else h2 - n_geo
             st["pos"].update({"sone": z, "E": round(E, 3), "N": round(Nn, 3),
                               "h_ell": None if h2 is None else round(h2, 3),
@@ -266,6 +327,93 @@ class Korrigerar:
         except Exception:
             pass
         self._log(gga, lat, lon, la, lo, h2, n_geo, pitch, roll, hdg, d0, now, lat_r, lon_r)
+        return out
+
+    def oppsett_varsel(self):
+        """Faste feil i oppsettet som gjer høgda feil (ikkje kortvarige – dei er i Vakt)."""
+        ut = []
+        if self.urort:
+            opp = float((self.cfg.get("spakarm") or {}).get("opp", 0) or 0)
+            if opp < 0.5:
+                ut.append(f"Mastehøgda står på {opp:g} m. Set ho til stanghøgda i Trimble Access (1,808 m). Geoscan "
+                          "treng ho når IMU-en fell ut og R12i sender antenna.")
+            if float(self.cfg.get("apc_tillegg", 0.179) or 0) == 0:
+                ut.append("«Frå undersida av hurtigfestet til fasesenteret» står på 0. For R12i skal det vere 0,179 m.")
+        return ut
+
+    def _vakt(self, gga, now):
+        t = time.time() if now is None else now
+        V = self.vakt
+        venta_imu = self.urort or self.komp
+        V.sjekk("imu", bool(venta_imu and self.talker and self.talker != "IN"), t,
+                V.TEKST["imu"].replace("${t}", "$" + (self.talker or "??")))
+        q = gga["q"]
+        V.sjekk("rtk", q != 4, t, V.TEKST["rtk"].format(q=q, namn=FIXNAMN.get(q, "ukjend")))
+        n = self.status.get("noy")
+        darleg = bool(n and time.time() - n["t"] < 5 and (n["qh_cm"] > V.qh or n["qv_cm"] > V.qv))
+        V.sjekk("noy", darleg, t, V.TEKST["noy"].format(qh=n["qh_cm"], qv=n["qv_cm"]) if n else "")
+
+    def _gn_hopp(self, talker, h_in, q, t):
+        """Mål hoppet i høgd når R12i byter mellom $INGGA (spissen) og $GNGGA. Hoppar høgda om lag mast + 0,179 m,
+        sender R12i antenna utan IMU, og Geoscan må trekkje det frå. Held ho seg, er stanghøgda alt trekt frå."""
+        p = self.siste_epoke
+        if not p or h_in is None or p[1] is None or (p[0] == "IN") == (talker == "IN"):
+            return
+        if t - p[3] > 2.0 or q != 4 or p[2] != 4:
+            return                      # berre med RTK FIX på begge sider og kort tid mellom, elles er hoppet ikkje til å stole på
+        dh = h_in - p[1] if talker != "IN" else p[1] - h_in     # GN-høgd minus IN-høgd
+        A = self.lever[2]
+        if abs(dh - A) < 0.25:
+            self.gn_red = {"m": A, "kjelde": f"målt: hopp {dh:+.2f} m – R12i sender antenna utan IMU"}
+        elif abs(dh) < 0.25:
+            self.gn_red = {"m": 0.0, "kjelde": f"målt: hopp {dh:+.2f} m – stanghøgda er alt trekt frå"}
+        else:
+            self.gn_red = dict(self.gn_red, kjelde=f"uklart hopp {dh:+.2f} m – brukar {self.gn_red['m']:.2f} m som før")
+
+    def _urort(self, fields, gga, lat, lon, now):
+        """«R12i med Trimble Access (IMU)»: punktet går urørt vidare. Høgda blir framleis gjort om til NN2000 med
+        geoiden frå Kartverket (mottakaren brukar ein annan geoide – 9.11 var skilnaden 0,44 m)."""
+        cfg, st = self.cfg, self.status
+        if not gga:
+            return N.rewrite(fields, lat, lon)
+        t = time.time() if now is None else now
+        talker = self.talker or ""
+        h_in = None if gga["alt"] is None else gga["alt"] + (gga["sep"] or 0.0)
+        self._gn_hopp(talker, h_in, gga["q"], t)
+        red = 0.0 if talker == "IN" else self.gn_red["m"]
+        h2 = None if h_in is None else h_in - red
+        self._epoke(fields[1], lat, lon, h2)
+        n_geo = GEOID.n(lat, lon) if cfg.get("hoegd") == "nn2000" else None
+        st["geoide"] = None if n_geo is None else round(n_geo, 3)
+        if n_geo is not None and h2 is not None:
+            out = N.rewrite(fields, lat, lon, alt=h2 - n_geo, sep=n_geo)
+        else:
+            out = N.rewrite(fields, lat, lon, dh=-red if red else None)
+        hdg, hsrc = self.hel.heading(cfg)
+        st.update(kurs=None if hdg is None else round(hdg, 1), kurskjelde=hsrc, korrigert=False, stamp=None,
+                  krenging=None, forskyving_cm=None, gn_reduksjon=dict(self.gn_red), urort=True)
+        if talker == "IN":
+            st["melding"] = "R12i rettar masta (IMU) – punktet går urørt til OneVision"
+        else:
+            st["melding"] = (f"IMU borte (${talker}GGA): Geoscan trekkjer frå {red:.2f} m ({self.gn_red['kjelde']}). "
+                             "Masta blir ikkje retta for helling sidevegs.")
+        lat_r, lon_r = self.radarmidt(lat, lon, st["kurs"])
+        st["pos"] = {"lat": round(lat, 8), "lon": round(lon, 8), "lat_ut": round(lat, 8), "lon_ut": round(lon, 8),
+                     "fix": gga["q"], "kurs": st["kurs"], "stamp": None, "krenging": None, "korrigert": False,
+                     "t": round(t, 2), "lat_r": None if lat_r is None else round(lat_r, 8),
+                     "lon_r": None if lon_r is None else round(lon_r, 8)}
+        try:
+            z = self.zone or K.zone_of(lon)
+            E, Nn = K.utm_forward(lat, lon, z)
+            h_nn = None if (h2 is None or n_geo is None) else h2 - n_geo
+            st["pos"].update({"sone": z, "E": round(E, 3), "N": round(Nn, 3),
+                              "h_ell": None if h2 is None else round(h2, 3),
+                              "h_nn": None if h_nn is None else round(h_nn, 3),
+                              "h_bakke": None if h_nn is None else round(h_nn - self.spiss, 3)})
+        except Exception:
+            pass
+        self._log(gga, lat, lon, lat, lon, h2, n_geo, 0.0, 0.0, hdg or 0.0, 0.0, now, lat_r, lon_r)
+        self.siste_epoke = (talker, h_in, gga["q"], t)
         return out
 
     def radarmidt(self, la, lo, kurs):
@@ -312,14 +460,19 @@ class Korrigerar:
         st = self.status
         h_nn = "" if (h2 is None or n_geo is None) else f"{h2 - n_geo:.3f}"
         # Høgda på bakken under radaren (referansepunktet): «rett antenne» står spakarmen over bakken
-        mast = self.lever[2] if self.cfg.get("utgang") == "rett_antenne" else 0.0
+        if self.urort:
+            mast = self.spiss          # punktet ut er spissen av stonga på ramma
+        else:
+            mast = (self.lever[2] if self.cfg.get("utgang") == "rett_antenne" else 0.0) + self.spiss
         h_bakke = "" if h_nn == "" else f"{float(h_nn) - mast:.3f}"
         self.logfile.write(
             f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t))}.{int(t * 1000) % 1000:03d};{gga['q']};"
             f"{lat:.9f};{lon:.9f};{la:.9f};{lo:.9f};{z};{E:.3f};{Nn:.3f};{h_nn};{h_bakke};"
             f"{1 if st['korrigert'] else 0};{pitch:.2f};{roll:.2f};{hdg:.1f};{st['kurskjelde']};{d0:g};"
             f"{st['forskyving_cm'] if st['forskyving_cm'] is not None else ''};"
-            f"{'' if lat_r is None else f'{lat_r:.9f}'};{'' if lon_r is None else f'{lon_r:.9f}'}\n")
+            f"{'' if lat_r is None else f'{lat_r:.9f}'};{'' if lon_r is None else f'{lon_r:.9f}'};"
+            f"{self.talker or ''};{1 if self.talker == 'IN' else 0};"
+            f"{','.join(v['kva'] for v in self.vakt.aktive(t))}\n")
         self.logfile.flush()
 
 
@@ -553,7 +706,13 @@ class App:
             ny = k.get(nk)
             if ny:
                 k[nk] = dict(ny, alder=round(time.time() - ny["t"], 1))
-        return {"korr": k, "ntrip": n, "inn": dict(self.state), "innstat": self.innstat(),
+        V = self.k.vakt
+        ga = None if self.last_gga_t is None else time.time() - self.last_gga_t
+        with self.k.lock:
+            V.sjekk("alder", ga is not None and ga > V.alder, time.time(),
+                    V.TEKST["alder"].format(s=round(ga or 0)))
+            vakt = {"aktive": V.aktive(), "nr": V.nr, "oppsett": self.k.oppsett_varsel()}
+        return {"korr": k, "vakt": vakt, "ntrip": n, "inn": dict(self.state), "innstat": self.innstat(),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"], "kasta": o["kasta"]} for o in self.ut.ports],
                 "stripe": [float(self.cfg.get("skannebreidd") or 0.96), float(self.cfg.get("skannebreidd_ytre") or 0.0)],

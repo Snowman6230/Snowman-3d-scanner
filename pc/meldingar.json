@@ -2,6 +2,23 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-09-v0921-imu",
+   "dato": "2026-11-09",
+   "versjon": "0.9.21",
+   "tittel": "Versjon 0.9.21: punktet går urørt med IMU, åtvaring ved tap av IMU/RTK, x/y/z for Stream C",
+   "tekst": "Hei Norman! Nytt i versjon 0.9.21, etter Holetomta test 2 og svara dine:\n\n1. HØGD OG IMU (versjon 0.9.21)\n• Med «R12i med Trimble Access (IMU)» sender Geoscan punktet frå R12i urørt til OneVision, slik du ville. Berre høgda blir gjort om til NN2000.\n• Set mastehøgda tilbake til 1,808 og «Frå undersida av hurtigfestet til fasesenteret» til 0,179 (Innstillingar → Vogn og mast). Dei blir brukte berre når IMU-en fell ut. Står mastehøgda på 0, kjem det ei gul åtvaring.\n• Viss IMU-en fell ut og R12i byter til $GNGGA, sjekkar Geoscan om høgda hoppar om lag 2 m (antenna) eller held seg (stanghøgda trekt frå), og rettar berre når det trengst. Masta blir då ikkje retta for helling sidevegs, og du får ei åtvaring.\n\n2. ÅTVARING (versjon 0.9.21)\n• Raud stripe øvst, pip og varsel i Windows når IMU-en er borte, RTK FIX er tapt, nøyaktigheita er dårleg (QH over 5 cm, QV over 8 cm) eller posisjonane stoppar.\n• Trykk «🔔 Varsel i Windows» éin gong, så kjem varselet sjølv om Geoscan ligg bak OneVision.\n• I Resultat blir sporet oransje der IMU-en var borte.\n\n3. STREAM C.XML (versjon 0.9.21)\n• Under Vogn og mast er det no felt for x (0,13), y (0,42) og z (spissen over bakken, 0,09), med ei skisse av vogna.\n• Trykk «Skriv Geoscan-måla til OneVision» – fila blir 0.13;0.42;0.09. Start OneVision på nytt.\n• Geoscan viser kva OneVision brukte i den nyaste målinga, og åtvarar om ein skjult kopi i VirtualStore.\n\n4. RESULTAT (versjon 0.9.21)\n• Geoscan les òg røyr du har eksportert frå OneVision (mappa Exports).\n• Har den nyaste målinga ingen røyr, står det tydeleg.\n\n5. BAKGRUNN (versjon 0.9.21)\n• Vel farge for kvar fil.\n• Høgda (Z) i DXF-filene blir teken vare på.\n• Kolonnen «Mot innmålt» i Resultat viser avviket til næraste innmålte røyr, sidevegs og i høgd.\n\nDET EG TRENG\n1. Heile mappa Survey_2026.11.09_006, med Exports.\n2. Ein test ute med RTK: slå av IMU i Access (eller la han miste justeringa) medan Geoscan går, og sjå om høgda i Fix-kortet hoppar om lag 2 m.\n3. Ei køyring langs eit kjent røyr, for å avgjere om +0,42 er venstre.\n4. Gjerne ei justering av farten i grunnen mot røyra ved Holetomta.\n\nHelsing Hans Petter",
+   "sjekk": {
+    "r4": {
+     "tekst": "Versjon 0.9.21: mast 1,808 og 0,179 til fasesenteret i Geoscan, stanghøgd 1,808 i Access, og Stream C.xml 0.13;0.42;0.09 (spissen står 9 cm over bakken).",
+     "prov_att": true
+    },
+    "f1": {
+     "tekst": "Versjon 0.9.21: test òg kva som skjer når IMU-en blir slått av ute med RTK – hoppar høgda i Fix-kortet om lag 2 m?",
+     "prov_att": true
+    }
+   }
+  },
+  {
    "id": "2026-11-09-v0920-hogd",
    "dato": "2026-11-09",
    "versjon": "0.9.20",

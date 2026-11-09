@@ -215,15 +215,14 @@ def forslag(skanna, c0c=None, cfg=None, ov=None):
         elif not c0c.get("par"):
             atv.append("com0com er installert, men utan portpar.")
     if ov:
-        mast = H.spakarm(cfg)[2] if (cfg.get("spakarm") or {}).get("opp") else 0.0
-        side = abs(float(((cfg.get("spakarm") or {}).get("hogre")) or 0))
         if ov.get("komma_feil"):
             atv.append(f"OneVision ({Path(ov['fil']).name}): GPS xyz «{ov['xyz']}» har komma. Bruk punktum.")
-        if "z" in ov and mast and abs(ov["z"] - mast) > 0.02:
-            atv.append(f"Antennehøgda (z) i OneVision er {ov['z']:g} m, men skal vere {mast:.2f} m: høgda til "
-                       "fasesenteret = mastehøgda (til undersida av hurtigfestet) + 0,179 m i R12i.")
-        if "y" in ov and side and abs(abs(ov["y"]) - side) > 0.02:
-            atv.append(f"Sideforskyvinga i OneVision er {abs(ov['y']):g} m, i Geoscan {side:g} m.")
+        if "x" in ov:
+            import streamc as SC
+            fs = SC.forslag(cfg)
+            if any(abs(ov[k] - fs[k]) > 0.02 for k in "xyz"):
+                atv.append(f"GPS-forskyvinga i OneVision (Stream C.xml) er «{ov['xyz']}», men Geoscan-måla gir "
+                           f"«{fs['xyz']}» (z: {fs['z_kvifor']}). Rett under Innstillingar → Vogn og mast.")
     return f, atv
 
 

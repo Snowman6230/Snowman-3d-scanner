@@ -83,8 +83,14 @@ def tal_objekt(sti):
             return c[1]
         import svy_objekt as SVY
         _, obj = SVY.les_svy(sti)
-        _cache[str(sti)] = (mt, len(obj))
-        return len(obj)
+        n = len(obj)
+        if not n:                       # tom <Targets>: sjå i Exports-mappa (0.9.21)
+            import onevision_eksport as OE
+            if OE.filer(sti):
+                gj = OE.les(sti)
+                n = len(gj["features"]) if gj else 0
+        _cache[str(sti)] = (mt, n)
+        return n
     except Exception:
         return None
 
@@ -105,6 +111,11 @@ def info(sti, med_objekt=False):
             d["gps_xyz"] = [ov["x"], ov["y"], ov["z"]]
     except Exception:
         pass
+    try:
+        import onevision_eksport as OE
+        d["eksport"] = [f.name for f in OE.filer(sti)]
+    except Exception:
+        d["eksport"] = []
     if med_objekt:
         d["objekt"] = tal_objekt(sti)
     return d
