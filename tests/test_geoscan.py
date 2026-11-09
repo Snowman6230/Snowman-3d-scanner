@@ -95,7 +95,7 @@ def test_talker_blir_verande():
 
 def test_ende_til_ende_med_pashr():
     cfg = dict(G.STANDARD, logg=None, hoegd="mottakar", utgang="referansepunkt",
-               spakarm={"fram": 0, "hogre": 0, "opp": 1.2})
+               apc_tillegg=0, spakarm={"fram": 0, "hogre": 0, "opp": 1.2})
     k = G.Korrigerar(cfg)
     # PASHR: tid, kurs 90 (aust), T, krenging +5 (høgre side ned), stamp 0
     pashr = N.build(["PASHR", "120000.00", "90.0", "T", "5.00", "0.00", "", "0.01", "0.01", "0.02", "2", "1"])
@@ -133,7 +133,7 @@ def test_djupn_25_m_ved_5_grader():
 def test_r12i_kompenserer_sjolv():
     # R12i sender stangspissen P. Rett antenne = P + 1,2 m loddrett, same posisjon. Ingen helling trengst.
     cfg = dict(G.STANDARD, logg=None, hoegd="mottakar", utgang="rett_antenne", mottakar_kompenserer=True,
-               spakarm={"fram": 0, "hogre": 0, "opp": 1.2})
+               apc_tillegg=0, spakarm={"fram": 0, "hogre": 0, "opp": 1.2})
     k = G.Korrigerar(cfg)
     out = k.handle(_gga(alt="148.800"), now=1.0)[0]
     g = N.parse_gga(N.split(out))
@@ -147,7 +147,7 @@ def test_korriger_objekt_ende_til_ende(tmp_path):
     import korriger_objekt as KO
     import koordinat as KK
     cfg = dict(G.STANDARD, hoegd="mottakar", utgang="referansepunkt", logg=str(tmp_path / "logg"),
-               spakarm={"fram": 0, "hogre": 0, "opp": 1.2}, sone="32")
+               apc_tillegg=0, spakarm={"fram": 0, "hogre": 0, "opp": 1.2}, sone="32")
     k = G.Korrigerar(cfg)
     pashr = N.build(["PASHR", "120000.00", "90.0", "T", "5.00", "0.00", "", "", "", "", "2", "1"])
     k.handle(pashr, now=1000.0)
@@ -216,7 +216,7 @@ def test_oydelagd_versjon_blir_ikkje_lagd_inn(tmp_path):
 
 def _logg_med_helling(tmp_path, roll=5.0):
     cfg = dict(G.STANDARD, hoegd="nn2000", utgang="rett_antenne", logg=str(tmp_path / "logg"),
-               spakarm={"fram": 0, "hogre": 0, "opp": 1.4}, sone="32")
+               apc_tillegg=0, spakarm={"fram": 0, "hogre": 0, "opp": 1.4}, sone="32")
     k = G.Korrigerar(cfg)
     pashr = N.build(["PASHR", "120000.00", "90.0", "T", f"{roll:.2f}", "0.00", "", "", "", "", "2", "1"])
     k.handle(pashr, now=1000.0)
@@ -373,7 +373,7 @@ def test_nettlesar_api_resultat_send_inn_innstillingar(tmp_path, monkeypatch):
         hb, ho, d1 = pr["bakke_nn2000_m"][0], pr["hoegd_nn2000_m"][0], pr["djupn_retta_m"][0]
         assert hb is not None and abs(ho - (hb - d1)) < 0.002
         # simulert antenne − mast. Toleransen dekkjer sidearmen (0,6 m) i ±6° krenging: 0,6 · sin 6° ≈ 6 cm
-        assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - G.STANDARD["spakarm"]["opp"])) < 0.1
+        assert abs(hb - (150.0 + 44.775 - GEOID.n(*spor[0][:2]) - G.STANDARD["spakarm"]["opp"] - G.STANDARD["apc_tillegg"])) < 0.1
         csvraw = _u.urlopen(base + "last-ned/resultat/" + _uq(r["filer"]["csv"]), timeout=5).read()
         assert csvraw.startswith(b"\xef\xbb\xbf")            # BOM, så Excel les æøå og – rett
         csvtxt = csvraw.decode("utf-8-sig")
@@ -823,7 +823,7 @@ def test_r12i_stangspiss_med_sidearm_blir_ikkje_flytta():
     0,6 m til venstre for køyreretninga ein gong for mykje (spor køyrde motsett veg låg ca. 1,2 m frå kvarandre)."""
     import math
     cfg = dict(G.STANDARD, logg=None, hoegd="mottakar", utgang="rett_antenne", mottakar_kompenserer=True,
-               spakarm={"fram": 0.4, "hogre": -0.6, "opp": 1.8})
+               apc_tillegg=0, spakarm={"fram": 0.4, "hogre": -0.6, "opp": 1.8})
     k = G.Korrigerar(cfg)
     ut = None
     for i, lon in enumerate(("00634.0000000", "00634.0010000", "00634.0020000", "00634.0030000")):  # austover
@@ -878,7 +878,7 @@ def test_gngga_er_antenne_sjolv_om_mottakar_kompenserer_er_paa():
     """Felttest 7.11: R12i direkte på USB sende $GNGGA (antennefasesenteret, IMU ikkje i bruk). Geoscan trudde
     det var stangspissen og la til mastehøgda – høgda til OneVision vart 1,8 m for høg. Berre $INGGA er spissen."""
     cfg = dict(G.STANDARD, logg=None, hoegd="mottakar", utgang="rett_antenne", mottakar_kompenserer=True,
-               spakarm={"fram": 0.4, "hogre": -0.6, "opp": 1.8})
+               apc_tillegg=0, spakarm={"fram": 0.4, "hogre": -0.6, "opp": 1.8})
     k = G.Korrigerar(cfg)
     out = k.handle(_gga(talker="GN", alt="150.000"), now=1.0)[0]
     g = N.parse_gga(N.split(out))
@@ -945,7 +945,7 @@ def test_finn_utstyr_skann_og_forslag():
                         {"fil": "Stream C.xml", "xyz": "0.13;0.42;1,9", "x": 0.13, "y": 0.42, "z": 1.9, "komma_feil": True})
     assert f["mottakar"] == "COM5" and f["onevision"] == "COM34"               # IN (IMU) og 10 Hz føre GN 1 Hz
     assert any("fleire portar" in a for a in atv) and any("komma" in a for a in atv)
-    assert any("Mastehøgda i OneVision er 1.9" in a for a in atv) and any("Sideforskyvinga" in a for a in atv)
+    assert any("Antennehøgda (z) i OneVision er 1.9" in a and "1.98" in a for a in atv) and any("Sideforskyvinga" in a for a in atv)
     f, atv = FU.forslag({"COM3": res["COM3"]})
     assert f["mottakar"] == "COM3" and any("antenneposisjon" in a for a in atv) and any("5 Hz" in a for a in atv)
 
@@ -1092,21 +1092,38 @@ def test_gps_oppsett_set_ntrip_og_komp(tmp_path):
 
 
 def test_streamc_skriv_gps_xyz(tmp_path):
-    """Geoscan skriv sida (|høgre|, forteiknet i fila blir halde) og mastehøgda til Stream C.xml. x blir ikkje rørt."""
+    """Geoscan skriv sida (|høgre|, forteiknet i fila blir halde) og høgda til fasesenteret (mast + 0,179) til
+    Stream C.xml. x blir ikkje rørt."""
     import streamc as SC
     f = tmp_path / "Stream C.xml"
     f.write_bytes(b'\xef\xbb\xbf<Radar><GPSs Count="1"><GPS Type="0" xyz="0.13;0.42;1.9"/></GPSs></Radar>')
-    cfg = {"spakarm": {"fram": -0.4, "hogre": -0.6, "opp": 1.86}}
+    cfg = {"spakarm": {"fram": -0.4, "hogre": -0.6, "opp": 1.808}}
     st = SC.status(cfg, [f])
-    assert st["ulik"] and st["forslag"]["xyz"] == "0.13;0.6;1.86"
+    assert st["ulik"] and st["forslag"]["xyz"] == "0.13;0.6;1.987"
     r = SC.skriv(cfg, stiar=[f], reserve=tmp_path / "res")
-    assert r["for"] == "0.13;0.42;1.9" and r["etter"] == "0.13;0.6;1.86"
-    assert f.read_bytes().startswith(b"\xef\xbb\xbf") and b'xyz="0.13;0.6;1.86"' in f.read_bytes()
+    assert r["for"] == "0.13;0.42;1.9" and r["etter"] == "0.13;0.6;1.987"
+    assert f.read_bytes().startswith(b"\xef\xbb\xbf") and b'xyz="0.13;0.6;1.987"' in f.read_bytes()
     assert list(tmp_path.glob("Stream C.xml.bak_*"))
     assert not SC.status(cfg, [f])["ulik"]
     import pytest
     with pytest.raises(ValueError):
         SC.ny_tekst('<GPS xyz="1;2;3"/>', "0,6;1;2")
+
+
+def test_bakkehogd_med_hurtigfeste_til_fasesenter():
+    """Trimble Access 9.11.2026 (RTK): stanghøgd 1,808 m til undersida av hurtigfestet, bakke 64,359 m. GGA frå R12i
+    er fasesenteret (66,346 m). Geoscan skal gi same bakke: 66,346 − (1,808 + 0,179)."""
+    cfg = dict(G.STANDARD, logg=None, spakarm={"fram": -0.4, "hogre": -0.6, "opp": 1.808})
+    assert abs(H.spakarm(cfg)[2] - 1.987) < 1e-9
+    k = G.Korrigerar(cfg)
+    lat, lon = 62.3, 6.6
+    h_nn_ant = 66.346
+    n = GEOID.n(lat, lon)
+    gga = N.build(["GNGGA", "075200.00", "6218.0000000", "N", "00636.0000000", "E", "4", "13", "0.7",
+                   f"{h_nn_ant:.3f}", "M", f"{n:.3f}", "M", "1.0", "0000"])
+    k.handle(gga, now=1.0)
+    assert abs(k.status["pos"]["h_bakke"] - 64.359) < 0.005
+    assert H.spakarm(dict(cfg, apc_tillegg=0))[2] == 1.808
 
 
 def test_finn_utstyr_modem_under_r12i():

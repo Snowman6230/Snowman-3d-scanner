@@ -56,7 +56,7 @@ SJEKKLISTE = [
         {"id": "r1", "tekst": "Trimble Access er lukka, og mottakarporten (t.d. COM23) står som «open»"},
         {"id": "r2", "tekst": "Fix og satellittar blir viste (DGPS er greitt innandørs)"},
         {"id": "r3", "tekst": "Posisjonen er fornuftig – rett stad på kartet"},
-        {"id": "r4", "tekst": "Innstillingar: mast 1,80 og høgre −0,60 er lagra, og stanghøgda i R12i er 1,80"}]},
+        {"id": "r4", "tekst": "Innstillingar: mast 1,808 (til undersida av hurtigfestet), 0,179 til fasesenteret og høgre −0,60 er lagra, stanghøgda i R12i er 1,808, og z i Stream C.xml er 1.99"}]},
     {"steg": "Steg 3 – NTRIP og RTK ute", "punkt": [
         {"id": "n1", "tekst": "NTRIP står som «tilkopla», og kB-teljaren går"},
         {"id": "n2", "tekst": "RTK FIX ute – skriv om RTCM gjekk over USB eller Bluetooth port 2"},

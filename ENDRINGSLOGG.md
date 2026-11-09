@@ -2,6 +2,19 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.20 – 9. november 2026
+- **Bakken kom 18 cm for høgt** (skjermbilete frå Norman 9.11 kl. 08:52): Geoscan og Trimble Access var samde på
+  1 cm i nord, aust og antennehøgd (66,34 m), men Geoscan viste bakken 64,53 m og Access 64,359 m. Mastehøgda er
+  målt til undersida av hurtigfestet (som stanghøgda i Access), og fasesenteret i R12i ligg 0,179 m høgare
+  (Access: 1,898 m → APC 2,077 m). Ny innstilling `apc_tillegg` (standard 0,179 m) under Vogn og mast, og
+  `helling.spakarm(cfg)` gir spakarmen til fasesenteret (mast + apc_tillegg). Brukt i rettinga, bakkehøgda,
+  loggen, sporet og Stream C-forslaget.
+- **z i Stream C.xml:** forslaget er no høgda til fasesenteret (1,99 m med mast 1,808), ikkje mastehøgda. Med
+  z = 1,9 kjem bakken i OneVision om lag 8 cm for høgt. «Finn utstyr» og OneVision-målingane åtvarar òg.
+- **Åtvaring ved feil GPS-kjelde:** kjem det `$GPGGA` utan GST, står det under Fix at Geoscan truleg les den
+  innebygde GPS-en i PC-en og ikkje R12i (skjermbilete 07:46: «GPS», 8 satellittar, 4,7 m feil i høgd, medan
+  Access hadde RTK med 13 satellittar).
+
 ## 0.9.19 – 9. november 2026
 - **Bakgrunnsfiler i kartet** (ønske frå Norman 8.11): knappen «🗺 Bakgrunn» på begge karta. DXF-teikningar og
   KOF-filer blir lasta opp, gjorde om til breidd/lengd og viste under sporet. Koordinatsystem UTM 32/33/35 eller

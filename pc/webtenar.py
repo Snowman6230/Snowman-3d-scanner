@@ -12,6 +12,8 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+import helling as HEL
+
 HER = Path(__file__).resolve().parent
 KARTLAG = ("topo", "graatone", "flyfoto", "osm")    # bakgrunnskart i Resultat-fana
 WEB = HER / "web"
@@ -158,8 +160,7 @@ def start(app, port=8088, lan=False):
                     return self._send([dict(o, i_okt=o["fil"] in mine) for o in RES.okter(loggdir())])
                 if path == "/api/spor":
                     f = loggdir() / Path(q.get("fil", "")).name
-                    sp = app.cfg.get("spakarm") or {}
-                    lever = (float(sp.get("fram", 0) or 0), float(sp.get("hogre", 0) or 0), float(sp.get("opp", 0) or 0))
+                    lever = HEL.spakarm(app.cfg)
                     return self._send(RES.spor(f, lever=lever, utgang=app.cfg.get("utgang")) if f.is_file() else [])
                 if path == "/api/innsending":
                     return self._send({"sporsmal": INS.SPORSMAL, "svar": INS.svar_les(), "filer": INS.filer(),

@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.19"
+VERSJON = "0.9.20"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -37,11 +37,13 @@ STANDARD = {
     "tema": "mork",               # skjermtema: mork eller dagslys (høg kontrast for sollys)
     "kartlag": "topo",            # bakgrunnskart i Resultat: topo, graatone, flyfoto eller osm
     "tcp_port": 5000,
-    "spakarm": {"fram": 0.0, "hogre": -0.60, "opp": 1.80},   # målt på vogna 6.11.2026 (Norman): GPS 0,6 m til venstre, 1,8 m opp
+    "spakarm": {"fram": 0.0, "hogre": -0.60, "opp": 1.808},  # Norman: GPS 0,6 m til venstre (6.11), 1,808 m til undersida av hurtigfestet (9.11)
     "utgang": "rett_antenne",
     "mottakar_kompenserer": False,
     "djupn_sanntid": 0.0,
     "radar_djupn": 2.5,
+    "apc_tillegg": 0.179,        # m, undersida av hurtigfestet → fasesenteret i R12i (Access 9.11.2026). Mastehøgda
+                                 # er målt til undersida av hurtigfestet, same som stanghøgda i Trimble Access
     "skannebreidd": 0.96,        # m, Stream C: IDS oppgir 96 cm, og objekt i .svy (7.11.2026) går ±0,479 m – stripa på karta
     "skannebreidd_ytre": 0.0,    # m, valfritt lysare felt utanfor stripa (0 = ingen)
     "onevision_mappe": "",       # arbeidsmappa i OneVision (tom = finn sjølv, sjå onevision_filer.py)
@@ -87,8 +89,7 @@ class Korrigerar:
     def __init__(self, cfg):
         self.cfg = cfg
         self.hel = H.Helling()
-        s = cfg["spakarm"]
-        self.lever = (float(s.get("fram", 0)), float(s.get("hogre", 0)), float(s.get("opp", 0)))
+        self.lever = H.spakarm(cfg)     # opp = mastehøgd + apc_tillegg (til fasesenteret)
         self.lock = threading.Lock()
         self.status = {"fix": None, "sats": None, "stamp": None, "krenging": None, "kurs": None,
                        "kurskjelde": None, "forskyving_cm": None, "korrigert": False, "melding": "ventar på data",
@@ -202,7 +203,7 @@ class Korrigerar:
         if gga:
             self.talker = (fields[0] or "")[:2].upper()
             self.komp_aktiv = self.komp and self.talker == "IN"
-            st.update(fix=gga["q"], sats=gga["sats"])
+            st.update(fix=gga["q"], sats=gga["sats"], talker=self.talker)
             try:
                 st["hdop"] = float(fields[8])
             except (IndexError, ValueError):

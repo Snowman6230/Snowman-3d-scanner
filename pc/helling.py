@@ -41,6 +41,25 @@ def _f(x):
         return None
 
 
+APC_R12I = 0.179   # m, frå undersida av hurtigfestet til antennefasesenteret i R12i (Trimble Access 9.11.2026:
+                   # stanghøgd 1,898 m målt til «Undersiden av hurtig feste» gir antennehøgd (APC) 2,077 m)
+
+
+def apc_tillegg(cfg):
+    """Avstanden frå punktet mastehøgda er målt til (undersida av hurtigfestet) opp til fasesenteret."""
+    v = (cfg or {}).get("apc_tillegg")
+    return APC_R12I if v in (None, "") else float(v)
+
+
+def spakarm(cfg):
+    """Spakarmen (fram, høgre, opp) frå radaren til antennefasesenteret. Mastehøgda i innstillingane er målt
+    til undersida av hurtigfestet (som stanghøgda i Trimble Access), så fasesenteret ligg apc_tillegg over.
+    (Retta 9.11.2026: før vart berre mastehøgda brukt, og bakken kom 0,18 m for høgt.)"""
+    s = (cfg or {}).get("spakarm") or {}
+    return (float(s.get("fram", 0) or 0), float(s.get("hogre", 0) or 0),
+            float(s.get("opp", 0) or 0) + apc_tillegg(cfg))
+
+
 def meter_per_grad(lat):
     """(meter per grad breidd, meter per grad lengd) ved breidda lat – krumningsradiane til ellipsoiden."""
     s = math.sin(math.radians(lat))

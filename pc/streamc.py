@@ -6,7 +6,7 @@ OneVision har ingen stad i programmet der GPS-forskyvinga kan endrast (Norman 8.
   x = fram/bak frå enkodaren (origo i OneVision) – blir ikkje endra her
   y = sidevegs – same tal som spakarmen «høgre» i Geoscan, men FORTEIKNET i fila blir halde (ikkje stadfest
       kva veg OneVision reknar; det må testast med køyring fram og tilbake over eit kjent røyr)
-  z = mastehøgda
+  z = høgda til antennefasesenteret = mastehøgd (til undersida av hurtigfestet) + apc_tillegg (0,179 m i R12i)
 Fila ligg under Program Files, så skriving krev ofte administratorløyve. Då blir den nye fila lagd i reserve/
 og kopiert på plass med Windows sitt løyve-vindauge (UAC). Det blir alltid teke kopi av den gamle fila først.
 """
@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 import finn_utstyr as FU
+import helling as H
 
 HER = Path(__file__).resolve().parent
 GPS_RE = re.compile(r'(<GPS\b[^>]*\bxyz=")([^"]*)(")')
@@ -28,9 +29,11 @@ def _tal(v):
 
 
 def forslag(cfg, ov):
-    """xyz Geoscan meiner OneVision bør ha: x som før, y = |høgre| med forteiknet som står, z = mastehøgda."""
-    s = (cfg or {}).get("spakarm") or {}
-    hogre, mast = abs(float(s.get("hogre", 0) or 0)), float(s.get("opp", 0) or 0)
+    """xyz Geoscan meiner OneVision bør ha: x som før, y = |høgre| med forteiknet som står, z = høgda til
+    antennefasesenteret over bakken (mastehøgd + apc_tillegg). GGA-høgda frå R12i er fasesenteret, så OneVision
+    må trekkje frå heile denne høgda for å få bakken (9.11.2026: z = 1,9 gav bakken om lag 8 cm for høgt)."""
+    _, hogre, mast = H.spakarm(cfg)
+    hogre, mast = abs(hogre), round(mast, 3)
     x = ov.get("x", 0.0) if ov else 0.0
     y0 = ov.get("y", 0.0) if ov else 0.0
     y = -hogre if y0 < 0 else hogre

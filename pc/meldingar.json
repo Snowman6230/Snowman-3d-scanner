@@ -2,6 +2,23 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-09-v0920-hogd",
+   "dato": "2026-11-09",
+   "versjon": "0.9.20",
+   "tittel": "Versjon 0.9.20: bakken kom 18 cm for høgt – retta. Set z = 1.99 i OneVision",
+   "tekst": "Hei Norman! Takk for skjermbileta i dag tidleg. Nytt i versjon 0.9.20:\n\n1. RETT BAKKEHØGD (versjon 0.9.20)\n• Kl. 08:52 var Geoscan og Trimble Access samde på 1 cm i nord, aust og høgda på antenna (66,34 m). Men Geoscan viste bakken 64,53 m, og Access 64,359 m – 18 cm for høgt.\n• Grunnen: mastehøgda (1,808 m) er målt til undersida av hurtigfestet, men posisjonen frå R12i gjeld fasesenteret inne i antenna, 0,179 m høgare (Access: 1,898 m gir APC 2,077 m).\n• I versjon 0.9.20 legg Geoscan til 0,179 m. Under Innstillingar → Vogn og mast står det eit nytt felt med 0,179. La det stå.\n• Sjekk at mastehøgda i Geoscan er 1,808 (same som stanghøgda i Access).\n\n2. Z I ONEVISION (Stream C.xml) SKAL VERE 1.99 (versjon 0.9.20)\n• OneVision treng høgda til fasesenteret: 1,808 + 0,179 = 1,99 m. No står det 1.9, som gir bakken om lag 8 cm for høgt i OneVision.\n• Innstillingar → Vogn og mast → boksen for Stream C føreslår z = 1.987 (1,808 + 0,179). Trykk «Skriv Geoscan-måla til OneVision» og start OneVision på nytt.\n\n3. ÅTVARING VED FEIL GPS (versjon 0.9.20)\n• Kl. 07:46 viste Geoscan «GPS», 8 satellittar og $GPGGA, medan Access hadde RTK med 13. Då las Geoscan truleg den innebygde GPS-en i PC-en, ikkje R12i – derfor 4–5 m feil.\n• No står det ei raud åtvaring under Fix når det skjer. Vel då R12i-porten (USB) under Innstillingar, eller bruk «Finn utstyr».\n\nSamanlikn gjerne Access og Geoscan éin gong til etter oppdateringa: bakken skal no vere lik på 1–2 cm.\n\nHelsing Hans Petter",
+   "sjekk": {
+    "r4": {
+     "tekst": "Versjon 0.9.20: mastehøgda er 1,808 m til undersida av hurtigfestet (same som stanghøgda i Access). Geoscan legg til 0,179 m til fasesenteret. z i Stream C.xml skal vere 1.987 (om lag 1.99) – skriv han frå Vogn og mast.",
+     "prov_att": true
+    },
+    "r3": {
+     "tekst": "Versjon 0.9.20: kl. 08:52 stemte posisjonen med Access på 1 cm. Kl. 07:46 var kjelda truleg den innebygde GPS-en i PC-en ($GPGGA, 8 satellittar). Geoscan åtvarar no om det.",
+     "prov_att": true
+    }
+   }
+  },
+  {
    "id": "2026-11-09-v0919-bakgrunn",
    "dato": "2026-11-09",
    "versjon": "0.9.19",

@@ -44,8 +44,9 @@ fram og tilbake.
 | Versjon | Innhald |
 |---|---|
 | 0.9.19 ✓ | Bakgrunnsfiler DXF og KOF, med val av kva filer og lag som skal visast (P1), og PJK/GGK frå Trimble Access under Fix med avvik mot Geoscan (P1b) |
-| 0.9.20 | Status utan rulling (oppsett C: infokolonne + kart i full høgd, A som reserve), app-modus i nettlesaren |
-| 0.9.21 | Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG |
+| 0.9.20 ✓ | Rett bakkehøgd: mastehøgd til undersida av hurtigfestet + 0,179 m til fasesenteret. z i Stream C.xml = 1,99. Åtvaring ved feil GPS-kjelde |
+| 0.9.21 | Status utan rulling (oppsett C: infokolonne + kart i full høgd, A som reserve), app-modus i nettlesaren |
+| 0.9.22 | Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG |
 | 0.9.2x | Rettingar etter felttesten med røyret. Eventuelt opplasting av testpakkar til privat repo (P2) |
 | **1.0** | Når krava over er oppfylte |
 

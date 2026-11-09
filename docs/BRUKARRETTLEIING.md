@@ -86,7 +86,11 @@ kopla saman inne i PC-en (Geoscan skriv på den eine, OneVision les den andre).
 
 **Utan com0com** kan testen likevel gjerast: OneVision les R12i direkte (Bluetooth port 1, som før), og Geoscan
 les USB (COM23) og loggar hellinga. Objekta blir då retta etterpå under Resultat i staden for i sanntid.
-   - **Mastehøgd:** mål frå merket for antennehøgd ned til underkanten av radaren.
+   - **Mastehøgd:** mål frå bakken (underkanten av radaren) opp til **undersida av hurtigfestet** på R12i, same
+     som stanghøgda i Trimble Access («Målt til: Undersiden av hurtig feste»). Vogna 9.11.2026: 1,808 m.
+   - **Frå undersida av hurtigfestet til fasesenteret:** 0,179 m for R12i (står som standard). Geoscan legg
+     dette til mastehøgda, sidan posisjonen frå R12i gjeld fasesenteret inne i antenna. Høgda til fasesenteret
+     (1,808 + 0,179 = 1,987 m) er det som skal stå som z i `Stream C.xml` for OneVision.
    - **NTRIP:** caster, port, mountpoint, brukarnamn og passord. Passordet blir berre lagra på PC-en.
    - **R12i rettar masta sjølv:** kryss av når tilt er på i R12i og stanghøgda er sett lik mastehøgda.
 3. Trykk **Lagre og start på nytt**.

@@ -23,6 +23,8 @@ import time
 from collections import Counter
 from pathlib import Path
 
+import helling as H
+
 BAUDAR = (115200, 9600, 38400, 57600, 19200, 4800)
 HELLING = ("PTNL,AVR", "PASHR", "HPR", "PSAT,HPR")
 
@@ -213,13 +215,13 @@ def forslag(skanna, c0c=None, cfg=None, ov=None):
         elif not c0c.get("par"):
             atv.append("com0com er installert, men utan portpar.")
     if ov:
-        mast = float(((cfg.get("spakarm") or {}).get("opp")) or 0)
+        mast = H.spakarm(cfg)[2] if (cfg.get("spakarm") or {}).get("opp") else 0.0
         side = abs(float(((cfg.get("spakarm") or {}).get("hogre")) or 0))
         if ov.get("komma_feil"):
             atv.append(f"OneVision ({Path(ov['fil']).name}): GPS xyz «{ov['xyz']}» har komma. Bruk punktum.")
         if "z" in ov and mast and abs(ov["z"] - mast) > 0.02:
-            atv.append(f"Mastehøgda i OneVision er {ov['z']:g} m, i Geoscan {mast:g} m. Bruk same målte tal begge "
-                       "stader (og som stanghøgd i mottakaren).")
+            atv.append(f"Antennehøgda (z) i OneVision er {ov['z']:g} m, men skal vere {mast:.2f} m: høgda til "
+                       "fasesenteret = mastehøgda (til undersida av hurtigfestet) + 0,179 m i R12i.")
         if "y" in ov and side and abs(abs(ov["y"]) - side) > 0.02:
             atv.append(f"Sideforskyvinga i OneVision er {abs(ov['y']):g} m, i Geoscan {side:g} m.")
     return f, atv
