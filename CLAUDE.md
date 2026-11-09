@@ -58,4 +58,4 @@ Når Hans Petter gir deg ei pakke:
   samanliknar versjonsnummeret, og utan ny versjon ser ikkje PC-ane endringa.
 - Skriv i `ENDRINGSLOGG.md` (nyaste øvst, med dato, kva og kvifor).
 - Filer som berre ligg på PC-en (`geoscan_config.json`, `ntrip_lokal.json`, `oppdatering_lokal.json`, `logg/`,
-  `reserve/`, `innsendt/`, `pakkar/`, `resultat/`) blir aldri overskrivne. Nye innstillingar skal ha standardverdi i `STANDARD` i `geoscan.py`.
+  `reserve/`, `innsendt/`, `pakkar/`, `resultat/`, `bakgrunn/`) blir aldri overskrivne. Nye innstillingar skal ha standardverdi i `STANDARD` i `geoscan.py`.

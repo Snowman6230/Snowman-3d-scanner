@@ -275,3 +275,16 @@ GST setjast til same rate som GGA i webgrensesnittet til R12i: I/O Configuration
 OneVision kan ikkje endre GPS-forskyvinga sjølv. Under Innstillingar → Vogn og mast viser Geoscan kva som står i
 `Stream C.xml`, og kva det bør vere etter Geoscan-måla. Trykk **Skriv Geoscan-måla til OneVision**. Geoscan tek
 kopi først, og Windows kan spørje om administratorløyve. Start OneVision på nytt etterpå.
+
+
+## Bakgrunn i kartet (frå 0.9.19)
+
+Trykk **🗺 Bakgrunn** over kartet (Status eller Resultat) og **Legg til fil …**. DXF-teikningar og KOF-filer frå
+landmålaren blir viste under sporet. Vel koordinatsystem (UTM 32 er vanleg, NTM for mange byggjeprosjekt), eller
+la Geoscan finne det sjølv. Hak av eller på for kvar fil og kvart lag. Ligg teikninga feil, prøv eit anna
+koordinatsystem i lista. DWG må lagrast som DXF først.
+
+## Trimble Access: PJK under Fix (frå 0.9.19)
+
+Set PJK til same rate som GGA i NMEA-utgangen i Access. Under Fix står då koordinatane i Access-jobben og kor
+mykje dei avvik frå Geoscan. Brukar jobben NTM eller eit lokalt system, står det at dei ikkje kan samanliknast.

@@ -1116,3 +1116,77 @@ def test_finn_utstyr_modem_under_r12i():
                     "skildring": "Sierra Wireless Snapdragon X7 LTE-A NMEA Port (COM21)"},
           "COM3": {"port": "COM3", "kva": "gnss", "talker": "GN", "hz": 5, "fix": 4, "skildring": "Seriell USB-enhet"}}
     assert FU.forslag(sk)[0]["mottakar"] == "COM3"
+
+
+def test_pjk_frå_access_mot_geoscan():
+    """PJK frå Trimble Access blir samanlikna med GGA frå same epoke: same punkt i UTM32 gir avvik ≈ 0."""
+    import copy
+    import geoscan as G
+    import nmea as N
+    import koordinat as K
+    cfg = copy.deepcopy(G.STANDARD); cfg["logg"] = None; cfg["sone"] = "32"
+    k = G.Korrigerar(cfg)
+    gga = N.build(["GNGGA", "120000.00", "6223.8000", "N", "00640.0000", "E", "4", "14", "0.8", "25.0", "M",
+                   "40.0", "M", "1.0", "0000"])
+    k.handle(gga)
+    E, Nn = K.utm_forward(62 + 23.8 / 60, 6 + 40 / 60, 32)
+    pjk = N.build(["PTNL", "PJK", "120000.00", "110926", f"{Nn + 0.012:.3f}", "N", f"{E:.3f}", "E", "3", "14", "1.1",
+                   "EHT65.000", "M"])
+    assert k.handle(pjk) == [pjk]
+    p = k.status["pjk"]
+    assert p["eht"] and p["q"] == 3 and abs(p["avvik_h_cm"] - 1.2) < 0.1 and abs(p["avvik_v_cm"]) < 0.1
+
+
+
+DXF_TEST = "\n".join([
+    "0", "SECTION", "2", "TABLES", "0", "TABLE", "2", "LAYER", "0", "LAYER", "2", "VA", "62", "5", "0", "ENDTAB",
+    "0", "ENDSEC",
+    "0", "SECTION", "2", "BLOCKS", "0", "BLOCK", "2", "KUM", "10", "0", "20", "0",
+    "0", "CIRCLE", "8", "0", "10", "0", "20", "0", "40", "0.5", "0", "ENDBLK", "0", "ENDSEC",
+    "0", "SECTION", "2", "ENTITIES",
+    "0", "LINE", "8", "VA", "10", "377750.0", "20", "6909260.0", "11", "377760.0", "21", "6909270.0",
+    "0", "LWPOLYLINE", "8", "VEG", "90", "3", "70", "1", "10", "377740.0", "20", "6909250.0",
+    "10", "377745.0", "20", "6909250.0", "10", "377745.0", "20", "6909255.0",
+    "0", "TEXT", "8", "TEKST", "10", "377752.0", "20", "6909262.0", "1", "VL 160",
+    "0", "INSERT", "8", "VA", "2", "KUM", "10", "377755.0", "20", "6909265.0",
+    "0", "ENDSEC", "0", "EOF", ""])
+
+KOF_TEST = "\n".join([
+    " 00 Testfil",
+    " 09_91",
+    " 05 1        VL       6909260.000  377750.000  65.10",
+    " 05 2        VL       6909270.000  377760.000  65.30",
+    " 09_99",
+    " 05 100      KUM      6909265.000  377755.000  65.00", ""])
+
+
+def test_bakgrunn_dxf_og_kof(tmp_path, monkeypatch):
+    """DXF (line, polylinje, tekst, blokk) og KOF (line og punkt) blir lagra og gjorde om til breidd/lengd i UTM32."""
+    import json as _json
+    import bakgrunn as BG
+    import koordinat as K
+    monkeypatch.setattr(BG, "DIR", tmp_path / "bg")
+    m = BG.legg_til("teikning.dxf", DXF_TEST.encode(), "auto", 32)
+    assert m["crs_brukt"] == "utm32" and m["merknad"] is None
+    assert set(m["lag"]) == {"VA", "VEG", "TEKST"}
+    assert m["lag"]["VA"]["farge"] == BG.ACI[5]                     # fargen frå lagtabellen (BYLAYER)
+    gj = _json.loads(BG.geojson(m["id"]))
+    la, lo = K.utm_inverse(377750.0, 6909260.0, 32)
+    line = next(f for f in gj["features"] if f["properties"]["lag"] == "VA" and len(f["geometry"]["coordinates"]) == 2)
+    assert abs(line["geometry"]["coordinates"][0][0] - lo) < 1e-7 and abs(line["geometry"]["coordinates"][0][1] - la) < 1e-7
+    assert any(f["properties"].get("tekst") == "VL 160" for f in gj["features"])
+    assert m["lag"]["VA"]["n"] == 2                                  # line + sirkelen frå blokka (lag 0 → VA)
+    k = BG.legg_til("innmaaling.kof", KOF_TEST.encode(), "auto", 32)
+    assert set(k["lag"]) == {"VL", "KUM"} and k["tal"] == 2
+    e = BG.endre(m["id"], crs="utm33", skjulte_lag=["TEKST"])
+    assert e["crs_brukt"] == "utm33" and e["skjulte_lag"] == ["TEKST"]
+    assert BG.slett(k["id"]) and len(BG.liste()) == 1
+    import pytest
+    with pytest.raises(ValueError):
+        BG.legg_til("teikning.dwg", b"AC1027", "auto", 32)
+
+
+def test_bakgrunn_gjett_ntm():
+    import bakgrunn as BG
+    crs, merk = BG.gjett_crs(((104000.0, 1490000.0), (104200.0, 1490300.0)), 32, lon=6.58)
+    assert crs == "ntm6" and merk

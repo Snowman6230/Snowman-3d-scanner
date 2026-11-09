@@ -2,6 +2,19 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-09-v0919-bakgrunn",
+   "dato": "2026-11-09",
+   "versjon": "0.9.19",
+   "tittel": "Versjon 0.9.19: bakgrunnsfiler (DXF og KOF) i kartet, og PJK frå Trimble Access under Fix",
+   "tekst": "Hei Norman! Nytt i versjon 0.9.19:\n\n1. BAKGRUNN I KARTET (versjon 0.9.19) – ønsket ditt\n• Trykk «🗺 Bakgrunn» over kartet (Status eller Resultat) og «Legg til fil …».\n• DXF-teikningar og KOF-filer blir viste under sporet, på begge karta.\n• Koordinatsystem: UTM 32/33/35 eller NTM. «Finn sjølv» gjettar ut frå tala. Ligg teikninga feil, vel eit anna i lista.\n• Hak av eller på for kvar fil og kvart lag (til dømes berre VA eller berre kabel).\n• DWG må lagrast som DXF først.\nPrøv gjerne med …M.dxf-fila på skrivebordet ditt, og send meg eit bilete.\n\n2. PJK FRÅ TRIMBLE ACCESS UNDER FIX (versjon 0.9.19) – ønsket ditt\n• Set PJK til 0.2 s i NMEA-utgangen i Access (Melding 4).\n• Under Fix står då koordinatane frå Access-jobben og avviket mot Geoscan, sidevegs og i høgd. Er Access og Geoscan samde, skal avviket vere nokre få cm.\n• Brukar jobben NTM eller eit lokalt system, står det at dei ikkje kan samanliknast.\n• Utan GST står det kvifor QH/QV manglar. Sjekk gjerne om GST står på for USB i webgrensesnittet til R12i når Access er kopla til.\n\n3. TYDELEGARE (versjon 0.9.19)\n• «Retting no» har fått teksten «flytting for helling».\n\nHelsing Hans Petter",
+   "sjekk": {
+    "f6": {
+     "tekst": "Versjon 0.9.18/0.9.19: Geoscan finn OneVision-målingane sjølv under Resultat. «Rett for helling» kan slåast av når det ikkje finst hellingsdata. Prøv med ei måling der du har merkt objekt i OneVision.",
+     "prov_att": true
+    }
+   }
+  },
+  {
    "id": "2026-11-09-v0918-pakke",
    "dato": "2026-11-09",
    "versjon": "0.9.18",

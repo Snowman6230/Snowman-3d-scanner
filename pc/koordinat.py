@@ -57,3 +57,46 @@ def enu_to_grid(dE, dN, gamma):
     """Vektor i sann aust/nord → UTM-rutenett (meter, skalafaktoren under 0,04 % er sett bort frå)."""
     g = math.radians(gamma)
     return dE * math.cos(g) - dN * math.sin(g), dN * math.cos(g) + dE * math.sin(g)
+
+
+# ---- Generell transversal Mercator (NTM og UTM), til bakgrunnsfiler (0.9.19) ----
+# Same Krüger-seriar som over, men med fritt val av sentralmeridian, skalafaktor, falsk aust/nord og
+# breidd for origo. NTM (EUREF89 NTM sone n): sentralmeridian n + 0,5°, skala 1,0, origo 58° N,
+# falsk aust 100 000 m og falsk nord 1 000 000 m (Kartverket).
+
+def _xi_eta(lat, lon, lon0):
+    phi, lam = math.radians(lat), math.radians(lon - lon0)
+    e = math.sqrt(_F * (2 - _F))
+    t = math.sinh(math.atanh(math.sin(phi)) - e * math.atanh(e * math.sin(phi)))
+    xi_, eta_ = math.atan2(t, math.cos(lam)), math.atanh(math.sin(lam) / math.sqrt(1 + t * t))
+    xi, eta = xi_, eta_
+    for j, a in enumerate(_ALPHA, 1):
+        xi += a * math.sin(2 * j * xi_) * math.cosh(2 * j * eta_)
+        eta += a * math.cos(2 * j * xi_) * math.sinh(2 * j * eta_)
+    return xi, eta
+
+
+def tm_forward(lat, lon, lon0, k0=1.0, fe=0.0, fn=0.0, lat0=0.0):
+    xi, eta = _xi_eta(lat, lon, lon0)
+    xi0 = _xi_eta(lat0, lon0, lon0)[0] if lat0 else 0.0
+    return fe + k0 * _AR * eta, fn + k0 * _AR * (xi - xi0)
+
+
+def tm_inverse(E, N, lon0, k0=1.0, fe=0.0, fn=0.0, lat0=0.0):
+    xi0 = _xi_eta(lat0, lon0, lon0)[0] if lat0 else 0.0
+    xi, eta = (N - fn) / (k0 * _AR) + xi0, (E - fe) / (k0 * _AR)
+    xi_, eta_ = xi, eta
+    for j, b in enumerate(_BETA, 1):
+        xi_ -= b * math.sin(2 * j * xi) * math.cosh(2 * j * eta)
+        eta_ -= b * math.cos(2 * j * xi) * math.sinh(2 * j * eta)
+    chi = math.asin(math.sin(xi_) / math.cosh(eta_))
+    phi = chi + sum(d * math.sin(2 * j * chi) for j, d in enumerate(_DELTA, 1))
+    return math.degrees(phi), lon0 + math.degrees(math.atan2(math.sinh(eta_), math.cos(xi_)))
+
+
+def ntm_forward(lat, lon, sone):
+    return tm_forward(lat, lon, sone + 0.5, 1.0, 100000.0, 1000000.0, 58.0)
+
+
+def ntm_inverse(E, N, sone):
+    return tm_inverse(E, N, sone + 0.5, 1.0, 100000.0, 1000000.0, 58.0)

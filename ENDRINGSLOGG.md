@@ -2,6 +2,21 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.19 – 9. november 2026
+- **Bakgrunnsfiler i kartet** (ønske frå Norman 8.11): knappen «🗺 Bakgrunn» på begge karta. DXF-teikningar og
+  KOF-filer blir lasta opp, gjorde om til breidd/lengd og viste under sporet. Koordinatsystem UTM 32/33/35 eller
+  NTM 5–30 (EUREF89), eller «finn sjølv» (UTM eller NTM etter storleiken på tala; NTM-sona frå posisjonen til
+  vogna). Kvar fil og kvart lag kan slåast av og på. DWG blir avvist med beskjed om å lagre som DXF. Nytt
+  `bakgrunn.py` (eigen DXF- og KOF-lesar, ingen nye pakkar) og `koordinat.tm_forward/tm_inverse` (NTM).
+  Filene ligg i `pc/bakgrunn/`, som berre finst på PC-en og aldri blir overskriven.
+- **PJK og GGK frå Trimble Access under Fix** (ønske frå Norman 9.11): Access har ingen GST, så QH/QV kan mangle.
+  Geoscan les `$PTNL,PJK` (koordinatane i Access-jobben) og viser dei under Fix med avviket mot Geoscan sine eigne
+  UTM/NN2000-tal for same epoke (same UTC-tid). Med «EHT» blir høgda samanlikna med ellipsoidehøgda, elles med
+  NN2000 (avviket viser då skilnaden mellom geoiden i Access og Kartverket-geoiden). Kjem berre GGK, blir DOP og
+  ellipsoidehøgd viste. Utan GST står det no kvifor QH/QV manglar.
+- «Retting no» på Status har fått underteksten «flytting for helling» (ein annan KI las kortet som korreksjonar
+  til OneVision).
+
 ## 0.9.18 – 9. november 2026
 Etter testpakka frå Norman 8.11.
 - **Skannebreidda er 96 cm**, ikkje 77 cm. Objekt tvers over beltet i `.svy` frå 7.11 går ±0,479 m, som IDS oppgir.

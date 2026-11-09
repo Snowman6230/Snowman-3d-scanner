@@ -135,11 +135,11 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 <!-- ================= STATUS ================= -->
 <section id="f-status" class="fane aktiv">
   <div class="rad">
-    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div><div class="s" id="noy" style="margin-top:6px;font-size:17px"></div></div>
+    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div><div class="s" id="noy" style="margin-top:6px;font-size:17px"></div><div class="s" id="pjk" style="margin-top:6px"></div></div>
     <div class="k"><div class="l">Helling</div><div class="v" id="hell">–</div><div class="s" id="hsrc"></div>
       <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="var(--linje)" stroke-width="2"/>
       <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="var(--for)"/><line x1="0" y1="10" x2="0" y2="-28" stroke="var(--svak)" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="var(--tekst)"/></g></svg></div>
-    <div class="k"><div class="l">Retting no</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
+    <div class="k"><div class="l">Retting no</div><div class="hj" style="margin-top:-2px">flytting for helling</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
     <div class="k"><div class="l">NTRIP</div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div><div class="s" id="koord" style="margin-top:6px;font-family:var(--mono,monospace)"></div></div>
   </div>
   <div class="k" style="margin-top:12px">
@@ -151,6 +151,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
         <label class="hj"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
         <button class="b gra" id="lpause" onclick="pauseLive()" title="Stopp teikninga når du snur og rangerer – vogna blir framleis vist, og loggen held fram">⏸ Pause sporet</button>
         <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
+        <button class="b gra bgknapp" onclick="opneBg()" title="Teikningar (DXF) og innmålingar (KOF) i kartet">🗺 Bakgrunn</button>
         <select class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
           <option value="topo">Fargekart</option><option value="graatone">Gråtonekart</option>
           <option value="flyfoto">Flyfoto</option><option value="osm">OpenStreetMap</option></select></span></div>
@@ -207,6 +208,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <span><label class="hj" style="display:inline-flex;align-items:center;gap:6px;margin-right:8px" title="Stripa radaren dekkjer: 96 cm, midt på radaren"><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
       <button class="b gra" id="tbtn" onclick="startTverr()" disabled title="Last inn ei eksportfil med objekt først">✚ Tverrsnitt</button>
       <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
+      <button class="b gra bgknapp" onclick="opneBg()" title="Teikningar (DXF) og innmålingar (KOF) i kartet">🗺 Bakgrunn</button>
       <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Kart:
         <select id="kartlag" class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
           <option value="topo">Fargekart (Kartverket)</option>
@@ -436,6 +438,19 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 </section>
 </main>
 
+<div id="bg" class="overlay" style="display:none" onclick="if(event.target==this)lukkBg()"><div class="k modal" style="max-width:820px">
+  <button class="b gra lukkx" onclick="lukkBg()" title="Lukk (Esc)">✕</button>
+  <h2 style="font-size:20px">🗺 Bakgrunn i kartet</h2>
+  <p class="hj">Teikningar (DXF) og innmålingar (KOF) blir viste under sporet på begge karta. DWG må lagrast som DXF først.
+    Filene blir lagra berre på denne PC-en.</p>
+  <div class="verktoy" style="gap:8px">
+    <label class="b">Legg til fil … <input type="file" id="bgfil" accept=".dxf,.kof,.dwg" multiple hidden></label>
+    <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Koordinatsystem:
+      <select id="bgcrs" style="width:auto"></select></label>
+    <span class="hj" id="bgmeld"></span>
+  </div>
+  <div id="bgliste" style="margin-top:12px"></div>
+</div></div>
 <div id="fu" class="overlay" style="display:none" onclick="if(event.target==this)lukkFu()"><div class="k modal" style="max-width:860px">
   <button class="b gra lukkx" onclick="lukkFu()" title="Lukk (Esc)">✕</button>
   <h2 style="font-size:20px">🔍 Finn utstyr automatisk</h2>
@@ -505,7 +520,15 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
   // Nøyaktigheit (1 σ) frå GST, som QH/QV i Xsite: grøn under 3 cm, gul under 10 cm, raud over
   {const q=k.noy,ok=q&&q.alder!=null&&q.alder<5,kl=v=>v<3?"ok":v<10?"var":"feil";
    $("noy").innerHTML=ok?`<b class="${kl(q.qh_cm)}">QH ${F(q.qh_cm,1)} cm</b> · <b class="${kl(q.qv_cm)}">QV ${F(q.qv_cm,1)} cm</b>`:
-     (k.hdop!=null?`HDOP ${F(k.hdop,1)} · `:"")+`<span class="hj">QH/QV: slå på GST i R12i (USB → NMEA)</span>`;
+     (k.hdop!=null?`HDOP ${F(k.hdop,1)} · `:"")+`<span class="hj">QH/QV manglar: mottakaren sender ikkje GST${k.pjk&&k.pjk.alder<5?" (Trimble Access har ikkje GST – slå på GST for USB i webgrensesnittet til R12i)":" – slå på GST i R12i (USB → NMEA)"}</span>`;
+   // PJK frå Trimble Access (0.9.19): koordinatane i Access-jobben og avviket mot Geoscan for same epoke
+   const pj=k.pjk,pf={0:"ingen",1:"GPS",2:"FLOAT",3:"RTK FIX",4:"DGPS",5:"SBAS"};
+   $("pjk").innerHTML=pj&&pj.alder<5?`<span class="hj">Access (PJK):</span> N ${F(pj.nord,2)} · E ${F(pj.aust,2)}`+
+     (pj.h!=null?` · ${pj.eht?"h":"H"} ${F(pj.h,2)}${pj.eht?" (ellipsoide)":" (jobben)"}`:"")+(pf[pj.q]?` · ${pf[pj.q]}`:"")+"<br>"+
+     (pj.avvik_h_cm==null?`<span class="var">Kan ikkje samanliknast med Geoscan – jobben i Access brukar truleg eit anna koordinatsystem enn UTM ${pj.sone||""}</span>`
+       :`Avvik mot Geoscan: <b class="${pj.avvik_h_cm<3?"ok":pj.avvik_h_cm<10?"var":"feil"}">${F(pj.avvik_h_cm,1)} cm</b> sidevegs`+
+        (pj.avvik_v_cm!=null?`, <b class="${Math.abs(pj.avvik_v_cm)<3?"ok":Math.abs(pj.avvik_v_cm)<10?"var":"feil"}">${F(pj.avvik_v_cm,1)} cm</b> i høgd${pj.eht?"":" (geoide i Access mot Kartverket)"}`:"")):
+     (k.ggk&&k.ggk.alder<5?`<span class="hj">GGK: DOP ${k.ggk.dop==null?"–":F(k.ggk.dop,1)}${k.ggk.eht!=null?" · h "+F(k.ggk.eht,2)+" (ellipsoide)":""}</span>`:"");
    $("noy").title="QH = horisontal og QV = vertikal nøyaktigheit (1 σ, standardavvik) som mottakaren sjølv reknar ut, frå NMEA GST"}
   if(k.korrigert){set("hell",(k.krenging>0?"+":"")+F(k.krenging,1)+"°",Math.abs(k.krenging)>5||Math.abs(k.stamp)>5?"var":"ok");
     set("hsrc","krenging · stamp "+F(k.stamp,1)+"° · "+k.hellingskjelde);$("vogn").setAttribute("transform","rotate("+k.krenging+" 0 24)")}
@@ -612,7 +635,7 @@ function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView
   setGrunn();stripeRend=L.canvas({padding:.5});lagStripe=L.layerGroup();if(visStripe)lagStripe.addTo(kart);
   lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
   L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt());
-  hentKartlag()}
+  hentKartlag();bgHent()}
 let kartlagHenta=null;
 function hentKartlag(){if(!kartlagHenta)kartlagHenta=api("api/kartlag").then(r=>{if(KARTLAG[r.kartlag])kartlag=r.kartlag}).catch(()=>{});
   kartlagHenta.then(()=>{if(kart)setGrunn();setLiveGrunn();document.querySelectorAll(".kartlagval").forEach(e=>e.value=kartlag)})}
@@ -628,7 +651,7 @@ function fuSjekk(s){if(s.demo){$("fubanner").style.display="none";return}
     if(!fuAutoKoyrd&&$("oktval").style.display=="none"&&$("c0c").style.display=="none"){fuAutoKoyrd=true;opneFu()}}}
 function lukkFu(){$("fu").style.display="none"}
 document.addEventListener("keydown",e=>{if(e.key!="Escape")return;
-  if($("fu").style.display!="none")lukkFu();else if($("c0c").style.display!="none")lukkCom0com()});
+  if($("bg").style.display!="none")lukkBg();else if($("fu").style.display!="none")lukkFu();else if($("c0c").style.display!="none")lukkCom0com()});
 function opneFu(){$("fu").style.display="flex";finnUtstyr()}
 const FUKVA={gnss:"GNSS-mottakar",helling:"Hellingsmålar",binaer:"binærdata (RTCM/UBX)",ukjend:"ukjende data",stille:"ingen data",com0com:"com0com (OneVision)"};
 async function finnUtstyr(){$("fubruk").style.display="none";$("fuskann").disabled=true;
@@ -722,7 +745,7 @@ function initLive(){if(lkart||typeof L=="undefined")return;lkart=L.map("livekart
   lkart.on("zoomend",()=>{if(lmerke){lmerke.setIcon(vognIkon());stilVogn()}});
   lspor=L.layerGroup().addTo(lkart);lstripeRend=L.canvas({padding:.5});lstripe=L.layerGroup();if(visStripe)lstripe.addTo(lkart);
   L.control.scale({imperial:false}).addTo(lkart);
-  lkart.on("dragstart",()=>{lfolg=false;$("lfolg").checked=false});hentKartlag()}
+  lkart.on("dragstart",()=>{lfolg=false;$("lfolg").checked=false});hentKartlag();bgHent()}
 function setLiveGrunn(){if(!lkart)return;if(lgrunn)lkart.removeLayer(lgrunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
   lgrunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(lkart);lgrunn.bringToBack()}
 function nullstillLive(){if(lspor)lspor.clearLayers();if(lstripe)lstripe.clearLayers();lforr=null;lforrR=null;lnseg=0;lnstripe=0}
@@ -1265,6 +1288,50 @@ function visGpsForkl(v){const o=GPS_OPPSETT[v];$("gpsforkl").textContent=o?o.t:"
 function velGpsOppsett(v){const o=GPS_OPPSETT[v],f=$("iform");if(!o)return;
   for(const k of ["ntrip_pa","mottakar_kompenserer"]){const el=f.elements[k];if(el&&el.checked!=o[k]){el.checked=o[k];el.dispatchEvent(new Event("change",{bubbles:true}))}}
   visGpsForkl(v)}
+// ---------- Bakgrunnsfiler: DXF og KOF i kartet (0.9.19) ----------
+const CRS_VAL=[["auto","Finn sjølv (UTM/NTM)"],["utm32","UTM 32 (EUREF89)"],["utm33","UTM 33"],["utm35","UTM 35"],
+  ...Array.from({length:26},(_,i)=>["ntm"+(i+5),"NTM sone "+(i+5)])];
+const crsTekst=c=>(CRS_VAL.find(x=>x[0]==c)||[c,c])[1];
+let bgFiler=[],bgData={},bgLag={live:null,res:null};
+function bgPane(m){if(!m.getPane("bakgrunn")){m.createPane("bakgrunn").style.zIndex=350}return m._bgRend||(m._bgRend=L.canvas({pane:"bakgrunn",padding:.5}))}
+async function bgHent(){try{bgFiler=(await api("api/bakgrunn")).filer}catch(e){bgFiler=[]}
+  for(const fl of bgFiler){const nk=fl.id+"|"+fl.gjort;if(fl.synleg&&!bgData[nk]){try{bgData[nk]=await api("api/bakgrunn/data?id="+encodeURIComponent(fl.id))}catch(e){}}}
+  bgTeikn()}
+function bgLagFor(m){if(!m)return null;const rend=bgPane(m),g=L.layerGroup();
+  for(const fl of bgFiler){if(!fl.synleg)continue;const d=bgData[fl.id+"|"+fl.gjort];if(!d)continue;const skjult=new Set(fl.skjulte_lag||[]);
+    L.geoJSON(d,{renderer:rend,pane:"bakgrunn",filter:ft=>!skjult.has(ft.properties.lag),
+      style:ft=>({color:ft.properties.farge,weight:1.6,opacity:.9}),
+      pointToLayer:(ft,ll)=>L.circleMarker(ll,{renderer:rend,pane:"bakgrunn",radius:ft.properties.tekst?2:3,color:ft.properties.farge,weight:1,fillOpacity:.8}),
+      onEachFeature:(ft,l)=>l.bindTooltip(esc((ft.properties.tekst?ft.properties.tekst+" · ":"")+ft.properties.lag+" · "+fl.namn),{sticky:true})}).addTo(g)}
+  return g.addTo(m)}
+function bgTeikn(){for(const [k,m] of [["live",lkart],["res",kart]]){if(bgLag[k]&&m)m.removeLayer(bgLag[k]);bgLag[k]=bgLagFor(m)}
+  document.querySelectorAll(".bgknapp").forEach(b=>b.textContent="🗺 Bakgrunn"+(bgFiler.filter(f=>f.synleg).length?` (${bgFiler.filter(f=>f.synleg).length})`:""))}
+function opneBg(){$("bgcrs").innerHTML=CRS_VAL.map(([v,t])=>`<option value="${v}">${t}</option>`).join("");$("bg").style.display="flex";visBgListe()}
+function lukkBg(){$("bg").style.display="none"}
+function visBgListe(){const el=$("bgliste");if(!bgFiler.length){el.innerHTML='<p class="hj">Ingen bakgrunnsfiler enno.</p>';return}
+  el.innerHTML=bgFiler.map((fl,i)=>`<div class="k" style="background:var(--kort2);margin-bottom:8px">
+    <div class="verktoy" style="gap:8px"><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" ${fl.synleg?"checked":""} onchange="bgEndre(${i},{synleg:this.checked})"> <b>${esc(fl.namn)}</b></label>
+      <span class="hj">${fl.tal} element${fl.avkorta?" (avkorta – fila er svært stor)":""}</span><span style="flex:1"></span>
+      <select style="width:auto" onchange="bgEndre(${i},{crs:this.value})">${CRS_VAL.map(([v,t])=>`<option value="${v}"${(fl.crs==v)?" selected":""}>${t}</option>`).join("")}</select>
+      <button class="b gra" onclick="bgZoom(${i})">Vis i kartet</button><button class="b gra" onclick="bgSlett(${i})">Slett</button></div>
+    <div class="hj" style="margin-top:4px">Brukar: ${esc(crsTekst(fl.crs_brukt))}${fl.merknad?` · <span class="var">${esc(fl.merknad)}</span>`:""}</div>
+    <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 14px">${Object.entries(fl.lag||{}).sort().map(([l,v])=>
+      `<label class="hj" style="display:inline-flex;gap:5px;align-items:center"><input type="checkbox" ${(fl.skjulte_lag||[]).includes(l)?"":"checked"} data-lag="${esc(l)}" onchange="bgLagVal(${i},this.dataset.lag,this.checked)"><span style="display:inline-block;width:12px;height:12px;background:${v.farge};border-radius:2px"></span>${esc(l)} (${v.n})</label>`).join("")}</div>
+  </div>`).join("")}
+async function bgEndre(i,d){const fl=bgFiler[i];set("bgmeld","Lagrar …","var");
+  try{await post("api/bakgrunn/endre",Object.assign({id:fl.id},d));await bgHent();visBgListe();set("bgmeld","✓ Lagra","ok")}catch(e){set("bgmeld","✗ "+e.message,"feil")}}
+function bgLagVal(i,lag,vis){const s=new Set(bgFiler[i].skjulte_lag||[]);vis?s.delete(lag):s.add(lag);bgEndre(i,{skjulte_lag:[...s]})}
+async function bgSlett(i){const fl=bgFiler[i];if(!confirm("Slette "+fl.namn+" frå bakgrunnen?"))return;
+  await post("api/bakgrunn/slett",{id:fl.id});await bgHent();visBgListe()}
+function bgZoom(i){const fl=bgFiler[i],d=bgData[fl.id+"|"+fl.gjort];if(!d)return;const b=L.geoJSON(d).getBounds();if(!b.isValid())return;
+  lukkBg();for(const m of [lkart,kart])if(m&&m.getContainer().offsetParent)m.fitBounds(b,{maxZoom:19})}
+$("bgfil").onchange=async e=>{const fl=[...e.target.files];e.target.value="";
+  for(const f of fl){set("bgmeld","Les "+f.name+" …","var");
+    try{const r=await api("api/bakgrunn?crs="+$("bgcrs").value+"&namn="+encodeURIComponent(f.name),{method:"POST",body:f});
+      set("bgmeld",`✓ ${f.name}: ${r.fil.tal} element, ${crsTekst(r.fil.crs_brukt)}`+(r.fil.merknad?" – "+r.fil.merknad:""),r.fil.merknad?"var":"ok")}
+    catch(err){set("bgmeld","✗ "+f.name+": "+err.message,"feil");return}}
+  await bgHent();visBgListe();const i=0;if(bgFiler.length)bgZoom(i)};
+
 // ---------- Stream C.xml: GPS-forskyvinga i OneVision (0.9.18) ----------
 let SC=null;const xyzTekst=o=>o?`x ${F(o.x,2)} · y ${F(o.y,2)} · z ${F(o.z,2)} m`:"–";
 async function lastStreamc(){try{SC=await api("api/streamc")}catch(e){$("scinfo").textContent="Kunne ikkje lese: "+e.message;return}

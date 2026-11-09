@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.18"
+VERSJON = "0.9.19"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -99,6 +99,7 @@ class Korrigerar:
         # «mottakar_kompenserer» står på (felttest 7.11: R12i direkte på USB sende $GNGGA – IMU ikkje i bruk).
         self.komp_aktiv = False
         self.talker = None
+        self.epoker = {}                 # UTC-tid → posisjon frå mottakaren (til samanlikning med PJK)
         self.zone = int(cfg["sone"]) if str(cfg.get("sone", "auto")).isdigit() else None
         if cfg.get("logg"):
             d = HER / cfg["logg"]
@@ -117,6 +118,11 @@ class Korrigerar:
             if line[3:6] == "GST":          # nøyaktigheit (1 σ) frå mottakaren, som QH/QV i Xsite
                 self._gst(line)
                 return [line]
+            if line.startswith("$PTNL,PJK,"):   # koordinatane i Trimble Access-jobben – til kontroll under Fix
+                self._pjk(line)
+                return [line]
+            if line.startswith("$PTNL,GGK,"):   # DOP og ellipsoidehøgd frå Trimble (posisjonen blir retta vidare)
+                self._ggk(line)
             if self.hel.feed(line, now):
                 return [line]
             fields = N.split(line)
@@ -138,6 +144,56 @@ class Korrigerar:
             return
         self.status["noy"] = {"qh_cm": round(math.hypot(la, lo) * 100, 1), "qv_cm": round(al * 100, 1),
                               "t": time.time()}
+
+    def _pjk(self, line):
+        """$PTNL,PJK,tid,dato,nord,N,aust,E,kvalitet,sat,DOP,høgd,M. Nord og aust er i koordinatsystemet til jobben i
+        Trimble Access (UTM, NTM …). Høgda er ellipsoidisk når ho byrjar med «EHT», elles frå jobben (geoide i Access).
+        Blir samanlikna med Geoscan sin eigen posisjon for same tidspunkt (GGA med same UTC-tid)."""
+        f = line.split("*")[0].split(",")
+        try:
+            nord, aust = float(f[4]), float(f[6])
+        except (IndexError, ValueError):
+            return
+        hs = f[11] if len(f) > 11 else ""
+        eht = hs.upper().startswith("EHT")
+        try:
+            h = float(hs[3:] if eht else hs) if hs else None
+        except ValueError:
+            h = None
+        q = int(f[8]) if len(f) > 8 and f[8].isdigit() else None
+        d = {"nord": nord, "aust": aust, "h": h, "eht": eht, "q": q, "sats": f[9] if len(f) > 9 else None,
+             "dop": f[10] if len(f) > 10 else None, "tid": f[2], "t": time.time()}
+        e = self.epoker.get(f[2])
+        if e:                                  # same epoke: avvik mot Geoscan (UTM + NN2000/ellipsoide)
+            dn, de = nord - e["N"], aust - e["E"]
+            d["avvik_h_cm"] = round(math.hypot(dn, de) * 100, 1) if abs(dn) < 1000 and abs(de) < 1000 else None
+            ref = e["h_ell"] if eht else e["h_nn"]
+            d["avvik_v_cm"] = None if (h is None or ref is None or d["avvik_h_cm"] is None) else round((h - ref) * 100, 1)
+            d["sone"] = e["sone"]
+        self.status["pjk"] = d
+
+    def _ggk(self, line):
+        f = line.split("*")[0].split(",")
+        try:
+            self.status["ggk"] = {"q": int(f[8]) if f[8] else None, "dop": float(f[10]) if f[10] else None,
+                                  "eht": float(f[11][3:]) if f[11].upper().startswith("EHT") else None, "t": time.time()}
+        except (IndexError, ValueError):
+            pass
+
+    def _epoke(self, tid, lat, lon, h_ell):
+        """Hugs posisjonen frå mottakaren (slik han kom inn) per UTC-tid, så PJK kan samanliknast med rett epoke."""
+        if not tid:
+            return
+        try:
+            z = self.zone or K.zone_of(lon)
+            E, Nn = K.utm_forward(lat, lon, z)
+            n = GEOID.n(lat, lon) if self.cfg.get("hoegd") == "nn2000" else None
+        except Exception:
+            return
+        self.epoker[tid] = {"E": E, "N": Nn, "sone": z, "h_ell": h_ell,
+                            "h_nn": None if (h_ell is None or n is None) else h_ell - n}
+        while len(self.epoker) > 50:
+            self.epoker.pop(next(iter(self.epoker)))
 
     def _correct(self, fields, k, pos, now):
         lat, lon = pos
@@ -177,6 +233,7 @@ class Korrigerar:
         h_in = None
         if gga:
             h_in = None if gga["alt"] is None else gga["alt"] + (gga["sep"] or 0.0)   # ellipsoidisk høgd
+            self._epoke(fields[1], lat, lon, h_in)
         la, lo, h2, off = self._point(lat, lon, 0.0 if h_in is None else h_in, lever, hdg, pitch, roll, d0)
         if not gga:
             return N.rewrite(fields, la, lo, dh=h2)
@@ -491,9 +548,10 @@ class App:
         if k.get("korrigert") and k.get("stamp") is not None:
             t = math.radians(math.hypot(k["stamp"], k["krenging"]))
             d25 = round(rd * math.sin(t) * 100, 1)
-        ny = k.get("noy")
-        if ny:
-            k["noy"] = dict(ny, alder=round(time.time() - ny["t"], 1))
+        for nk in ("noy", "pjk", "ggk"):
+            ny = k.get(nk)
+            if ny:
+                k[nk] = dict(ny, alder=round(time.time() - ny["t"], 1))
         return {"korr": k, "ntrip": n, "inn": dict(self.state), "innstat": self.innstat(),
                 "gnss_alder": None if self.last_gga_t is None else round(time.time() - self.last_gga_t, 1),
                 "ut": [{"port": o["spec"]["port"], "feil": o["feil"], "kasta": o["kasta"]} for o in self.ut.ports],

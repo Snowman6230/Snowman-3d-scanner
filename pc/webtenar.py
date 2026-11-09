@@ -171,6 +171,15 @@ def start(app, port=8088, lan=False):
                 if path == "/api/streamc":
                     import streamc as SC
                     return self._send(SC.status(dict(app.cfg, **INN._read(app.cfg_path))))
+                if path == "/api/bakgrunn":
+                    import bakgrunn as BG                  # bakgrunnsfiler (DXF/KOF) i kartet
+                    return self._send({"filer": BG.liste()})
+                if path == "/api/bakgrunn/data":
+                    import bakgrunn as BG
+                    try:
+                        return self._send(BG.geojson(q.get("id", "")))
+                    except (ValueError, OSError) as e:
+                        return self._err(str(e), 404)
                 if path == "/api/onevision":
                     import onevision_filer as OVF          # målefilene frå OneVision, nyaste først
                     return self._send(OVF.finn(app.cfg))
@@ -342,6 +351,22 @@ def start(app, port=8088, lan=False):
                     src = Path(sti)
                     fn = INS.fil_lagre(src.name, src.read_bytes(), "eksport", gjenbruk=True)
                     return self._send({"ok": True, "fil": fn, "namn": src.name})
+                if path in ("/api/bakgrunn", "/api/bakgrunn/endre", "/api/bakgrunn/slett"):
+                    import bakgrunn as BG
+                    cs = str(app.cfg.get("sone", "32"))
+                    us = int(cs) if cs.isdigit() else 32
+                    lon = ((app.k.status.get("pos") or {}).get("lon") if hasattr(app, "k") else None)
+                    try:
+                        if path == "/api/bakgrunn":
+                            return self._send({"ok": True, "fil": BG.legg_til(q.get("namn", "fil.dxf"), self._body(),
+                                                                                q.get("crs", "auto"), us, lon)})
+                        d = json.loads(self._body() or b"{}")
+                        if path == "/api/bakgrunn/slett":
+                            return self._send({"ok": BG.slett(d.get("id", ""))})
+                        return self._send({"ok": True, "fil": BG.endre(d.get("id", ""), d.get("synleg"), d.get("crs"),
+                                                                        d.get("skjulte_lag"), us, lon)})
+                    except (ValueError, OSError) as e:
+                        return self._err(str(e))
                 if path == "/api/streamc":
                     import streamc as SC                  # skriv GPS-forskyvinga til OneVision (Stream C.xml)
                     d = json.loads(self._body() or b"{}")
