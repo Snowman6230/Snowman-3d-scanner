@@ -43,7 +43,7 @@ fram og tilbake.
 
 | Versjon | Innhald |
 |---|---|
-| 0.9.19 | Bakgrunnsfiler DXF og KOF, med val av kva filer og lag som skal visast (P1 i OPNE-SPORSMAL) |
+| 0.9.19 | Bakgrunnsfiler DXF og KOF, med val av kva filer og lag som skal visast (P1), og PJK/GGK frå Trimble Access under Fix med avvik mot Geoscan (P1b) |
 | 0.9.20 | Status utan rulling (oppsett C: infokolonne + kart i full høgd, A som reserve), app-modus i nettlesaren |
 | 0.9.21 | Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG |
 | 0.9.2x | Rettingar etter felttesten med røyret. Eventuelt opplasting av testpakkar til privat repo (P2) |
