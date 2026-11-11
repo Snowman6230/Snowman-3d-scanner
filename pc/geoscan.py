@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.22"
+VERSJON = "0.9.23"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -154,7 +154,9 @@ class Korrigerar:
         self.spiss = float(cfg.get("spiss_over_bakken", 0.09) or 0.0)
         # Når IMU-en fell ut og R12i byter til $GNGGA: kor mykje skal trekkjast frå for å kome til spissen?
         # Antenna (stanghøgd + fasesenter) eller 0 (stanghøgda alt trekt frå). Blir målt ved bytet (sjå _gn_hopp).
-        self.gn_red = {"m": self.lever[2], "kjelde": "antatt (antenna, som utan IMU 9.11 kl. 08:52)"}
+        # Startar R12i med $GNGGA (IMU slått av i Access), sender han antenna (9.11 kl. 08:52). Fell IMU-en ut
+        # medan R12i sender $INGGA, held han fram med spissen (11.11: hopp +0,003 / +0,010 / +0,003 m) – sjå _urort.
+        self.gn_red = {"m": self.lever[2], "kjelde": "antatt: IMU av frå start – R12i sender antenna (9.11 kl. 08:52)"}
         self.siste_epoke = None          # (talker, h_ell, fix, t) – førre GGA, til å måle hoppet ved IN/GN-byte
         self.vakt = Vakt(cfg)
         self.epoker = {}                 # UTC-tid → posisjon frå mottakaren (til samanlikning med PJK)
@@ -359,8 +361,8 @@ class Korrigerar:
         p = self.siste_epoke
         if not p or h_in is None or p[1] is None or (p[0] == "IN") == (talker == "IN"):
             return
-        if t - p[3] > 2.0 or q != 4 or p[2] != 4:
-            return                      # berre med RTK FIX på begge sider og kort tid mellom, elles er hoppet ikkje til å stole på
+        if t - p[3] > 1.0 or q not in (2, 4, 5) or p[2] not in (2, 4, 5) or 4 not in (q, p[2]):
+            return                      # RTK FIX på minst éi side, DGPS/FLOAT på den andre, og kort tid mellom (0.9.23)
         dh = h_in - p[1] if talker != "IN" else p[1] - h_in     # GN-høgd minus IN-høgd
         A = self.lever[2]
         if abs(dh - A) < 0.25:
@@ -379,6 +381,11 @@ class Korrigerar:
         t = time.time() if now is None else now
         talker = self.talker or ""
         h_in = None if gga["alt"] is None else gga["alt"] + (gga["sep"] or 0.0)
+        p = self.siste_epoke
+        if talker != "IN" and p and p[0] == "IN" and self.gn_red["kjelde"].startswith("antatt"):
+            # IMU-en fall ut medan R12i sende spissen: han held fram med spissen (stanghøgda trekt frå). Målt 11.11.2026
+            # på grusbana ved Velledalen grendahus, tre byte IN → GN med hopp på +0,003, +0,010 og +0,003 m. 0.9.23
+            self.gn_red = {"m": 0.0, "kjelde": "antatt: IMU fall ut – R12i held fram med spissen (målt 11.11)"}
         self._gn_hopp(talker, h_in, gga["q"], t)
         red = 0.0 if talker == "IN" else self.gn_red["m"]
         h2 = None if h_in is None else h_in - red

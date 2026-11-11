@@ -153,9 +153,9 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <span class="verktoy" style="gap:10px">
         <label class="hj"><input type="checkbox" id="lfolg" checked onchange="lfolg=this.checked;if(lfolg&&lsist)lkart.panTo(lsist)"> Følg vogna</label>
         <label class="hj" title="Stripa radaren dekkjer: 96 cm, midt på radaren (ikkje på antenna)."><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
-        <label class="hj" title="Ingen stripe når vogna står i ro (under 0,15 m/s) eller svingar kraftig (over 20°/s) – til dømes når du snur og rangerar"><input type="checkbox" id="lautop" checked onchange="settAutoPause(this.checked)"> Auto-pause ved snuing</label>
+        <label class="hj" title="Ingen stripe når vogna står i ro eller går sakte (under 0,25 m/s), svingar (over 15°/s), knekkjer meir enn 25° på 1 m eller rygger – til dømes når du snur og rangerer. Stripa held pause i 1,5 s etter siste sving"><input type="checkbox" id="lautop" checked onchange="settAutoPause(this.checked)"> Auto-pause ved snuing</label>
         <label class="hj"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
-        <button class="b gra" id="lpause" onclick="pauseLive()" title="Stopp teikninga når du snur og rangerer – vogna blir framleis vist, og loggen held fram">⏸ Pause sporet</button>
+        <button class="b" id="lpause" onclick="pauseLive()" style="background:#2e7d32;color:#fff;min-width:170px" title="Start og stopp teikninga av sporet og skannestripa i kartet. Vogna blir framleis vist, og loggen til OneVision held fram">● Sporet blir teikna</button>
         <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
         <button class="b gra bgknapp" onclick="opneBg()" title="Teikningar (DXF) og innmålingar (KOF) i kartet">🗺 Bakgrunn</button>
         <select class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
@@ -750,7 +750,7 @@ function settStripe(v){visStripe=v;try{localStorage.setItem("geoscan_stripe",v?"
 {const f=()=>{document.querySelectorAll(".stripeval").forEach(e=>e.checked=visStripe);const a=$("lautop");if(a)a.checked=autoPause};
   if(document.readyState=="loading")document.addEventListener("DOMContentLoaded",f);else f()}
 // Auto-pause (0.9.18, ønske frå Norman): ikkje teikn stripe når vogna står, eller svingar kraftig (snur og rangerar)
-const AP_FART=0.15,AP_SVING=20,AP_KNEKK=35;let autoPause=true,lforrRt=null,lforrB=null,lpausa=false;
+const AP_FART=0.25,AP_SVING=15,AP_KNEKK=35,AP_KNEKK_1M=25,AP_HALD=1.5;let lhist=[],lpauseTil=0;   // 0.9.23: strengare (ønske frå Norman 11.11)let autoPause=true,lforrRt=null,lforrB=null,lpausa=false;
 try{const v=localStorage.getItem("geoscan_autopause");if(v!==null)autoPause=v=="1"}catch(e){}
 function settAutoPause(v){autoPause=v;try{localStorage.setItem("geoscan_autopause",v?"1":"0")}catch(e){}}
 const retning=(a,b)=>{const dy=(b[0]-a[0])*111320,dx=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);return Math.atan2(dx,dy)*180/Math.PI};
@@ -792,8 +792,9 @@ function setLiveGrunn(){if(!lkart)return;if(lgrunn)lkart.removeLayer(lgrunn);con
   lgrunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(lkart);lgrunn.bringToBack()}
 function nullstillLive(){if(lspor)lspor.clearLayers();if(lstripe)lstripe.clearLayers();lforr=null;lforrR=null;lnseg=0;lnstripe=0}
 let lteikn=true;
-function pauseLive(){lteikn=!lteikn;lforr=null;lforrR=null;const b=$("lpause");b.textContent=lteikn?"⏸ Pause sporet":"▶ Teikn sporet";
-  b.style.background=lteikn?"":"var(--var)";b.style.color=lteikn?"":"#000"}
+function pauseLive(){lteikn=!lteikn;lforr=null;lforrR=null;lhist=[];const b=$("lpause");
+  b.textContent=lteikn?"● Sporet blir teikna":"▶ Start sporet (stoppa)";
+  b.style.background=lteikn?"#2e7d32":"#c62828";b.style.color="#fff"}
 // Mountpoint: lista blir henta av seg sjølv når Innstillingar blir opna (0.9.18, ønske frå Norman), og kan veljast i ein meny
 function velMount(v){if(!v)return;const el=$("iform").elements.mountpoint;el.value=v;el.dispatchEvent(new Event("change",{bubbles:true}))}
 async function hentMounts(stille){const f=$("iform");if(stille&&!f.elements.caster.value)return;set("mmeld","Hentar liste frå casteren …","var");
@@ -816,7 +817,13 @@ function oppdaterLive(p,k){initLive();if(!lkart||!p)return;
   if(!lteikn||!rm){lforrR=null;lforrB=null}
   else if(!lforrR||avst(lforrR,rm)>0.1){const d=lforrR?avst(lforrR,rm):0,dt=lforrR&&p.t!=null&&lforrRt!=null?p.t-lforrRt:null,
       b=lforrR?retning(lforrR,rm):null,sving=lforrB!=null&&b!=null&&dt>0?vinkelSkil(b,lforrB)/dt:0;
-    lpausa=autoPause&&lforrR&&((dt>0&&d/dt<AP_FART)||sving>AP_SVING);
+    // 0.9.23: sjå òg på kursen over den siste metern mot metern før (knekk), og hald pausen 1,5 s etter siste sving
+    lhist.push({p:rm,t:p.t});let s=0;for(let i=lhist.length-1;i>0;i--){s+=avst(lhist[i-1].p,lhist[i].p);if(s>2.5){lhist=lhist.slice(i-1);break}}
+    const bak=m=>{let s=0;for(let i=lhist.length-1;i>0;i--){s+=avst(lhist[i-1].p,lhist[i].p);if(s>=m)return lhist[i-1].p}return null};
+    const p1=bak(0.8),p2=bak(1.6),knekk=p1&&p2?vinkelSkil(retning(p1,rm),retning(p2,p1)):0;
+    const naa=p.t||Date.now()/1000;
+    if(autoPause&&lforrR&&((dt>0&&d/dt<AP_FART)||sving>AP_SVING||knekk>AP_KNEKK_1M))lpauseTil=naa+AP_HALD;
+    lpausa=autoPause&&naa<lpauseTil;
     lforrB=b;lforrRt=p.t;
     if(lforrR&&d<5&&!lpausa){leggStripe(lstripe,lstripeRend,lforrR,rm);
       {const g=lstripe.getLayers();while(g.length>6000)lstripe.removeLayer(g.shift())}}

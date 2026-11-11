@@ -83,8 +83,8 @@ def test_nmea_sjekksum_og_koordinatar():
     assert (v, hemi) == ("00634.8000000", "E")
 
 
-def _gga(talker="IN", lat="6223.4000000", lon="00634.8000000", alt="150.000", sep="44.775"):
-    return N.build([f"{talker}GGA", "120000.00", lat, "N", lon, "E", "4", "18", "0.7", alt, "M", sep, "M", "1.0", "0001"])
+def _gga(talker="IN", lat="6223.4000000", lon="00634.8000000", alt="150.000", sep="44.775", q="4"):
+    return N.build([f"{talker}GGA", "120000.00", lat, "N", lon, "E", q, "18", "0.7", alt, "M", sep, "M", "1.0", "0001"])
 
 
 def test_talker_blir_verande():
@@ -1230,10 +1230,20 @@ def test_access_imu_urort_og_gn_hopp():
         ut2 = N.parse_gga(N.split(k.handle(_gga("GN", alt=f"{150.0 + hopp:.3f}"), now=1.1)[0]))
         assert abs(k.gn_red["m"] - venta) < 1e-6 and k.gn_red["kjelde"].startswith("målt")
         assert abs(ut2["alt"] - tupp) < 0.002                                               # framleis spissen
-    # utan målt hopp: antatt antenna
+    # IMU av frå start ($GNGGA utan $INGGA først): antenna, trekk frå mast + 0,179
     k = G.Korrigerar(dict(base))
     ut = N.parse_gga(N.split(k.handle(_gga("GN", alt="151.987"), now=1.0)[0]))
-    assert abs(ut["alt"] - (150.0 + 44.775 - n)) < 0.002 and k.gn_red["kjelde"].startswith("antatt")
+    assert abs(ut["alt"] - (150.0 + 44.775 - n)) < 0.002 and k.gn_red["kjelde"].startswith("antatt: IMU av")
+    # 0.9.23: IMU fell ut etter $INGGA, utan målbart hopp (lang pause): R12i held fram med spissen → 0
+    k = G.Korrigerar(dict(base))
+    k.handle(_gga("IN", alt="150.000"), now=1.0)
+    ut = N.parse_gga(N.split(k.handle(_gga("GN", alt="150.000"), now=5.0)[0]))
+    assert k.gn_red["m"] == 0.0 and "fall ut" in k.gn_red["kjelde"] and abs(ut["alt"] - (150.0 + 44.775 - n)) < 0.002
+    # 0.9.23: RTK FIX → DGPS (som 11.11 kl. 18:36) blir òg målt
+    k = G.Korrigerar(dict(base))
+    k.handle(_gga("IN", alt="150.000"), now=1.0)
+    k.handle(_gga("GN", alt="150.003", q="2"), now=1.2)
+    assert k.gn_red["m"] == 0.0 and k.gn_red["kjelde"].startswith("målt")
 
 
 def test_vakt_imu_rtk_med_hysterese():

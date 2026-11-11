@@ -47,7 +47,8 @@ fram og tilbake.
 | 0.9.20 ✓ | Rett bakkehøgd: mastehøgd til undersida av hurtigfestet + 0,179 m til fasesenteret. z i Stream C.xml = 1,99. Åtvaring ved feil GPS-kjelde |
 | 0.9.21 ✓ | Access/IMU: punktet går urørt, spissen 0,09 over bakken, hoppet ved tap av IMU blir målt. Kvalitetsvakt (raud stripe, lyd, Windows-varsel). Stream C-boks med x/y/z og skisse. Objekt frå Exports. Bakgrunn: farge, Z og avvik mot innmålt |
 | 0.9.22 ✓ | Ikonet på skrivebordet blir laga på nytt etter oppdatering, og knapp for det under Innstillingar |
-| 0.9.23 | Status utan rulling (oppsett C: infokolonne + kart i full høgd, A som reserve), app-modus i nettlesaren. Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG |
+| 0.9.23 ✓ | Tap av IMU: R12i held fram med spissen (målt 11.11). Tydeleg start/stopp for sporet, strengare auto-pause av stripa |
+| 0.9.24 | Status utan rulling (oppsett C: infokolonne + kart i full høgd, A som reserve), app-modus i nettlesaren. Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG |
 | 0.9.2x | Rettingar etter felttesten med røyret. Eventuelt opplasting av testpakkar til privat repo (P2) |
 | **1.0** | Når krava over er oppfylte |
 

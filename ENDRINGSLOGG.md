@@ -2,6 +2,17 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.23 – 11. november 2026
+- **Tap av IMU – Norman hadde rett.** Testen på grusbana ved Velledalen grendahus 11.11 viste tre byte frå `$INGGA`
+  (RTK FIX) til `$GNGGA` med hopp i høgd på +0,003, +0,010 og +0,003 m: når IMU-en fell ut medan R12i sender
+  spissen, held han fram med spissen (stanghøgda trekt frå). 0.9.21 venta antenna og trekte frå 1,808 m, så
+  OneVision fekk bakken 1,8 m for lågt i dei sekunda. No: byte frå IN til GN → ingenting blir trekt frå. Berre når
+  R12i sender `$GNGGA` utan å ha sendt `$INGGA` først (IMU slått av i Access, som 9.11 kl. 08:52) blir antenna
+  rekna med. Hoppet blir no målt òg når den eine sida er DGPS/FLOAT (RTK FIX på minst éi side, under 1 s mellom).
+- **Sporet i kartet (ønske frå Norman 11.11):** knappen er no grøn «● Sporet blir teikna» / raud «▶ Start sporet
+  (stoppa)». Auto-pause av skannestripa er strengare: under 0,25 m/s, over 15°/s, knekk over 25° på 1 m, eller
+  rygging, og pausen held 1,5 s etter siste sving, så stripa ikkje blir teikna når du snur og rangerer.
+
 ## 0.9.22 – 11. november 2026
 - **Ikonet på skrivebordet:** Norman hadde mista ikonet på snarvegen. Nytt `snarveg.py`: ved første start etter kvar
   oppdatering lagar Geoscan snarvegane «Snowman Geoscan» og «Snowman Geoscan DEMO» på skrivebordet på nytt (same som
