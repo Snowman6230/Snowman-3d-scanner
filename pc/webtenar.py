@@ -244,6 +244,10 @@ def start(app, port=8088, lan=False):
                     return self._send({"ok": True, "lagra": t, "fil": Path(app.cfg_path).name, "feil": INN.lagre.feil,
                                        "har_passord": bool(INN._read(INN.HER / "ntrip_lokal.json").get("passord")),
                                        "har_token": bool(INN._read(INN.HER / "oppdatering_lokal.json").get("token"))})
+                if path == "/api/snarveg":
+                    import snarveg as SV                  # lag snarvegane på skrivebordet på nytt (0.9.22)
+                    ok, m = SV.lag(tving=True)
+                    return self._send({"ok": ok, "melding": m}) if ok else self._err(m)
                 if path == "/api/finn_utstyr":
                     res = finn_utstyr(app)
                     lagre_skanning(app, res)

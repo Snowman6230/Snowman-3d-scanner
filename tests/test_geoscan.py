@@ -1338,3 +1338,18 @@ def test_resultat_utan_helling_hoegd_og_imu(tmp_path):
     hb = 150.0 + 44.775 - GEOID.n(g["lat"], g["lon"]) - 0.09
     assert abs(pr["bakke_nn2000_m"][0] - hb) < 0.01 and abs(pr["hoegd_nn2000_m"][0] - (hb - 1.2)) < 0.01
     assert pr.get("utan_imu") in (None, "1/1")
+
+
+def test_snarveg_med_ikon(tmp_path, monkeypatch):
+    """0.9.22: snarvegane blir laga på nytt med ikonet ved første start etter oppdatering."""
+    import snarveg as SV
+    s = SV.skript(tmp_path)
+    assert "geoscan.ico,0" in s and "START-GEOSCAN.bat" in s and "START-DEMO.bat" in s and "ie4uinit" in s
+    (tmp_path / "ikon").mkdir()
+    (tmp_path / "ikon" / "geoscan.ico").write_bytes(b"x")
+    kall = []
+    monkeypatch.setattr(SV.sys, "platform", "win32")
+    monkeypatch.setattr(SV.subprocess, "run", lambda *a, **k: kall.append(a) or type("R", (), {"returncode": 0})())
+    assert SV.lag(tmp_path, "0.9.22")[0] and len(kall) == 1
+    assert SV.lag(tmp_path, "0.9.22")[0] and len(kall) == 1            # same versjon: ikkje på nytt
+    assert SV.lag(tmp_path, "0.9.22", tving=True)[0] and len(kall) == 2

@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-11-v0922-ikon",
+   "dato": "2026-11-11",
+   "versjon": "0.9.22",
+   "tittel": "Versjon 0.9.22: ikonet på skrivebordet er tilbake",
+   "tekst": "Hei Norman! Versjon 0.9.22 lagar snarvegane «Snowman Geoscan» og «Snowman Geoscan DEMO» på skrivebordet på nytt, med ikonet. Det skjer av seg sjølv første gong du startar Geoscan etter oppdateringa.\n\n• Er ikonet framleis borte, trykk «Lag snarvegar på nytt» under Innstillingar → Oppdatering (versjon 0.9.22).\n• Ser det framleis kvitt ut, logg ut og inn att i Windows. Då les Windows ikona på nytt.\n\nAlt anna er som i 0.9.21. Eg ventar framleis på Survey-mappa og testane eg bad om.\n\nHelsing Hans Petter",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-09-v0921-imu",
    "dato": "2026-11-09",
    "versjon": "0.9.21",

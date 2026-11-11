@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.22 – 11. november 2026
+- **Ikonet på skrivebordet:** Norman hadde mista ikonet på snarvegen. Nytt `snarveg.py`: ved første start etter kvar
+  oppdatering lagar Geoscan snarvegane «Snowman Geoscan» og «Snowman Geoscan DEMO» på skrivebordet på nytt (same som
+  INSTALL.bat), med `ikon/geoscan.ico`, og ber Windows oppdatere ikon-mellomlageret (`ie4uinit -show`). Merket ligg i
+  `logg/snarveg.txt`. Ny knapp «Lag snarvegar på nytt» under Innstillingar → Oppdatering.
+
 ## 0.9.21 – 9. november 2026
 Etter Holetomta test 2 og svar frå Norman: spissen av stonga står i GPS-støtta på ramma, 0,09 m over bakken, og er
 0-punktet. Med Trimble Access og IMU skal Geoscan ikkje endre noko – OneVision flyttar frå spissen til radaren.

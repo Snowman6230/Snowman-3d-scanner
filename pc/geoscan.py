@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.21"
+VERSJON = "0.9.22"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -794,6 +794,9 @@ def main(argv=None):
     app = App(cfg, a.config, omstart=a.omstart)
     app.start()
     print(f"\n  *  {NAMN.upper()}  {VERSJON}  *\n     {PRODUSENT}\n")
+    # Snarvegane på skrivebordet med ikonet: lag dei på nytt ved første start etter kvar oppdatering (0.9.22)
+    import snarveg as SV
+    threading.Thread(target=lambda: print("  Snarvegar: " + SV.lag(HER, VERSJON)[1]), daemon=True).start()
     if cfg.get("vis_oppstartlogo", True) and not a.omstart:
         oppstartlogo()
     k = app.k

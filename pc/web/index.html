@@ -444,6 +444,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <button type="button" class="b gra" onclick="sjekkNo()">Sjå etter ny versjon no</button>
       <button type="button" class="b" id="ubtn" style="display:none;background:var(--var)" onclick="oppdater()">Oppdater no</button>
       <button type="button" class="b gra" onclick="tilbake()">Gå tilbake til førre versjon</button>
+      <button type="button" class="b gra" onclick="snarveg()" title="Lag snarvegane «Snowman Geoscan» og «Snowman Geoscan DEMO» på skrivebordet på nytt, med ikonet">Lag snarvegar på nytt</button>
       <span class="melding" id="umeld"></span></div>
     <div class="felt"><label><span>GitHub-nøkkel (berre lesetilgang) <span id="itok" style="display:inline"></span></span>
       <input name="token" type="password" autocomplete="off" placeholder="(uendra)"></label></div>
@@ -578,6 +579,9 @@ function visOppd(o){const nk=o.feil=="nokkel"&&!o.nyare&&!o.koyrer;
   $("otekst").textContent=o.koyrer?"Oppdaterer …":o.omstart?"Startar på nytt …":o.nyare?"Ny versjon v"+o.github+" finst"+(o.melding?": «"+o.melding+"»":".")+" ":"";
   $("obtn").style.display=o.nyare&&!o.koyrer&&!o.omstart?"inline-block":"none";$("ologg").textContent=o.logg.join("\n");
   if(o.omstart)ventOmstart()}
+async function snarveg(){const m=$("umeld");m.className="melding";m.textContent="Lagar snarvegar …";
+  try{const r=await post("api/snarveg",{});m.className="melding ok";m.textContent=r.melding+" Ser ikonet framleis feil ut, logg ut og inn att i Windows."}
+  catch(e){m.className="melding feil";m.textContent=e.message}}
 async function oppdater(){if(!confirm("Hente og leggje inn ny versjon? Snowman Geoscan startar på nytt."))return;
   $("obtn").disabled=true;try{await fetch("oppdater",{method:"POST"})}catch(e){}}
 let venter=false;

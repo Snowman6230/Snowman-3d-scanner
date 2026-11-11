@@ -253,6 +253,11 @@ han gjerne inn med ein gong. Manglar nøkkelen når repoet er lukka, seier progr
 
 ## Når noko ikkje verkar
 
+**Ikonet på skrivebordet er borte eller kvitt (frå 0.9.22):** Geoscan lagar snarvegane på nytt ved første start etter
+kvar oppdatering. Du kan òg trykkje **Lag snarvegar på nytt** under Innstillingar → Oppdatering. Ser ikonet framleis
+feil ut, logg ut og inn att i Windows.
+
+
 | Det du ser | Gjer dette |
 |---|---|
 | Porten står med «feil» på Status | Er Trimble Access lukka? Er USB-kabelen sett godt inn? Programmet koplar til att av seg sjølv. |
