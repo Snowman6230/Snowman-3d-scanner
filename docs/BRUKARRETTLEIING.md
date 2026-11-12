@@ -48,7 +48,9 @@ Dreg du i kartet, sluttar det å følgje vogna – kryss av for «Følg vogna» 
 ### Finn utstyr automatisk
 
 Trykk **«🔍 Finn utstyr automatisk»** (under Status → Portar eller Innstillingar → Portar). Snowman Geoscan
-lyttar på alle portane i nokre sekund og viser kva som er kva:
+lyttar på alle portane i nokre sekund og viser kva som er kva. Øvst kan du velje **Alle portar**, **Berre kabel
+(USB)** eller **Berre Bluetooth** (frå 0.9.24). Kabel er raskast, fordi Bluetooth-portar utan tilkopla eining
+kan bruke lang tid. Valet blir hugsa.
 
 - **GNSS-mottakar**, med talker (`$INGGA` = stangspiss med IMU, `$GNGGA` = antenne), rate (Hz), fix og satellittar
 - **Hellingsmålar**, om det finst ein
@@ -95,8 +97,11 @@ les USB (COM23) og loggar hellinga. Objekta blir då retta etterpå under Result
    - **NTRIP:** caster, port, mountpoint, brukarnamn og passord. Passordet blir berre lagra på PC-en.
    - **R12i rettar masta sjølv:** kryss av når tilt er på i R12i og stanghøgda er sett lik mastehøgda.
 3. Trykk **Lagre og start på nytt**.
-4. Sjå på fana **Status**. Fix skal bli **RTK FIX** ute, og NTRIP skal vere **tilkopla**. Hellinga blir vist med ei
-   teikning av vogna.
+4. Sjå på fana **Status**. Fix skal bli **RTK FIX** ute, og NTRIP skal vere **tilkopla** (eller «via mottakaren»
+   når Trimble Access hentar korreksjonane). Hellinga blir vist med ei teikning av vogna.
+5. Ruta **Korreksjonar** har ein gul stolpe som flyttar seg eitt steg for kvar korreksjon som kjem fram til
+   mottakaren (frå 0.9.24). Gul = ferske (under 3 s), oransje = seine (3–10 s), raud ramme = ingen korreksjonar.
+   Står stolpen stille, blir det ikkje RTK.
 
 ## 4. Skanne
 
@@ -261,6 +266,8 @@ feil ut, logg ut og inn att i Windows.
 | Det du ser | Gjer dette |
 |---|---|
 | Porten står med «feil» på Status | Er Trimble Access lukka? Er USB-kabelen sett godt inn? Programmet koplar til att av seg sjølv. |
+| Raud ramme rundt korreksjonsstolpen | Mottakaren får ingen korreksjonar. Med Trimble Access: sjekk at måleboka er tilkopla og har nett. Står Bluetooth-sambandet og går av og på etter at måleboka har vore utan straum: lukk Access, slå R12i av og på, og kople til att. |
+| Mørk ramme «Geoscan svarar ikkje» | Programmet har stoppa eller blir starta på nytt. Sjå i det svarte vindauget, eller start Geoscan med snarvegen. Sida koplar til att av seg sjølv. |
 | NTRIP «feil: … passord» | Sjekk brukarnamn og passord under Innstillingar. |
 | NTRIP tilkopla, men berre DGPS/FLOAT | Vent 1–3 min med fri sikt. Hjelper det ikkje, set «RTCM til port» til Bluetooth port 2 (til dømes COM20). |
 | «ingen fersk helling» | Normalt med berre R12i: masta blir retta i mottakaren. For djupna trengst ein ekstra IMU. |

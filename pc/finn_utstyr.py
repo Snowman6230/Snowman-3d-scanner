@@ -128,6 +128,24 @@ def skann_port(port, sekund=2.5, opne=None):
     return beste
 
 
+KJELDER = ("alle", "kabel", "bluetooth")
+
+
+def er_bluetooth(skildring):
+    """Windows kallar Bluetooth-portane «Standard Serial over Bluetooth link» (på norsk òg med «Bluetooth»)."""
+    return "bluetooth" in (skildring or "").lower()
+
+
+def filtrer(portar, kjelde="alle"):
+    """Berre kabel (USB og andre fysiske portar) eller berre Bluetooth, etter ønske frå Norman 12.11.2026:
+    Bluetooth-portar utan eining kan bruke lang tid og gi mange feilmeldingar. 0.9.24"""
+    if kjelde == "kabel":
+        return [p for p in portar if not er_bluetooth(p.get("skildring"))]
+    if kjelde == "bluetooth":
+        return [p for p in portar if er_bluetooth(p.get("skildring"))]
+    return list(portar)
+
+
 def skann(portar, hopp_over=(), frist=12.0, opne=None, sekund=2.5):
     """Skannar portane parallelt (Bluetooth-portar kan bruke lang tid på å opne). portar: [{"port","skildring"}]."""
     res, traadar = {}, []

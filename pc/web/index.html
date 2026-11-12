@@ -41,6 +41,15 @@ pre{white-space:pre-wrap;color:var(--svak);font-size:13px;margin:0}
 .banner{border-radius:10px;padding:12px 14px;margin:10px 0 0;font-weight:600}
 .vaktb{position:sticky;top:0;z-index:2000;background:#c62828;color:#fff;border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.4);font-size:17px}
 .vaktb .vline+.vline{margin-top:3px}
+/* Aktivitetsstolpe for korreksjonane (0.9.24), som NTRIP-stolpen i Xsite */
+.kbar{display:flex;gap:3px;height:16px;margin:4px 0 6px}
+.kbar i{flex:1;border-radius:2px;background:var(--kort2);border:1px solid var(--linje);transition:background .15s}
+.kbar i.paa{background:#ffd400;border-color:#ffd400}
+.kbar.seint i.paa{background:var(--var);border-color:var(--var)}
+.kbar.daud i{background:var(--kort2)}
+.kbar.daud{outline:2px solid var(--feil);outline-offset:2px;border-radius:3px}
+/* Statussida har mista kontakten med Geoscan (0.9.24) */
+.kontaktb{position:sticky;top:0;z-index:2001;background:#263238;color:#fff;border:2px solid var(--feil);font-size:17px}
 .demo{background:#5a1f1f}
 .oppd{border:1px solid var(--var);background:var(--kort)}
 button.b,label.b,a.b{display:inline-block;text-decoration:none;background:var(--blaa);color:#06121e;border:0;border-radius:7px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
@@ -111,6 +120,10 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <span class="hj" id="oktinfo" style="text-align:right"></span>
       <button class="b gra" id="temaknapp" onclick="bytTema()" title="Byt mellom mørk skjerm og høg kontrast for sollys">☀ Dagslys</button>
       <button class="b gra" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button></div></div>
+  <div id="kontakt" class="banner kontaktb" style="display:none"><b style="font-size:20px">⛔ Geoscan svarar ikkje</b> <span id="kontakttid"></span><br>
+    Denne sida har mista kontakten med Geoscan-programmet. Tala under er ikkje oppdaterte.
+    Sjå etter det svarte Geoscan-vindauget (ta bilete av feilteksten viss det står ein der), eller start Geoscan på nytt med snarvegen på skrivebordet.
+    Sida koplar til att av seg sjølv når Geoscan køyrer igjen.</div>
   <div id="vakt" class="banner vaktb" style="display:none"><div style="display:flex;gap:12px;align-items:flex-start"><b style="font-size:22px">⚠</b><div id="vakttekst" style="flex:1"></div>
     <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="b gra" id="vaktlyd" onclick="bytVaktLyd()" title="Lyd når eit nytt varsel kjem">🔊 Lyd på</button>
     <button class="b gra" id="vaktwin" onclick="slaPaWinVarsel()" style="display:none" title="Varsel i Windows, òg når Geoscan ligg bak OneVision">🔔 Varsel i Windows</button></span></div></div>
@@ -146,7 +159,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="var(--linje)" stroke-width="2"/>
       <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="var(--for)"/><line x1="0" y1="10" x2="0" y2="-28" stroke="var(--svak)" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="var(--tekst)"/></g></svg></div>
     <div class="k"><div class="l">Retting no</div><div class="hj" style="margin-top:-2px">flytting for helling</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
-    <div class="k"><div class="l">NTRIP</div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div><div class="s" id="koord" style="margin-top:6px;font-family:var(--mono,monospace)"></div></div>
+    <div class="k"><div class="l">Korreksjonar</div><div id="kbar" class="kbar" title="Ein ny stolpe lyser for kvar korreksjon som kjem fram til mottakaren"></div><div class="s" id="ktekst"></div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div><div class="s" id="koord" style="margin-top:6px;font-family:var(--mono,monospace)"></div></div>
   </div>
   <div class="k" style="margin-top:12px">
     <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><div class="l" style="margin:0">Kart – live</div>
@@ -473,6 +486,11 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 <div id="fu" class="overlay" style="display:none" onclick="if(event.target==this)lukkFu()"><div class="k modal" style="max-width:860px">
   <button class="b gra lukkx" onclick="lukkFu()" title="Lukk (Esc)">✕</button>
   <h2 style="font-size:20px">🔍 Finn utstyr automatisk</h2>
+  <p style="margin:6px 0 10px">Leit etter:
+    <label style="margin-left:8px"><input type="radio" name="fukjelde" value="alle" onchange="velFuKjelde(this.value)"> Alle portar</label>
+    <label style="margin-left:8px"><input type="radio" name="fukjelde" value="kabel" onchange="velFuKjelde(this.value)"> Berre kabel (USB)</label>
+    <label style="margin-left:8px"><input type="radio" name="fukjelde" value="bluetooth" onchange="velFuKjelde(this.value)"> Berre Bluetooth</label>
+    <br><span class="hj">Kabel er raskast. Bluetooth-portar utan tilkopla eining kan bruke lang tid.</span></p>
   <div id="fuinnhald"></div>
   <div class="verktoy" style="margin-top:14px"><span style="flex:1"></span>
     <button class="b gra" id="fuskann" onclick="finnUtstyr()">Skann på nytt</button>
@@ -529,7 +547,17 @@ function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.
 // ---------- status ----------
 let radarDjupn=2.5,avslutta=false;
 const FIX={0:["INGEN","feil"],1:["GPS","feil"],2:["DGPS","var"],4:["RTK FIX","ok"],5:["RTK FLOAT","var"],6:["INS","var"],9:["SBAS","var"]};
-async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status")).json()}catch(e){set("fix","ingen kontakt","feil");return}
+// Mista kontakt med Geoscan (0.9.24): før stod dei siste varsla og tala att som om dei var ferske.
+let kontaktBorte=null;
+function utanKontakt(){const forste=kontaktBorte===null;if(forste)kontaktBorte=Date.now();
+  $("kontakt").style.display="block";$("vakt").style.display="none";$("oppsettvarsel").style.display="none";
+  const sek=Math.round((Date.now()-kontaktBorte)/1000);$("kontakttid").textContent=sek>=2?`(${sek} s)`:"";
+  set("fix","ingen kontakt","feil");set("sat","");$("noy").textContent="";$("pjk").textContent="";$("koord").textContent="";
+  set("hell","–","var");set("hsrc","");set("fors","–");set("ntrip","–");set("nmeld","");visKorr(null,null);
+  if(forste){vaktNr=null;if(vaktLyd)pip();
+    try{if("Notification" in window&&Notification.permission=="granted")new Notification("Snowman Geoscan svarar ikkje",{body:"Statussida har mista kontakten med Geoscan-programmet.",tag:"geoscan-kontakt",requireInteraction:true})}catch(e){}}}
+async function tikk(){if(avslutta)return;let s;try{const r=await fetch("status");if(!r.ok)throw new Error(r.status);s=await r.json()}catch(e){utanKontakt();return}
+  if(kontaktBorte!==null){kontaktBorte=null;$("kontakt").style.display="none"}
   const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;if(s.stripe)STRIPE=s.stripe;visVakt(s.vakt);
   OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);visUst(s.oppdatering);
   if(fane!="status")return;
@@ -556,8 +584,11 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
   set("fors",k.forskyving_cm==null?"–":F(k.forskyving_cm,1)+" cm");
   radarDjupn=s.radar_djupn||2.5;
   set("djup",s.djupnfeil_25==null?"":"objekt på "+F(radarDjupn,1)+" m: "+F(s.djupnfeil_25,0)+" cm (blir retta under Resultat)");
-  const n=s.ntrip;set("ntrip",n.tilstand,n.tilstand=="tilkopla"?"ok":n.tilstand=="av"?"":"feil");
-  set("nmeld",n.tilstand=="tilkopla"?(n.protokoll+" · "+F(n.byte/1024,0)+" kB · alder "+(n.alder==null?"–":F(n.alder,0)+" s")):n.melding);
+  const n=s.ntrip;visKorr(k.korreksjon,s.gnss_alder);
+  if(n.tilstand=="av"){const kr=k.korreksjon,ok=kr&&kr.alder!=null&&s.gnss_alder!=null&&s.gnss_alder<5;
+    set("ntrip",ok?"via mottakaren":"NTRIP av",ok?"ok":"");set("nmeld",ok?"Korreksjonane kjem frå Trimble Access (Bluetooth) eller anna kjelde, ikkje frå Geoscan":"")}
+  else{set("ntrip",n.tilstand,n.tilstand=="tilkopla"?"ok":"feil");
+    set("nmeld",n.tilstand=="tilkopla"?(n.protokoll+" · "+F(n.byte/1024,0)+" kB · alder "+(n.alder==null?"–":F(n.alder,0)+" s")):n.melding)}
   const pk=k.pos;
   if(pk&&pk.E!=null){const m=v=>v==null?"–":v.toFixed(2).replace(".",",")+" m";
     $("koord").innerHTML=`UTM ${pk.sone}: E ${pk.E.toFixed(2).replace(".",",")} · N ${pk.N.toFixed(2).replace(".",",")}<br>`+
@@ -571,6 +602,19 @@ async function tikk(){if(avslutta)return;let s;try{s=await (await fetch("status"
       else if(a)t+=" · "+(a.kva=="stille"?"ingen data":a.kva);return t})
     .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n");
   fuSjekk(s)}
+// Aktivitetsstolpen (0.9.24): ein lysande stolpe vandrar fram og tilbake, eitt steg for kvar ny korreksjon.
+// Gul = korreksjonane er ferske (under 3 s), oransje = seine (3–10 s), raud ramme = ingen korreksjonar.
+const KBAR_N=12;let kbarNye=null,kbarPos=0,kbarRetn=1;
+function visKorr(kr,gnssAlder){const b=$("kbar");if(!b.children.length)b.innerHTML="<i></i>".repeat(KBAR_N);
+  const a=kr?kr.alder:null,dataOk=gnssAlder!=null&&gnssAlder<5;
+  if(kr&&kbarNye!==null&&kr.nye>kbarNye){const steg=Math.min(kr.nye-kbarNye,KBAR_N);
+    for(let i=0;i<steg;i++){kbarPos+=kbarRetn;if(kbarPos>=KBAR_N-1||kbarPos<=0)kbarRetn=-kbarRetn;kbarPos=Math.max(0,Math.min(KBAR_N-1,kbarPos))}}
+  kbarNye=kr?kr.nye:null;
+  const daud=!dataOk||a==null||a>10;b.classList.toggle("daud",daud);b.classList.toggle("seint",!daud&&a>=3);
+  [...b.children].forEach((c,i)=>c.classList.toggle("paa",!daud&&Math.abs(i-kbarPos)<=1));
+  $("ktekst").innerHTML=!dataOk?'<span class="feil">ingen data frå mottakaren</span>':
+    a==null?'<span class="feil">Ingen korreksjonar – mottakaren får ikkje RTCM</span>':
+    `alder <b class="${a<3?"ok":a<=10?"var":"feil"}">${F(a,1)} s</b> · ${kr.nye} mottekne`}
 function visOppd(o){const nk=o.feil=="nokkel"&&!o.nyare&&!o.koyrer;
   $("nokkel").style.display=nk?"block":"none";
   // Ugyldig nøkkel blir ikkje vist som stripe: så lenge repoet er ope, går oppdateringane likevel.
@@ -694,11 +738,14 @@ function fuSjekk(s){if(s.demo){$("fubanner").style.display="none";return}
 function lukkFu(){$("fu").style.display="none"}
 document.addEventListener("keydown",e=>{if(e.key!="Escape")return;
   if($("bg").style.display!="none")lukkBg();else if($("fu").style.display!="none")lukkFu();else if($("c0c").style.display!="none")lukkCom0com()});
-function opneFu(){$("fu").style.display="flex";finnUtstyr()}
+// Kabel eller Bluetooth (0.9.24, ønske frå Norman): valet blir hugsa i nettlesaren på denne PC-en
+let fuKjelde="alle";try{fuKjelde=localStorage.getItem("geoscan_fukjelde")||"alle"}catch(e){}
+function velFuKjelde(v){fuKjelde=v;try{localStorage.setItem("geoscan_fukjelde",v)}catch(e){}finnUtstyr()}
+function opneFu(){$("fu").style.display="flex";document.querySelectorAll('input[name=fukjelde]').forEach(r=>r.checked=r.value==fuKjelde);finnUtstyr()}
 const FUKVA={gnss:"GNSS-mottakar",helling:"Hellingsmålar",binaer:"binærdata (RTCM/UBX)",ukjend:"ukjende data",stille:"ingen data",com0com:"com0com (OneVision)"};
 async function finnUtstyr(){$("fubruk").style.display="none";$("fuskann").disabled=true;
-  $("fuinnhald").innerHTML='<p class="var"><b>Skannar portane …</b> Lyttar på kvar port i nokre sekund (ca. 10–15 s). Bluetooth-portar kan bruke litt tid.</p>';
-  try{FU=await post("api/finn_utstyr",{})}catch(e){$("fuinnhald").innerHTML='<p class="feil">✗ '+esc(e.message)+'</p>';$("fuskann").disabled=false;return}
+  $("fuinnhald").innerHTML='<p class="var"><b>Skannar '+({kabel:"kabelportane",bluetooth:"Bluetooth-portane"}[fuKjelde]||"alle portane")+' …</b> Lyttar på kvar port i nokre sekund (ca. 10–15 s). Bluetooth-portar kan bruke litt tid.</p>';
+  try{FU=await post("api/finn_utstyr",{kjelde:fuKjelde})}catch(e){$("fuinnhald").innerHTML='<p class="feil">✗ '+esc(e.message)+'</p>';$("fuskann").disabled=false;return}
   $("fuskann").disabled=false;const f=FU.forslag;
   const kortPortfeil=m=>/semafor|semaphore|121\)/i.test(m)?"svarar ikkje (Bluetooth-port utan tilkopla eining)":
     /tilgang|access is denied|PermissionError|\(5,/i.test(m)?"oppteken av eit anna program":/FileNotFound|\(2,/i.test(m)?"finst ikkje lenger":m.length>90?m.slice(0,90)+" …":m;

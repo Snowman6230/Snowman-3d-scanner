@@ -1363,3 +1363,33 @@ def test_snarveg_med_ikon(tmp_path, monkeypatch):
     assert SV.lag(tmp_path, "0.9.22")[0] and len(kall) == 1
     assert SV.lag(tmp_path, "0.9.22")[0] and len(kall) == 1            # same versjon: ikkje på nytt
     assert SV.lag(tmp_path, "0.9.22", tving=True)[0] and len(kall) == 2
+
+
+def _gga_alder(alder):
+    return N.build(["INGGA", "120000.00", "6223.4000000", "N", "00634.8000000", "E", "4", "18", "0.7", "150.000",
+                    "M", "44.775", "M", alder, "0001"])
+
+
+def test_korreksjonsalder_tel_nye_korreksjonar():
+    """0.9.24: alderen fell kvar gong ein ny korreksjon kjem (10 Hz GGA, 1 Hz RTCM som 12.11.2026)."""
+    k = G.Korrigerar(dict(G.STANDARD, logg=None, hoegd="mottakar", gps_oppsett="access"))
+    for i, a in enumerate(["0.2", "0.4", "0.6", "0.8", "1.0", "0.2", "0.4", "1.0", "0.2"]):
+        k.handle(_gga_alder(a), now=1.0 + i * 0.1)
+    kr = k.status["korreksjon"]
+    assert kr["alder"] == 0.2 and kr["nye"] == 3
+
+
+def test_korreksjonsalder_manglar():
+    k = G.Korrigerar(dict(G.STANDARD, logg=None, hoegd="mottakar", gps_oppsett="access"))
+    k.handle(_gga_alder(""), now=1.0)
+    assert k.status["korreksjon"]["alder"] is None and k.status["korreksjon"]["nye"] == 0
+
+
+def test_finn_utstyr_filtrerer_kabel_og_bluetooth():
+    import finn_utstyr as FU
+    p = [{"port": "COM3", "skildring": "Trimble USB Serial (COM3)"},
+         {"port": "COM10", "skildring": "Standard Serial over Bluetooth link (COM10)"},
+         {"port": "COM21", "skildring": "Sierra Wireless NMEA Port (COM21)"}]
+    assert [x["port"] for x in FU.filtrer(p, "kabel")] == ["COM3", "COM21"]
+    assert [x["port"] for x in FU.filtrer(p, "bluetooth")] == ["COM10"]
+    assert len(FU.filtrer(p, "alle")) == 3

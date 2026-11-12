@@ -2,6 +2,35 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-12-v0924-korreksjonar",
+   "dato": "2026-11-12",
+   "versjon": "0.9.24",
+   "tittel": "Versjon 0.9.24: gul aktivitetsstolpe for korreksjonane, og kabel eller Bluetooth i «Finn utstyr»",
+   "tekst": "Hei Norman! Takk for pakka frå 12.11. Nytt i versjon 0.9.24:\n\n1. AKTIVITETSSTOLPE FOR KORREKSJONANE (versjon 0.9.24, ønsket ditt)\n• Ruta «Korreksjonar» på statussida har ein gul stolpe som vandrar fram og tilbake, eitt steg for kvar korreksjon som kjem fram til R12i, som i Xsite.\n• Han verkar same kvar korreksjonane kjem frå: Trimble Access over Bluetooth eller Geoscan over USB.\n• Gul = ferske korreksjonar (under 3 s). Oransje = seine (3–10 s). Raud ramme = ingen korreksjonar. Då blir det ikkje RTK.\n• Med NTRIP av i Geoscan står det «via mottakaren» når korreksjonane kjem frå Access.\n\n2. KABEL ELLER BLUETOOTH I «FINN UTSTYR» (versjon 0.9.24, ønsket ditt)\n• Vel «Alle portar», «Berre kabel (USB)» eller «Berre Bluetooth» øvst. Valet blir hugsa.\n• Kabel er raskast og gir ingen feilmeldingar frå Bluetooth-portar utan eining.\n\n3. NÅR STATUSSIDA MISTAR KONTAKTEN (versjon 0.9.24)\n• Før stod dei gamle varsla att som om dei var ferske. No kjem ei mørk ramme: «Geoscan svarar ikkje», med lyd, og tala blir tømde.\n• Sida koplar til att av seg sjølv når Geoscan køyrer igjen.\n\nDAGEN 12.11\n• 10:30–11:40: RTK FIX med IMU heile tida. Perfekt.\n• Frå kl. 15:15 kom det aldri RTK att: korreksjonane kom seint eller ikkje, og ein del av tida var det berre 4–9 satellittar. Det passar med at måleboka døydde.\n• «Ingen kontakt» kl. 22:37 var ikkje eit kræsj. Geoscan vart starta på nytt kl. 22:38.\n\nDETTE TRENG EG\n• DXF-fila «VL 160PE innm kabels.dxf». Du har merkt 8 objekt i Survey_2026.11.12_007, og dei vil eg samanlikne med det innmålte røyret.\n• Stream C.xml står på 0.13;0.42;0. Trykk «Skriv Geoscan-måla til OneVision» under Vogn og mast, så blir det 0.09.\n\nHelsing Hans Petter",
+   "sjekk": {
+    "n1": {
+     "tekst": "Versjon 0.9.24: gul aktivitetsstolpe for korreksjonane i ruta «Korreksjonar», som i Xsite. Prøv han att.",
+     "prov_att": true
+    },
+    "n2": {
+     "tekst": "Versjon 0.9.24: stolpen viser om korreksjonane kjem fram. Med NTRIP av i Geoscan står det «via mottakaren» når dei kjem frå Access.",
+     "prov_att": true
+    },
+    "r1": {
+     "tekst": "Versjon 0.9.24: du kan velje berre kabel (USB) eller berre Bluetooth i «Finn utstyr». Stream C.xml står på 0 – skriv 0.09 med knappen.",
+     "prov_att": true
+    },
+    "r2": {
+     "tekst": "Versjon 0.9.24: R12i hadde ingen posisjon innandørs 13:47–14:54. Prøv ved eit vindauge eller ute.",
+     "prov_att": true
+    },
+    "f1": {
+     "tekst": "Versjon 0.9.23 har knappen for sporet og pause når du snur. Sei frå om stripa framleis blir teikna når du rangerer.",
+     "prov_att": true
+    }
+   }
+  },
+  {
    "id": "2026-11-11-v0923-imu",
    "dato": "2026-11-11",
    "versjon": "0.9.23",

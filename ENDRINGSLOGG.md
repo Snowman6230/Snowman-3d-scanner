@@ -2,6 +2,20 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.24 – 12. november 2026
+Etter pakka frå Norman 12.11 (målebok tom for straum, RTK borte frå kl. 15:15):
+- **Aktivitetsstolpe for korreksjonane (ønske frå Norman, som NTRIP-stolpen i Xsite).** Ruta heiter no
+  «Korreksjonar». Geoscan les alderen på korreksjonane frå GGA (felt 13) og tel kvar gong han fell, det vil seie kvar
+  gong ein ny korreksjon kjem fram til mottakaren. Det verkar same om korreksjonane kjem frå Trimble Access
+  (Bluetooth) eller frå Geoscan (USB). Gul = under 3 s, oransje = 3–10 s, raud ramme = ingen korreksjonar. Med NTRIP
+  av i Geoscan står det «via mottakaren» når korreksjonane kjem frå Access. Ny `status.korr.korreksjon`
+  (`alder`, `nye`, `ny_t`).
+- **Kabel eller Bluetooth i «Finn utstyr» (ønske frå Norman).** Val øvst: alle portar, berre kabel (USB) eller berre
+  Bluetooth. `finn_utstyr.filtrer()`, `kjelde` i `/api/finn_utstyr`. Valet blir hugsa i nettlesaren.
+- **Statussida som mistar kontakten med Geoscan:** før stod siste varsel og tal att som om dei var ferske (sett
+  12.11 kl. 22:37 under omstart). No kjem ei mørk ramme «Geoscan svarar ikkje» med lyd og Windows-varsel, og tala blir
+  tømde. Sida koplar til att av seg sjølv.
+
 ## 0.9.23 – 11. november 2026
 - **Tap av IMU – Norman hadde rett.** Testen på grusbana ved Velledalen grendahus 11.11 viste tre byte frå `$INGGA`
   (RTK FIX) til `$GNGGA` med hopp i høgd på +0,003, +0,010 og +0,003 m: når IMU-en fell ut medan R12i sender

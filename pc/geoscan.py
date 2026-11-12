@@ -29,7 +29,7 @@ import nmea as N
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.23"
+VERSJON = "0.9.24"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -268,6 +268,7 @@ class Korrigerar:
             except (IndexError, ValueError):
                 st["hdop"] = None
             self.hel.add_position(lat, lon, now)
+            self._korreksjon(fields, now)
             self._vakt(gga, now)
         if self.urort:
             return self._urort(fields, gga, lat, lon, now)
@@ -342,6 +343,22 @@ class Korrigerar:
             if float(self.cfg.get("apc_tillegg", 0.179) or 0) == 0:
                 ut.append("«Frå undersida av hurtigfestet til fasesenteret» står på 0. For R12i skal det vere 0,179 m.")
         return ut
+
+    def _korreksjon(self, fields, now):
+        """Alderen på korreksjonane frå GGA (felt 13, sekund sidan siste RTCM). Han går ned att kvar gong ein ny
+        korreksjon kjem fram til mottakaren, same om han kjem frå Trimble Access (Bluetooth) eller frå Geoscan
+        (USB). Det gir aktivitetsstolpen på statussida, som NTRIP-stolpen i Xsite (ønske frå Norman 12.11). 0.9.24"""
+        t = time.time() if now is None else now
+        try:
+            a = float(fields[13]) if len(fields) > 13 and fields[13] else None
+        except ValueError:
+            a = None
+        k = self.status.setdefault("korreksjon", {"alder": None, "nye": 0, "ny_t": None})
+        forrige = k["alder"]
+        if a is not None and (forrige is None or a < forrige - 0.05):
+            k["nye"] += 1
+            k["ny_t"] = round(t, 2)
+        k["alder"] = a
 
     def _vakt(self, gga, now):
         t = time.time() if now is None else now

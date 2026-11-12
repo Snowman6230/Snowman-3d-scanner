@@ -48,7 +48,8 @@ fram og tilbake.
 | 0.9.21 ✓ | Access/IMU: punktet går urørt, spissen 0,09 over bakken, hoppet ved tap av IMU blir målt. Kvalitetsvakt (raud stripe, lyd, Windows-varsel). Stream C-boks med x/y/z og skisse. Objekt frå Exports. Bakgrunn: farge, Z og avvik mot innmålt |
 | 0.9.22 ✓ | Ikonet på skrivebordet blir laga på nytt etter oppdatering, og knapp for det under Innstillingar |
 | 0.9.23 ✓ | Tap av IMU: R12i held fram med spissen (målt 11.11). Tydeleg start/stopp for sporet, strengare auto-pause av stripa |
-| 0.9.24 | Status utan rulling (oppsett C: infokolonne + kart i full høgd, A som reserve), app-modus i nettlesaren. Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG |
+| 0.9.24 ✓ | Gul aktivitetsstolpe for korreksjonane (alder frå GGA, som Xsite). Kabel eller Bluetooth i «Finn utstyr». Tydeleg melding når statussida mistar kontakten med Geoscan |
+| 0.9.25 | Status utan rulling (oppsett C: infokolonne + kart i full høgd, A som reserve), app-modus i nettlesaren. Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG. Kalibrering av x/y mot innmålt røyr (grusbana 11.11 og 12.11) |
 | 0.9.2x | Rettingar etter felttesten med røyret. Eventuelt opplasting av testpakkar til privat repo (P2) |
 | **1.0** | Når krava over er oppfylte |
 

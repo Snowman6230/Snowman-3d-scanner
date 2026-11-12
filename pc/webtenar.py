@@ -42,23 +42,26 @@ def lagre_skanning(app, res):
         pass
 
 
-def finn_utstyr(app):
+def finn_utstyr(app, kjelde="alle"):
     """Oppstartssjekken (finn_utstyr.py): skann ledige portar, bruk live-data for portane Geoscan alt les,
-    finn com0com-para og OneVision-oppsettet, og lag eit forslag."""
+    finn com0com-para og OneVision-oppsettet, og lag eit forslag. kjelde: «alle», «kabel» eller «bluetooth»
+    (0.9.24) – kva slags portar som skal vere med."""
     import com0com as C0
     import finn_utstyr as FU
     import innstillingar as INN
     cfgf = dict(app.cfg, **INN._read(app.cfg_path))
     c0c = C0.status(cfgf)
     virtuelle = {x for p in c0c.get("par") or [] for x in (p["geoscan"], p["onevision"]) if x}
-    eigne = {n for n, v in app.state.items() if v == "open"}
-    portar = INN.porter()
+    alle = INN.porter()
+    portar = FU.filtrer(alle, kjelde)
+    tekne = {p["port"] for p in portar}
+    eigne = {n for n, v in app.state.items() if v == "open" and (kjelde == "alle" or n in tekne)}
     skanna = FU.skann([p for p in portar if p["port"] not in virtuelle], hopp_over=eigne)
     stat = app.innstat()
     for n in eigne:
         r = dict(stat.get(n) or {"kva": "stille"})
         r.update(port=n, tilstand="brukt av Geoscan",
-                 skildring=next((p["skildring"] for p in portar if p["port"] == n), ""),
+                 skildring=next((p["skildring"] for p in alle if p["port"] == n), ""),
                  baud=next((int(i.get("baud") or 115200) for i in cfgf.get("inn") or [] if i.get("port") == n), 115200))
         skanna[n] = r
     for v in sorted(virtuelle):
@@ -68,7 +71,8 @@ def finn_utstyr(app):
     f, atv = FU.forslag(skanna, c0c, cfgf, ov)
     g = skanna.get(f["mottakar"]) or {}
     f["talker"] = g.get("talker")
-    return {"portar": sorted(skanna.values(), key=lambda r: (r.get("kva") != "gnss", r["port"])),
+    return {"kjelde": kjelde,
+            "portar": sorted(skanna.values(), key=lambda r: (r.get("kva") != "gnss", r["port"])),
             "forslag": f, "atvaringar": atv, "onevision": ov, "com0com": c0c,
             "noverande": {"mottakar": (cfgf.get("inn") or [{}])[0].get("port"),
                           "onevision": (cfgf.get("ut_seriell") or [{}])[0].get("port") if cfgf.get("ut_seriell") else None}}
@@ -249,7 +253,9 @@ def start(app, port=8088, lan=False):
                     ok, m = SV.lag(tving=True)
                     return self._send({"ok": ok, "melding": m}) if ok else self._err(m)
                 if path == "/api/finn_utstyr":
-                    res = finn_utstyr(app)
+                    d = json.loads(self._body() or b"{}")
+                    kj = d.get("kjelde") if d.get("kjelde") in ("alle", "kabel", "bluetooth") else "alle"
+                    res = finn_utstyr(app, kj)
                     lagre_skanning(app, res)
                     return self._send(res)
                 if path == "/api/bruk_oppsett":
