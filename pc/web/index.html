@@ -13,15 +13,74 @@
 :root{--bg:#0f1418;--kort:#1a2228;--kort2:#222c33;--linje:#2c3a44;--tekst:#e8eef2;--svak:#8a9aa6;--ok:#3ecf74;--var:#f2b33d;--feil:#ef5b5b;--blaa:#4ea8ff;--for:#9aa7b1}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tekst);font:15px/1.45 system-ui,"Segoe UI",sans-serif}
-header{padding:14px 16px 0;max-width:1200px;margin:0 auto}
-h1{font-size:22px;margin:0;font-weight:700}
+/* ---------- Layout B2 (0.9.25): infomeny til venstre, kartet i midten, ikonmeny og panel til høgre ---------- */
+html,body{height:100%}
+body{display:flex;flex-direction:column;overflow:hidden}
+header.topp{display:flex;align-items:center;gap:12px;padding:6px 14px;background:var(--kort);border-bottom:1px solid var(--linje);flex:0 0 auto}
+h1{font-size:19px;margin:0;font-weight:700}
 #ver{font-weight:400;color:var(--svak);font-size:14px}
 .prod{color:var(--svak);font-size:13px;margin:2px 0 10px}
-nav{display:flex;gap:4px;border-bottom:1px solid var(--linje);overflow-x:auto}
-nav button{background:none;border:0;color:var(--svak);font:inherit;font-weight:600;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
-nav button.aktiv{color:var(--tekst);border-bottom-color:var(--blaa)}
-main{max-width:1200px;margin:0 auto;padding:14px 16px 40px}
+#stripar{flex:0 0 auto;max-height:34vh;overflow:auto;padding:0 10px}
+#stripar .mld{padding:8px 12px}#stripar .mld p{margin:6px 0}#stripar .mld details[open]{max-height:24vh;overflow:auto}
+#stripar>.banner,#stripar .mld{margin:6px 0}
+#app{flex:1;display:flex;min-height:0}
+#info{flex:0 0 268px;width:268px;background:var(--kort);border-right:1px solid var(--linje);overflow-y:auto;overflow-x:hidden}
+#info .ihovud{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border-bottom:1px solid var(--linje);position:sticky;top:0;background:var(--kort);z-index:2}
+#info .ihovud .b{padding:2px 10px}
+#info .k{border-radius:0;margin:0;border-bottom:1px solid var(--linje);padding:10px 12px}
+#info .v{font-size:26px}
+#info svg{margin:2px 0 0}
+#info .imini{display:none;cursor:pointer}
+#info.mini{flex-basis:84px;width:84px}
+#info.mini .ifull,#info.mini .ihovud .l{display:none}
+#info.mini .ihovud{justify-content:center;padding:8px 2px}
+#info.mini .imini{display:block}
+.mb{padding:9px 4px;text-align:center;border-bottom:1px solid var(--linje)}
+.mb .l{font-size:10px;letter-spacing:.03em}
+.mv{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:2px;overflow-wrap:anywhere}
+.satsys{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:4px;margin-top:8px}
+.satsys div{background:var(--kort2);border:1px solid var(--linje);border-radius:5px;padding:3px 2px;text-align:center;font-size:11px;color:var(--svak);line-height:1.25}
+.satsys b{display:block;font-size:15px;color:var(--tekst)}
+.satsys .ingen b{color:var(--svak)}
+#midt{flex:1;position:relative;min-width:0;background:#0b0f12}
+.kartflate{position:absolute;inset:0}
+#livekart,#kart{position:absolute;inset:0}
+.kartknappar{position:absolute;z-index:1000;display:flex;flex-wrap:wrap;gap:6px;align-items:center;left:56px;right:56px;pointer-events:none}
+.kartknappar>*{pointer-events:auto;box-shadow:0 1px 5px rgba(0,0,0,.45)}
+.kartknappar.oppe{top:10px}
+.kartknappar select{width:auto}
+.brytar{display:inline-flex;border-radius:7px;overflow:hidden}
+.brytar .b{border-radius:0}
+.kartinfo{position:absolute;z-index:1000;left:10px;bottom:24px;max-width:calc(100% - 180px);background:var(--kort);border:1px solid var(--linje);border-radius:8px;padding:4px 10px;opacity:.94}
+.kartboks{position:absolute;z-index:1001;box-shadow:0 4px 18px rgba(0,0,0,.45);border:1px solid var(--linje)}
+#tre{position:absolute;inset:0;z-index:500;background:#dfe8ee}
+#reswrap.tre3d #kartfeil{display:none!important}
+#reswrap.tre3d .leaflet-control-container{display:none}
+#trecv{position:absolute;inset:0;width:100%;height:100%;display:block;margin:0;touch-action:none}
+#trelbl{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.tl{position:absolute;transform:translate(-50%,-50%);background:#fffffff0;color:#000;border:1px solid #4b5560;border-radius:5px;padding:1px 6px;font:600 12px system-ui,"Segoe UI",sans-serif;white-space:nowrap}
+.tl.maal{background:#ffd400;border-color:#000;font-weight:800}
+.tl.grav{background:#ff2d7a;color:#fff;border:0}
+.tl.svak{font-weight:400;color:#444}
+#dra{flex:0 0 7px;cursor:col-resize;background:var(--linje);position:relative}
+#dra:after{content:"⋮";position:absolute;top:50%;left:0;width:7px;text-align:center;color:var(--svak);transform:translateY(-50%)}
+#dra:hover{background:var(--blaa)}
+#hogre{display:flex;background:var(--kort);--pw:440px}
+#ikonar{flex:0 0 78px;width:78px;display:flex;flex-direction:column;border-right:1px solid var(--linje);overflow-y:auto;overflow-x:hidden}
+#ikonar button{background:none;border:0;border-left:3px solid transparent;color:var(--svak);font:inherit;font-size:12px;font-weight:700;padding:10px 3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.2;text-align:center}
+#ikonar button b{font-size:23px;line-height:1}
+#ikonar button.aktiv{color:var(--tekst);background:var(--kort2);border-left-color:var(--blaa)}
+#ikonar button:hover{color:var(--tekst)}
+#ikonar .rk{font-size:11.5px;padding:8px 3px}
+#panel{width:var(--pw);overflow-y:auto;padding:10px 12px 30px}
+#hogre.lukka #panel{display:none}
+#hogre.lukka{}
 .fane{display:none}.fane.aktiv{display:block}
+@media (max-width:900px){
+  body{overflow:auto;height:auto}#app{flex-direction:column}
+  #info,#info.mini{width:auto;flex-basis:auto}#info{max-height:none}#info .ifull{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  #midt{flex:0 0 60vh}#dra{display:none}#hogre{flex-direction:column}#ikonar{flex-direction:row;width:auto;flex-basis:auto;overflow-x:auto}
+  #panel{width:auto!important}}
 .rad{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .k{background:var(--kort);border-radius:10px;padding:14px;margin-bottom:12px}
 .rad .k{margin-bottom:0}
@@ -69,7 +128,7 @@ th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--linje);verti
 th{color:var(--svak);font-weight:600}
 td.n{text-align:right;font-variant-numeric:tabular-nums}
 .tabell{overflow-x:auto}
-#kart{height:520px;border-radius:10px;background:#0b0f12}
+#kart{background:#0b0f12}
 .forkl{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--svak);margin-top:8px}
 .forkl i{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
 .melding{margin-top:8px;font-size:13px}
@@ -98,7 +157,9 @@ body.dagslys .k{border:2px solid #39434c}
 body.dagslys .v{font-size:40px;font-weight:800}
 body.dagslys .l{font-size:13px;font-weight:800}
 body.dagslys .s,body.dagslys .hj,body.dagslys pre,body.dagslys .forkl,body.dagslys .felt label{font-size:15px;font-weight:600}
-body.dagslys nav button{font-weight:800}body.dagslys nav button.aktiv{border-bottom-width:5px}
+body.dagslys #ikonar button{color:#1b252e;font-weight:800}body.dagslys #ikonar button.aktiv{color:#000;border-left-width:5px}
+body.dagslys #midt{background:#e6e9ec}body.dagslys .kartinfo{opacity:1;border-width:2px}
+body.dagslys .satsys div{border:2px solid #39434c}body.dagslys .mv{font-size:19px}
 body.dagslys button.b,body.dagslys label.b,body.dagslys a.b{color:#ffffff;border:2px solid #000}
 body.dagslys button.b.gra,body.dagslys label.b.gra,body.dagslys a.b.gra{background:#ffffff;color:#000000;border:2px solid #000}
 body.dagslys input,body.dagslys select,body.dagslys textarea{border:2px solid #39434c;background:#fff;color:#000}
@@ -111,22 +172,19 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 </style>
 </head>
 <body>
-<header>
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
-    <img src="vendor/geoscan-ikon.svg" alt="" width="48" height="48" style="border-radius:11px">
-    <div><h1>Snowman Geoscan <span id="ver"></span></h1>
-    <div class="prod" style="margin:0">Alpindata HP Brunstad Sørensen</div></div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-      <span class="hj" id="oktinfo" style="text-align:right"></span>
-      <button class="b gra" id="temaknapp" onclick="bytTema()" title="Byt mellom mørk skjerm og høg kontrast for sollys">☀ Dagslys</button>
-      <button class="b gra" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button></div></div>
+<header class="topp">
+  <img src="vendor/geoscan-ikon.svg" alt="" width="40" height="40" style="border-radius:9px">
+  <div><h1>Snowman Geoscan <span id="ver"></span></h1>
+  <div class="prod" style="margin:0">Alpindata HP Brunstad Sørensen</div></div>
+  <span style="flex:1"></span>
+  <span class="hj" id="oktinfo" style="text-align:right"></span>
+</header>
+<div id="stripar">
   <div id="kontakt" class="banner kontaktb" style="display:none"><b style="font-size:20px">⛔ Geoscan svarar ikkje</b> <span id="kontakttid"></span><br>
     Denne sida har mista kontakten med Geoscan-programmet. Tala under er ikkje oppdaterte.
     Sjå etter det svarte Geoscan-vindauget (ta bilete av feilteksten viss det står ein der), eller start Geoscan på nytt med snarvegen på skrivebordet.
     Sida koplar til att av seg sjølv når Geoscan køyrer igjen.</div>
-  <div id="vakt" class="banner vaktb" style="display:none"><div style="display:flex;gap:12px;align-items:flex-start"><b style="font-size:22px">⚠</b><div id="vakttekst" style="flex:1"></div>
-    <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="b gra" id="vaktlyd" onclick="bytVaktLyd()" title="Lyd når eit nytt varsel kjem">🔊 Lyd på</button>
-    <button class="b gra" id="vaktwin" onclick="slaPaWinVarsel()" style="display:none" title="Varsel i Windows, òg når Geoscan ligg bak OneVision">🔔 Varsel i Windows</button></span></div></div>
+  <div id="vakt" class="banner vaktb" style="display:none"><div style="display:flex;gap:12px;align-items:flex-start"><b style="font-size:22px">⚠</b><div id="vakttekst" style="flex:1"></div></div></div>
   <div id="oppsettvarsel" class="banner oppd" style="display:none;border-color:var(--var)"></div>
   <div id="demo" class="banner demo" style="display:none">DEMO – simulert mottakar og NTRIP-caster. Dette er ikkje ekte målingar.</div>
   <div id="oppd" class="banner oppd" style="display:none"><span id="otekst"></span>
@@ -142,45 +200,128 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div id="c0cbanner" class="banner oppd" style="display:none;border-color:var(--feil)">⚠ <span id="c0cbtekst"></span>
     <button class="b" style="margin-left:8px" onclick="visCom0com(true)">Kva gjer eg?</button></div>
   <div id="meldingar"></div>
-  <nav>
-    <button data-f="status" class="aktiv">Status</button>
-    <button data-f="resultat">Resultat</button>
-    <button data-f="send">Send inn</button>
-    <button data-f="innst">Innstillingar</button>
-  </nav>
-</header>
-<main>
-
-<!-- ================= STATUS ================= -->
-<section id="f-status" class="fane aktiv">
-  <div class="rad">
-    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div><div class="s" id="noy" style="margin-top:6px;font-size:17px"></div><div class="s" id="pjk" style="margin-top:6px"></div></div>
+</div>
+<div id="app">
+<!-- ================= INFOMENYEN TIL VENSTRE (0.9.25) ================= -->
+<aside id="info">
+  <div class="ihovud"><span class="l">Posisjon og kvalitet</span>
+    <button class="b gra" id="infoknapp" onclick="bytInfo()" title="Minimer infomenyen (nøkkeltala blir ståande)">⇤</button></div>
+  <div class="ifull">
+    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div><div class="s" id="noy" style="margin-top:6px;font-size:17px"></div><div class="s" id="pjk" style="margin-top:6px"></div><div id="satsys" class="satsys"></div></div>
     <div class="k"><div class="l">Helling</div><div class="v" id="hell">–</div><div class="s" id="hsrc"></div>
       <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="var(--linje)" stroke-width="2"/>
       <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="var(--for)"/><line x1="0" y1="10" x2="0" y2="-28" stroke="var(--svak)" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="var(--tekst)"/></g></svg></div>
     <div class="k"><div class="l">Retting no</div><div class="hj" style="margin-top:-2px">flytting for helling</div><div class="v" id="fors">–</div><div class="s" id="djup"></div></div>
-    <div class="k"><div class="l">Korreksjonar</div><div id="kbar" class="kbar" title="Ein ny stolpe lyser for kvar korreksjon som kjem fram til mottakaren"></div><div class="s" id="ktekst"></div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div><div class="s" id="koord" style="margin-top:6px;font-family:var(--mono,monospace)"></div></div>
+    <div class="k"><div class="l">Korreksjonar</div><div id="kbar" class="kbar" title="Ein ny stolpe lyser for kvar korreksjon som kjem fram til mottakaren"></div><div class="s" id="ktekst"></div><div class="v" id="ntrip" style="font-size:22px">–</div><div class="s" id="nmeld"></div></div>
+    <div class="k"><div class="l">Posisjon</div><div class="s" id="koord" style="margin-top:4px;font-family:var(--mono,monospace)"></div></div>
   </div>
-  <div class="k" style="margin-top:12px">
-    <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><div class="l" style="margin:0">Kart – live</div>
-      <span class="verktoy" style="gap:10px">
-        <label class="hj"><input type="checkbox" id="lfolg" checked onchange="lfolg=this.checked;if(lfolg&&lsist)lkart.panTo(lsist)"> Følg vogna</label>
-        <label class="hj" title="Stripa radaren dekkjer: 96 cm, midt på radaren (ikkje på antenna)."><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
-        <label class="hj" title="Ingen stripe når vogna står i ro eller går sakte (under 0,25 m/s), svingar (over 15°/s), knekkjer meir enn 25° på 1 m eller rygger – til dømes når du snur og rangerer. Stripa held pause i 1,5 s etter siste sving"><input type="checkbox" id="lautop" checked onchange="settAutoPause(this.checked)"> Auto-pause ved snuing</label>
-        <label class="hj"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
-        <button class="b" id="lpause" onclick="pauseLive()" style="background:#2e7d32;color:#fff;min-width:170px" title="Start og stopp teikninga av sporet og skannestripa i kartet. Vogna blir framleis vist, og loggen til OneVision held fram">● Sporet blir teikna</button>
-        <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
-        <button class="b gra bgknapp" onclick="opneBg()" title="Teikningar (DXF) og innmålingar (KOF) i kartet">🗺 Bakgrunn</button>
-        <select class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
-          <option value="topo">Fargekart</option><option value="graatone">Gråtonekart</option>
-          <option value="flyfoto">Flyfoto</option><option value="osm">OpenStreetMap</option></select></span></div>
-    <div id="livekart" style="height:380px;border-radius:10px;overflow:hidden"></div>
-    <div class="hj" id="liveinfo" style="margin-top:6px">Ventar på posisjon frå mottakaren …</div>
+  <div class="imini" onclick="bytInfo()" title="Vis heile infomenyen">
+    <div class="mb"><div class="l">Fix</div><div class="mv" id="im-fix">–</div></div>
+    <div class="mb"><div class="l">Sat</div><div class="mv" id="im-sat">–</div></div>
+    <div class="mb"><div class="l">QH/QV</div><div class="mv" id="im-noy" style="font-size:14px">–</div></div>
+    <div class="mb"><div class="l">Helling</div><div class="mv" id="im-hell">–</div></div>
+    <div class="mb"><div class="l">Retting</div><div class="mv" id="im-fors" style="font-size:15px">–</div></div>
+    <div class="mb"><div class="l">Korr.</div><div class="mv" id="im-korr" style="font-size:15px">–</div></div>
+    <div class="mb"><div class="l">Varsel</div><div class="mv" id="im-varsel">0</div></div>
+  </div>
+</aside>
+<!-- ================= KARTET I MIDTEN ================= -->
+<div id="midt">
+  <div id="livewrap" class="kartflate">
+    <div id="livekart"></div>
+    <div class="kartknappar oppe">
+      <button class="b" id="lpause" onclick="pauseLive()" style="background:#2e7d32;color:#fff;min-width:170px" title="Start og stopp teikninga av sporet og skannestripa i kartet. Vogna blir framleis vist, og loggen til OneVision held fram">● Sporet blir teikna</button>
+      <button class="b gra" onclick="nullstillLive()">Tøm sporet</button>
+      <button class="b gra bgknapp" onclick="opneBg()" title="Teikningar (DXF) og innmålingar (KOF) i kartet">🗺 Bakgrunn</button></div>
+    <div class="hj kartinfo" id="liveinfo">Ventar på posisjon frå mottakaren …</div>
+  </div>
+  <div id="reswrap" class="kartflate" style="display:none">
+    <div id="kart"></div>
+    <div id="tre" style="display:none"><canvas id="trecv"></canvas><div id="trelbl"></div>
+      <div class="hj kartinfo" id="treinfo" style="top:58px;bottom:auto;left:auto;right:56px;max-width:420px">Dra = snu · rull = zoom · høgre knapp (eller Shift) = flytt · klikk på eit røyr = vel det</div></div>
+    <div class="kartknappar oppe">
+      <span class="brytar"><button class="b" id="b2d" onclick="vis3D(false)" title="Vanleg kart ovanfrå">🗺 2D-kart</button><button class="b gra" id="b3d" onclick="vis3D(true)" title="Grøft i 3D med røyr og kablar frå målinga">🧊 3D-grøft</button></span>
+      <label class="b gra berre2d" style="display:inline-flex;align-items:center;gap:6px" title="Stripa radaren dekkjer: 96 cm, midt på radaren"><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Skannestripe</label>
+      <button class="b gra" id="tbtn" onclick="startTverr()" disabled title="Last inn ei eksportfil med objekt først">✚ Tverrsnitt</button>
+      <button class="b gra berre2d" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
+      <button class="b gra bgknapp berre2d" onclick="opneBg()" title="Teikningar (DXF) og innmålingar (KOF) i kartet">🗺 Bakgrunn</button>
+      <select id="kartlag" class="kartlagval berre2d" onchange="velKartlag(this.value)" style="width:auto" title="Bakgrunnskart">
+        <option value="topo">Fargekart (Kartverket)</option><option value="graatone">Gråtonekart (Kartverket)</option>
+        <option value="flyfoto">Flyfoto (Esri)</option><option value="osm">OpenStreetMap</option></select>
+      <span id="kartlagmeld" class="ok" style="background:var(--kort);border-radius:6px;padding:0 4px"></span>
+      <button class="b gra berre3d" id="tmaal" onclick="bytMaal()" style="display:none" title="Mål på grøfta, djupn til røyra og klaring der dei kryssar">📏 Målsetting av</button>
+      <button class="b gra berre3d" onclick="treKamera('ovanfra')" style="display:none">⟲ Ovanfrå</button>
+      <button class="b gra berre3d" onclick="treKamera('skraatt')" style="display:none">↗ Skrått</button>
+      <button class="b gra berre3d" onclick="treKamera('langs')" style="display:none">↔ Langs grøfta</button></div>
+    <div class="hj" id="kartfeil" style="display:none;position:absolute;left:12px;bottom:110px;z-index:1001;background:var(--kort);padding:6px 10px;border-radius:8px">Bakgrunnskartet kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel. Prøv eit anna kart i menyen.</div>
+    <div id="grav" class="k kartboks" style="left:12px;right:150px;bottom:24px;padding:8px 12px;margin:0">
+      <div class="verktoy" style="gap:12px">
+        <b>Grav nedover:</b>
+        <input type="range" id="gdjupn" min="0" max="300" step="1" value="0" style="flex:1;min-width:180px">
+        <span style="font-variant-numeric:tabular-nums;min-width:74px;font-weight:700;font-size:18px" id="gtekst">0 cm</span>
+        <button class="b gra" id="gspel" onclick="spelGrav()">▶ Spel av</button>
+        <button class="b gra" id="galt" onclick="slaGravAv()">Vis alt</button>
+      </div>
+      <div class="hj" style="margin-top:4px" id="ginfo"></div>
+    </div>
+  <div class="k kartboks" id="pos" style="display:none;right:60px;top:110px;width:min(380px,calc(100% - 80px));max-height:38%;overflow:auto">
+    <div class="verktoy" style="justify-content:space-between"><h2 style="margin:0">Posisjon under bakken</h2>
+      <span><button class="b gra" onclick="eksporterPunkt()">Eksporter punktet</button> <button class="b gra" onclick="kopierPos()">Kopier</button> <a class="b gra" id="poskart" target="_blank" rel="noopener">Opne i kart</a>
+      <button class="b gra" onclick="$('pos').style.display='none';if(posMerke)kart.removeLayer(posMerke)">Lukk</button></span></div>
+    <div class="hj" id="posnamn" style="margin:4px 0 8px"></div>
+    <div class="rad" id="posrad"></div>
+    <p class="hj" style="margin:10px 0 0">Klikk kvar som helst på eller ved eit røyr/ein kabel på kartet (innan 2 m) for å få posisjonen der.
+      Koordinatane er retta for hellinga. Bruk austing/nording til utsetting med R12i, og grav til djupna som står her.</p>
+  </div>
+  <div class="k kartboks" id="tverr" style="display:none;left:12px;right:12px;bottom:110px;max-height:46%;overflow:auto">
+    <div class="verktoy" style="justify-content:space-between"><h2 style="margin:0" id="ttittel">Tverrsnitt</h2>
+      <span><button class="b gra" onclick="startTverr()">Nytt tverrsnitt</button> <button class="b gra" onclick="lukkTverr()">Lukk</button></span></div>
+    <div class="hj" id="tinfo" style="margin-top:4px"></div>
+    <svg id="tsvg" width="100%" height="280" style="margin-top:8px;background:var(--bg);border-radius:8px"></svg>
+    <div class="forkl"><span><i style="background:#8a6a4a"></i>bakken</span>
+      <span><i style="background:#4ea8ff;border-radius:50%;width:10px;height:10px"></i>objekt etter retting (storleik = diameter når han er kjend)</span>
+      <span><i style="border:1.5px dashed var(--tekst);background:none;border-radius:50%;width:10px;height:10px"></i>der GRED HD/OneVision la det (før retting)</span></div>
+    <div class="tabell" style="margin-top:8px"><table id="ttab"><thead><tr><th>Objekt</th><th class="n">Frå A (m)</th><th class="n">Djupn etter (m)</th>
+      <th class="n">Djupn før (m)</th><th class="n">Flytta langs snittet</th><th class="n">Diameter</th>
+      <th class="n">Austing (E)</th><th class="n">Nording (N)</th><th class="n">Høgd NN2000</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  </div>
+</div>
+<div id="dra" title="Dra for å gjere menyen breiare eller smalare (dobbeltklikk = standard)"></div>
+<!-- ================= MENYEN TIL HØGRE: ikon + panel (0.9.25) ================= -->
+<aside id="hogre">
+  <nav id="ikonar">
+    <button data-f="status" class="aktiv"><b>📍</b>Status</button>
+    <button data-f="resultat"><b>📊</b>Resultat</button>
+    <button data-f="send"><b>📤</b>Send inn</button>
+    <button data-f="innst"><b>⚙</b>Innst.</button>
+    <span style="flex:1"></span>
+    <button class="rk" id="temaknapp" onclick="bytTema()" title="Byt mellom mørk skjerm og høg kontrast for sollys">☀ Dagslys</button>
+    <button class="rk" id="vaktlyd" onclick="bytVaktLyd()" title="Lyd når eit nytt varsel kjem">🔊 Lyd på</button>
+    <button class="rk" id="vaktwin" onclick="slaPaWinVarsel()" style="display:none" title="Varsel i Windows, òg når Geoscan ligg bak OneVision">🔔 Varsel i Windows</button>
+    <button class="rk" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button>
+    <button class="rk" id="panelknapp" onclick="bytPanel()" title="Fald saman menyen til berre ikon">»</button>
+  </nav>
+  <main id="panel">
+
+<!-- ================= STATUS ================= -->
+<section id="f-status" class="fane aktiv">
+  <div class="k"><div class="l" style="margin-bottom:6px">Kart – live</div>
+    <label class="hj" style="display:block"><input type="checkbox" id="lfolg" checked onchange="lfolg=this.checked;if(lfolg&&lsist)lkart.panTo(lsist)"> Følg vogna</label>
+    <label class="hj" style="display:block" title="Stripa radaren dekkjer: 96 cm, midt på radaren (ikkje på antenna)."><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
+    <label class="hj" style="display:block" title="Ingen stripe når vogna står i ro eller går sakte (under 0,25 m/s), svingar (over 15°/s), knekkjer meir enn 25° på 1 m eller rygger – til dømes når du snur og rangerer. Stripa held pause i 1,5 s etter siste sving"><input type="checkbox" id="lautop" checked onchange="settAutoPause(this.checked)"> Auto-pause ved snuing</label>
+    <label class="hj" style="display:block"><input type="checkbox" id="lraavis" checked onchange="if(lraa)lraa.setStyle({opacity:this.checked?1:0})"> Vis mottakarposisjon</label>
+    <label class="hj" style="display:block;margin-top:8px">Kart:
+      <select class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
+        <option value="topo">Fargekart</option><option value="graatone">Gråtonekart</option>
+        <option value="flyfoto">Flyfoto</option><option value="osm">OpenStreetMap</option></select></label></div>
+  <div class="k"><div class="l" style="margin-bottom:6px">Teiknforklaring</div>
     <div class="hj"><span style="color:#29b6f6">■</span> Skannestripa er det radaren dekkjer: 96 cm, midt på radaren.
       Når ho blir vist, står vogna midt på radaren, elles på punktet som blir sendt til OneVision. Strekane er punktet som blir
       sendt til OneVision (med «rett antenne» er det antenna, 0,6 m ved sida av stripa). Vogna snur seg etter køyreretninga.
       GPS-prikken på vogna har farge etter fix: <span class="ok">grøn = RTK FIX</span> · <span class="var">gul = FLOAT/DGPS</span> · <span class="feil">raud = GPS</span>.
-      ○ Open ring = posisjonen frå mottakaren. Sporet har farge etter hellinga.</div></div>
+      ○ Open ring = posisjonen frå mottakaren. Sporet har farge etter hellinga.</div>
+  </div>
   <div class="k"><div class="verktoy" style="justify-content:space-between"><div class="l" style="margin:0">Portar</div>
     <button class="b gra" onclick="opneFu()">🔍 Finn utstyr automatisk</button></div><pre id="portar" style="margin-top:6px"></pre></div>
   <div class="k"><div class="l">Kva skjer</div>
@@ -191,6 +332,22 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 
 <!-- ================= RESULTAT ================= -->
 <section id="f-resultat" class="fane">
+  <div class="k" id="treval" style="display:none">
+    <h2>3D-grøft</h2>
+    <div class="felt">
+      <label><span>Djupn på grøfta (m, tom = djupaste objekt + 0,3)</span><input id="tredjupn" inputmode="decimal" placeholder="auto" onchange="treByggPaaNytt()"></label>
+      <label><span>Overhøgd (loddrett skala)</span><select id="treoverh" onchange="treByggPaaNytt()"><option value="1">1× (verkeleg)</option><option value="2">2×</option><option value="3">3×</option></select></label>
+      <label><span>Terreng</span><select id="treterreng" onchange="treByggPaaNytt()"><option value="kart">Same kart som i 2D (flyfoto, fargekart …)</option><option value="flyfoto">Flyfoto</option><option value="ingen">Utan kart</option></select></label>
+    </div>
+    <p class="hj" style="margin-top:8px">
+      <label style="display:block"><input type="checkbox" id="treveggar" checked onchange="treByggPaaNytt()"> Veggar med rutenett</label>
+      <label style="display:block"><input type="checkbox" id="trefor" checked onchange="treByggPaaNytt()"> Objekt før retting (grå, gjennomsiktige)</label>
+      <label style="display:block"><input type="checkbox" id="tretekst" checked onchange="treByggPaaNytt()"> Djupnetekst</label>
+      <label style="display:block"><input type="checkbox" id="trebg" checked onchange="treByggPaaNytt()"> Bakgrunnsfiler (DXF/KOF) på bakken</label>
+      <label style="display:block"><input type="checkbox" id="tremaal" onchange="settMaal(this.checked)"> 📏 Målsetting</label></p>
+    <div class="verktoy"><button class="b gra" onclick="treBilete()">📷 Lagre bilete</button><span class="hj" id="tremeld"></span></div>
+    <p class="hj" style="margin-bottom:0">Røyra er farga etter djupn (same fargar som i 2D) og har diameteren når han er kjend. «Grav nedover» viser djupna som eit plan i grøfta.</p>
+  </div>
   <div class="k">
     <h2>1. Skanningar</h2>
     <p class="hj">Kvar gong Snowman Geoscan køyrer, blir det lagra ein logg med posisjon og helling. Trykk på ei rad for å sjå
@@ -223,31 +380,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <div class="melding" id="rmeld"></div>
     <div class="hj" id="sporimu" style="display:none;margin-top:4px"><span style="display:inline-block;width:22px;height:4px;background:#ff6d00;vertical-align:middle"></span> Oransje spor: målt medan IMU-en var borte ($GNGGA) – usikker sidevegs.</div>
   </div>
-  <div class="k">
-    <div class="verktoy" style="justify-content:space-between;margin-bottom:8px"><h2 style="margin:0">Kart</h2>
-      <span><label class="hj" style="display:inline-flex;align-items:center;gap:6px;margin-right:8px" title="Stripa radaren dekkjer: 96 cm, midt på radaren"><input type="checkbox" class="stripeval" checked onchange="settStripe(this.checked)"> Vis skannestripe</label>
-      <button class="b gra" id="tbtn" onclick="startTverr()" disabled title="Last inn ei eksportfil med objekt først">✚ Tverrsnitt</button>
-      <button class="b gra" id="dbtn" onclick="bytDjupnTekst()" style="display:none">Vis djupn på kartet</button>
-      <button class="b gra bgknapp" onclick="opneBg()" title="Teikningar (DXF) og innmålingar (KOF) i kartet">🗺 Bakgrunn</button>
-      <label class="hj" style="display:inline-flex;align-items:center;gap:6px">Kart:
-        <select id="kartlag" class="kartlagval" onchange="velKartlag(this.value)" style="width:auto">
-          <option value="topo">Fargekart (Kartverket)</option>
-          <option value="graatone">Gråtonekart (Kartverket)</option>
-          <option value="flyfoto">Flyfoto (Esri)</option>
-          <option value="osm">OpenStreetMap</option></select>
-        <span id="kartlagmeld" class="ok"></span></label></span></div>
-    <div id="grav" class="k" style="background:var(--kort2);margin:0 0 10px;padding:10px 12px">
-      <div class="verktoy" style="gap:12px">
-        <b>Grav nedover:</b>
-        <input type="range" id="gdjupn" min="0" max="300" step="1" value="0" style="flex:1;min-width:180px">
-        <span style="font-variant-numeric:tabular-nums;min-width:74px;font-weight:700;font-size:18px" id="gtekst">0 cm</span>
-        <button class="b gra" id="gspel" onclick="spelGrav()">▶ Spel av</button>
-        <button class="b gra" id="galt" onclick="slaGravAv()">Vis alt</button>
-      </div>
-      <div class="hj" style="margin-top:4px" id="ginfo"></div>
-    </div>
-    <div id="kart"></div>
-    <div class="hj" id="kartfeil" style="display:none;margin-top:6px">Bakgrunnskartet kunne ikkje lastast (krev internett). Spor og objekt blir viste likevel. Prøv eit anna kart i menyen.</div>
+  <div class="k"><div class="l" style="margin-bottom:6px">Teiknforklaring</div>
     <div class="forkl">
       <span><i style="background:rgba(41,182,246,.55)"></i>skannestripe 96 cm</span>
       <span><i style="background:#3ecf74"></i>helling under 1°</span><span><i style="background:#c6d83a"></i>1–3°</span>
@@ -260,27 +393,6 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <span><i style="background:#e04fd0"></i>2–3 m</span><span><i style="background:#ff6b6b"></i>3–5 m</span>
       <span><i style="background:#ffb347"></i>over 5 m</span>
     </div>
-  </div>
-  <div class="k" id="pos" style="display:none">
-    <div class="verktoy" style="justify-content:space-between"><h2 style="margin:0">Posisjon under bakken</h2>
-      <span><button class="b gra" onclick="eksporterPunkt()">Eksporter punktet</button> <button class="b gra" onclick="kopierPos()">Kopier</button> <a class="b gra" id="poskart" target="_blank" rel="noopener">Opne i kart</a>
-      <button class="b gra" onclick="$('pos').style.display='none';if(posMerke)kart.removeLayer(posMerke)">Lukk</button></span></div>
-    <div class="hj" id="posnamn" style="margin:4px 0 8px"></div>
-    <div class="rad" id="posrad"></div>
-    <p class="hj" style="margin:10px 0 0">Klikk kvar som helst på eller ved eit røyr/ein kabel på kartet (innan 2 m) for å få posisjonen der.
-      Koordinatane er retta for hellinga. Bruk austing/nording til utsetting med R12i, og grav til djupna som står her.</p>
-  </div>
-  <div class="k" id="tverr" style="display:none">
-    <div class="verktoy" style="justify-content:space-between"><h2 style="margin:0" id="ttittel">Tverrsnitt</h2>
-      <span><button class="b gra" onclick="startTverr()">Nytt tverrsnitt</button> <button class="b gra" onclick="lukkTverr()">Lukk</button></span></div>
-    <div class="hj" id="tinfo" style="margin-top:4px"></div>
-    <svg id="tsvg" width="100%" height="280" style="margin-top:8px;background:var(--bg);border-radius:8px"></svg>
-    <div class="forkl"><span><i style="background:#8a6a4a"></i>bakken</span>
-      <span><i style="background:#4ea8ff;border-radius:50%;width:10px;height:10px"></i>objekt etter retting (storleik = diameter når han er kjend)</span>
-      <span><i style="border:1.5px dashed var(--tekst);background:none;border-radius:50%;width:10px;height:10px"></i>der GRED HD/OneVision la det (før retting)</span></div>
-    <div class="tabell" style="margin-top:8px"><table id="ttab"><thead><tr><th>Objekt</th><th class="n">Frå A (m)</th><th class="n">Djupn etter (m)</th>
-      <th class="n">Djupn før (m)</th><th class="n">Flytta langs snittet</th><th class="n">Diameter</th>
-      <th class="n">Austing (E)</th><th class="n">Nording (N)</th><th class="n">Høgd NN2000</th></tr></thead><tbody></tbody></table></div>
   </div>
   <div class="k" id="rboks" style="display:none">
     <h2>Resultat</h2>
@@ -469,6 +581,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   </form>
 </section>
 </main>
+</aside>
+</div>
 
 <div id="bg" class="overlay" style="display:none" onclick="if(event.target==this)lukkBg()"><div class="k modal" style="max-width:820px">
   <button class="b gra lukkx" onclick="lukkBg()" title="Lukk (Esc)">✕</button>
@@ -536,12 +650,20 @@ function set(id,t,c){const e=$(id);e.textContent=t;e.classList.remove("ok","var"
 
 // ---------- faner ----------
 let fane="status";
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>visFane(b.dataset.f));
-function visFane(f){fane=f;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("aktiv",b.dataset.f==f));
+// 3D-grøfta (0.9.25) – tilstanden er deklarert her, så alt under kan bruke han
+const TRE={paa:false,maal:false,r:null,sc:null,cam:null,cv:null,lbl:[],obj:[],grav:null,gravLbl:null,mal:[0,0,0],az:-35,el:38,dist:20,
+  ov:1,bygd:false,teikn:false,ramme:null,senter:null,til:null,lagerJobb:0};
+document.querySelectorAll("#ikonar button[data-f]").forEach(b=>b.onclick=()=>{
+  // Trykk på fana som alt er open: fald panelet saman (eller opp att). Anna fane: opne panelet.
+  if(b.dataset.f==fane&&!$("hogre").classList.contains("lukka")){bytPanel();return}
+  if($("hogre").classList.contains("lukka"))bytPanel();visFane(b.dataset.f)});
+function visFane(f){fane=f;document.querySelectorAll("#ikonar button[data-f]").forEach(b=>b.classList.toggle("aktiv",b.dataset.f==f));
   document.querySelectorAll(".fane").forEach(s=>s.classList.toggle("aktiv",s.id=="f-"+f));
+  // Kartet i midten: resultatkartet under Resultat, live-kartet elles (0.9.25)
+  $("reswrap").style.display=f=="resultat"?"block":"none";$("livewrap").style.display=f=="resultat"?"none":"block";
   lagreOkt();
-  if(f=="status")setTimeout(()=>lkart&&lkart.invalidateSize(),50);
-  if(f=="resultat"){initKart();lastOkter();lastResFiler();lastOV(false);setTimeout(()=>kart&&kart.invalidateSize(),50)}
+  if(f!="resultat")setTimeout(()=>lkart&&lkart.invalidateSize(),50);
+  if(f=="resultat"){initKart();lastOkter();lastResFiler();lastOV(false);setTimeout(()=>{kart&&kart.invalidateSize();treStorleik()},50)}
   if(f=="send")lastInnsending();if(f=="innst")lastInnst()}
 
 // ---------- status ----------
@@ -554,13 +676,13 @@ function utanKontakt(){const forste=kontaktBorte===null;if(forste)kontaktBorte=D
   const sek=Math.round((Date.now()-kontaktBorte)/1000);$("kontakttid").textContent=sek>=2?`(${sek} s)`:"";
   set("fix","ingen kontakt","feil");set("sat","");$("noy").textContent="";$("pjk").textContent="";$("koord").textContent="";
   set("hell","–","var");set("hsrc","");set("fors","–");set("ntrip","–");set("nmeld","");visKorr(null,null);
+  $("satsys").style.display="none";["im-sat","im-noy","im-hell","im-fors","im-korr"].forEach(i=>set(i,"–"));set("im-fix","borte","feil");
   if(forste){vaktNr=null;if(vaktLyd)pip();
     try{if("Notification" in window&&Notification.permission=="granted")new Notification("Snowman Geoscan svarar ikkje",{body:"Statussida har mista kontakten med Geoscan-programmet.",tag:"geoscan-kontakt",requireInteraction:true})}catch(e){}}}
 async function tikk(){if(avslutta)return;let s;try{const r=await fetch("status");if(!r.ok)throw new Error(r.status);s=await r.json()}catch(e){utanKontakt();return}
   if(kontaktBorte!==null){kontaktBorte=null;$("kontakt").style.display="none"}
   const k=s.korr;$("ver").textContent="v"+s.oppdatering.lokal;if(s.stripe)STRIPE=s.stripe;visVakt(s.vakt);
   OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);visUst(s.oppdatering);
-  if(fane!="status")return;
   if(k.pos)oppdaterLive(k.pos,k);
   const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
   set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
@@ -601,7 +723,25 @@ async function tikk(){if(avslutta)return;let s;try{const r=await fetch("status")
       else if(a&&a.kva=="helling")t+=" · hellingsdata ("+Object.keys(a.typar).join(", ")+")";
       else if(a)t+=" · "+(a.kva=="stille"?"ingen data":a.kva);return t})
     .concat(s.ut.map(o=>"ut "+o.port+": "+(o.feil||"ok")),["TCP "+s.tcp_port+": "+s.tcp_klientar+" klientar"]).join("\n");
+  visSatsys(k.satsys,s.gnss_alder);visMini(k,s);
   fuSjekk(s)}
+// ---------- satellittar per system (0.9.25): GSA = i bruk, GSV = i sikte ----------
+function visSatsys(ss,gnssAlder){const e=$("satsys");if(!e)return;
+  if(!ss||!ss.system.length){e.style.display=gnssAlder!=null&&gnssAlder<5?"block":"none";
+    e.innerHTML='<span class="hj" style="font-size:12px">Satellittar per system: mottakaren sender ikkje GSA/GSV. Slå på GSA og GSV for porten i R12i (I/O Configuration → NMEA).</span>';return}
+  e.style.display="grid";
+  e.innerHTML=ss.system.map(x=>`<div class="${x.bruk?"":"ingen"}" title="${esc(x.namn)}: ${x.bruk==null?"–":x.bruk} i bruk i løysinga, ${x.sikte==null?"–":x.sikte} i sikte">`+
+    `<b>${x.bruk==null?"–":x.bruk}</b>${x.sikte!=null?"av "+x.sikte+"<br>":""}${esc(x.kort)}</div>`).join("")+
+    (ss.har_gsa?"":'<span class="hj" style="grid-column:1/-1;font-size:11px">Berre i sikte (GSV). Slå på GSA for å sjå kva som er i bruk.</span>')}
+// Den minimerte infomenyen: berre nøkkeltala (0.9.25)
+function visMini(k,s){const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"],q=k.noy,ok=q&&q.alder!=null&&q.alder<5;
+  set("im-fix",f[0]=="RTK FIX"?"FIX":f[0]=="RTK FLOAT"?"FLOAT":f[0],f[1]);
+  set("im-sat",k.sats==null?"–":String(+k.sats));
+  $("im-noy").innerHTML=ok?`${F(q.qh_cm,1)}<br>${F(q.qv_cm,1)}`:"–";
+  if(k.korrigert)set("im-hell",F(Math.hypot(k.krenging||0,k.stamp||0),1)+"°",Math.abs(k.krenging)>5||Math.abs(k.stamp)>5?"var":"ok");else set("im-hell","–","var");
+  set("im-fors",k.forskyving_cm==null?"–":F(k.forskyving_cm,1)+" cm");
+  const kr=k.korreksjon,a=kr?kr.alder:null,d=s.gnss_alder==null||s.gnss_alder>=5;
+  set("im-korr",d||a==null?"ingen":F(a,1)+" s",d||a==null||a>10?"feil":a>=3?"var":"ok")}
 // Aktivitetsstolpen (0.9.24): ein lysande stolpe vandrar fram og tilbake, eitt steg for kvar ny korreksjon.
 // Gul = korreksjonane er ferske (under 3 s), oransje = seine (3–10 s), raud ramme = ingen korreksjonar.
 const KBAR_N=12;let kbarNye=null,kbarPos=0,kbarRetn=1;
@@ -644,7 +784,7 @@ document.addEventListener("click",()=>{try{lydCtx=lydCtx||new (window.AudioConte
 function slaPaWinVarsel(){if(!("Notification" in window))return;Notification.requestPermission().then(()=>visVakt(null))}
 function visVakt(v){const wb=$("vaktwin");if("Notification" in window)wb.style.display=Notification.permission=="granted"?"none":"inline-block";
   $("vaktlyd").textContent=vaktLyd?"🔊 Lyd på":"🔇 Lyd av";if(!v)return;
-  const a=v.aktive||[];$("vakt").style.display=a.length?"block":"none";
+  const a=v.aktive||[];$("vakt").style.display=a.length?"block":"none";set("im-varsel",a.length?"⚠ "+a.length:"0",a.length?"feil":"ok");
   $("vakttekst").innerHTML=a.map(x=>`<div class="vline">${esc(x.tekst)}${x.sekund>2?` <span style="font-weight:400">(${x.sekund} s)</span>`:""}</div>`).join("");
   const o=v.oppsett||[];$("oppsettvarsel").style.display=o.length?"block":"none";
   $("oppsettvarsel").innerHTML=o.map(t=>"⚠ "+esc(t)).join("<br>")+(o.length?` <a href="#" onclick="visFane('innst');return false" style="color:var(--var)">Innstillingar</a>`:"");
@@ -654,7 +794,7 @@ function visVakt(v){const wb=$("vaktwin");if("Notification" in window)wb.style.d
 // ---------- økt: lagre alt og halde fram der ein slapp (pc/okt.py) ----------
 let OKT=null,gjenopprettar=false,oktTimer=null;
 function uiTilstand(){return{fane,valde:[...valde],spor:visteSpor,valt:[...valt],profil:profilVist&&$("profil").style.display!="none"?profilFi:null,
-  grav:gravPa?+$("gdjupn").value:null,tverr:tverrAB,djupnTekst,
+  grav:gravPa?+$("gdjupn").value:null,tverr:tverrAB,djupnTekst,vis3d:TRE.paa,maal:TRE.maal,
   kart:kart?{lat:kart.getCenter().lat,lng:kart.getCenter().lng,zoom:kart.getZoom()}:null}}
 function lagreOkt(){if(gjenopprettar||!OKT)return;clearTimeout(oktTimer);oktTimer=setTimeout(async()=>{
   try{await post("api/okt/lagre",{ui:uiTilstand()});visOktInfo(new Date().toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit"}))}catch(e){}},1200)}
@@ -677,7 +817,8 @@ async function gjenopprett(o){const ui=o.ui||{};gjenopprettar=true;
         if(ui.profil!=null&&ui.profil<r.tabell.length)visProfil(ui.profil);
         if(ui.djupnTekst)bytDjupnTekst();
         if(ui.grav!=null){$("gdjupn").value=ui.grav;grav(ui.grav)}
-        if(ui.tverr)visTverr(ui.tverr[0],ui.tverr[1])}
+        if(ui.tverr)visTverr(ui.tverr[0],ui.tverr[1]);
+        if(ui.maal)settMaal(true);if(ui.vis3d)vis3D(true)}
       catch(e){$("rmeld").className="melding var";$("rmeld").textContent="Kunne ikkje opne førre resultat att: "+e.message}}
     if(ui.kart&&kart)kart.setView([ui.kart.lat,ui.kart.lng],ui.kart.zoom)}
   finally{gjenopprettar=false}
@@ -698,12 +839,22 @@ async function tilbake(){if(!confirm("Gå tilbake til versjonen før siste oppda
   try{const r=await post("api/tilbake");set("umeld",(r.logg||[]).join(" "),r.ok?"ok":"var")}catch(e){set("umeld",e.message,"feil")}}
 // ---------- meldingar frå utviklaren (pc/meldingar.json) ----------
 async function lastMeldingar(){let d;try{d=await api("api/meldingar")}catch(e){return}
-  const ulest=d.meldingar.filter(m=>!m.lest);
-  $("meldingar").innerHTML=ulest.map(m=>`<div class="mld"><b>💬 Melding frå Hans Petter</b> <span class="hj">${esc(m.dato||"")}${m.versjon?" · v"+esc(m.versjon):""}</span>
-    <p><b style="color:var(--tekst)">${esc(m.tittel||"")}</b><br>${esc(m.tekst||"").replace(/\n/g,"<br>")}</p>
+  const ulest=d.meldingar.filter(m=>!m.lest),eldre=ulest.length-1;
+  // 0.9.25: meldingane er falda saman til tittelen, så kartet får plassen («Les meir» opnar heile teksten)
+  $("meldingar").innerHTML=ulest.map(m=>`<div class="mld"><details><summary style="cursor:pointer"><b>💬 Melding frå Hans Petter</b> <span class="hj">${esc(m.dato||"")}${m.versjon?" · v"+esc(m.versjon):""}</span>
+    · <b style="color:var(--tekst)">${esc(m.tittel||"")}</b> <span class="hj">(Les meir)</span></summary>
+    <p>${esc(m.tekst||"").replace(/\n/g,"<br>")}</p></details>
     ${Object.keys(m.sjekk||{}).length?`<p class="hj">Svar på ${Object.keys(m.sjekk).length} punkt i testsjekklista – sjå «Send inn».</p>`:""}
     <button class="b" onclick="lestMelding('${esc(m.id)}')">OK, lese</button>
-    ${Object.keys(m.sjekk||{}).length?` <button class="b gra" onclick="visFane('send');lestMelding('${esc(m.id)}')">Gå til sjekklista</button>`:""}</div>`).join("")}
+    ${Object.keys(m.sjekk||{}).length?` <button class="b gra" onclick="visFane('send');lestMelding('${esc(m.id)}')">Gå til sjekklista</button>`:""}</div>`).join("");
+  // 0.9.25: berre den nyaste ulesne meldinga blir vist. Dei eldre ligg bak «Vis eldre», så kartet får plassen.
+  if(eldre>0){[...$("meldingar").children].slice(1).forEach(e=>{e.style.display=visEldre?"":"none"});
+    $("meldingar").children[0].insertAdjacentHTML("beforeend",`<span class="hj" style="margin-left:10px">${eldre} eldre ulesne melding${eldre==1?"":"ar"}:
+      <a href="#" onclick="visEldre=!visEldre;lastMeldingar();return false" style="color:var(--blaa)">${visEldre?"skjul":"vis"}</a> ·
+      <a href="#" onclick="alleLesne();return false" style="color:var(--blaa)">merk alle som lesne</a></span>`)}}
+let visEldre=false;
+async function alleLesne(){let d;try{d=await api("api/meldingar")}catch(e){return}
+  for(const m of d.meldingar.filter(m=>!m.lest))try{await post("api/melding-lest",{id:m.id})}catch(e){}lastMeldingar()}
 async function lestMelding(id){try{await post("api/melding-lest",{id})}catch(e){}lastMeldingar()}
 lastMeldingar();
 
@@ -720,7 +871,7 @@ const KARTLAG={
 function initKart(){if(kart)return;kart=L.map("kart",{zoomControl:true}).setView([62.39,6.58],12);
   setGrunn();stripeRend=L.canvas({padding:.5});lagStripe=L.layerGroup();if(visStripe)lagStripe.addTo(kart);
   lagSpor=L.layerGroup().addTo(kart);lagObj=L.layerGroup().addTo(kart);
-  L.control.scale({imperial:false}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt());
+  L.control.scale({imperial:false,position:"bottomright"}).addTo(kart);kart.on("click",tverrKlikk);kart.on("moveend",()=>lagreOkt());
   hentKartlag();bgHent()}
 let kartlagHenta=null;
 function hentKartlag(){if(!kartlagHenta)kartlagHenta=api("api/kartlag").then(r=>{if(KARTLAG[r.kartlag])kartlag=r.kartlag}).catch(()=>{});
@@ -797,7 +948,8 @@ function settStripe(v){visStripe=v;try{localStorage.setItem("geoscan_stripe",v?"
 {const f=()=>{document.querySelectorAll(".stripeval").forEach(e=>e.checked=visStripe);const a=$("lautop");if(a)a.checked=autoPause};
   if(document.readyState=="loading")document.addEventListener("DOMContentLoaded",f);else f()}
 // Auto-pause (0.9.18, ønske frå Norman): ikkje teikn stripe når vogna står, eller svingar kraftig (snur og rangerar)
-const AP_FART=0.25,AP_SVING=15,AP_KNEKK=35,AP_KNEKK_1M=25,AP_HALD=1.5;let lhist=[],lpauseTil=0;   // 0.9.23: strengare (ønske frå Norman 11.11)let autoPause=true,lforrRt=null,lforrB=null,lpausa=false;
+const AP_FART=0.25,AP_SVING=15,AP_KNEKK=35,AP_KNEKK_1M=25,AP_HALD=1.5;let lhist=[],lpauseTil=0;   // 0.9.23: strengare (ønske frå Norman 11.11)
+let autoPause=true,lforrRt=null,lforrB=null,lpausa=false;   // 0.9.25: stod før etter kommentaren over og vart aldri deklarerte
 try{const v=localStorage.getItem("geoscan_autopause");if(v!==null)autoPause=v=="1"}catch(e){}
 function settAutoPause(v){autoPause=v;try{localStorage.setItem("geoscan_autopause",v?"1":"0")}catch(e){}}
 const retning=(a,b)=>{const dy=(b[0]-a[0])*111320,dx=(b[1]-a[1])*111320*Math.cos(a[0]*Math.PI/180);return Math.atan2(dx,dy)*180/Math.PI};
@@ -833,7 +985,7 @@ function stilVogn(){const el=lmerke&&lmerke.getElement();if(!el)return;const v=e
 function initLive(){if(lkart||typeof L=="undefined")return;lkart=L.map("livekart",{zoomControl:true}).setView([62.39,6.58],12);
   lkart.on("zoomend",()=>{if(lmerke){lmerke.setIcon(vognIkon());stilVogn()}});
   lspor=L.layerGroup().addTo(lkart);lstripeRend=L.canvas({padding:.5});lstripe=L.layerGroup();if(visStripe)lstripe.addTo(lkart);
-  L.control.scale({imperial:false}).addTo(lkart);
+  L.control.scale({imperial:false,position:"bottomright"}).addTo(lkart);
   lkart.on("dragstart",()=>{lfolg=false;$("lfolg").checked=false});hentKartlag();bgHent()}
 function setLiveGrunn(){if(!lkart)return;if(lgrunn)lkart.removeLayer(lgrunn);const k=KARTLAG[kartlag]||KARTLAG.topo;
   lgrunn=L.tileLayer(k.url,{maxZoom:22,maxNativeZoom:k.nat,attribution:k.att}).addTo(lkart);lgrunn.bringToBack()}
@@ -995,7 +1147,7 @@ function visResultat(r,namn){initKart();lagObj.clearLayers();siste=r;segs=[];val
           .on("click",e=>{L.DomEvent.stopPropagation(e);if(tverrModus){tverrKlikk(e);return}velObjekt(fi);visPos(fi,idx,null)}).addTo(lagObj)}
       k+=ll.length})});
   if(alle.length)kart.fitBounds(L.latLngBounds(alle).pad(.4));
-  $("dbtn").style.display=r.etter?"inline-block":"none";lukkTverr();
+  $("dbtn").style.display=r.etter&&!TRE.paa?"inline-block":"none";lukkTverr();
   const dmx=Math.max(0,...segs.map(x=>Math.max(x.a??0,x.b??0)));verktoyTilstand(!!r.etter&&segs.length>0,dmx>0);
   $("gdjupn").max=Math.ceil(Math.max(dmx,radarDjupn)*100)+10;djupnTekst=false;$("dbtn").textContent="Vis djupn på kartet";if(lagDjupn)lagDjupn.clearLayers();
   const maks=Math.max(0,...r.tabell.map(t=>+t.maks_endring_cm||0));
@@ -1009,7 +1161,8 @@ function visResultat(r,namn){initKart();lagObj.clearLayers();siste=r;segs=[];val
     tr.innerHTML=`<td><input type=checkbox data-fi="${fi}" ${valt.has(fi)?"checked":""}></td><td>${t.nr}</td><td>${esc(t.id)}</td><td>${esc(t.lag)}</td><td>${esc(t.type)}</td><td>${esc(t.skildring)}</td>
     <td class=n>${ds(t.djupn_for)}</td><td class=n><b>${ds(t.djupn_etter)}</b></td><td class=n>${F(+t.maks_endring_cm||0,1)} cm</td><td class=n>${esc(t.retta)}${t.utan_imu?` <span class=var title="Punkt målt medan IMU-en var borte ($GNGGA): usikker sidevegs">⚠ utan IMU ${esc(t.utan_imu)}</span>`:""}</td><td class=n id="avv${fi}">–</td>`;
     const cb=tr.querySelector("input");cb.onclick=e=>{e.stopPropagation();velObjekt(fi,cb.checked)};
-    tr.onclick=()=>{visProfil(fi)};tb.appendChild(tr)});oppdaterUtval();lastAvvik()}
+    tr.onclick=()=>{visProfil(fi)};tb.appendChild(tr)});oppdaterUtval();lastAvvik();
+  if(TRE.paa)treByggPaaNytt()}
 // Avvik frå kvart objekt til næraste innmålte linje i bakgrunnsfilene (0.9.21)
 async function lastAvvik(){if(!siste||!siste.etter)return;let r;try{r=await post("api/avvik",siste.etter)}catch(e){return}
   (r.avvik||[]).forEach(a=>{const td=$("avv"+a.nr);if(!td)return;
@@ -1045,12 +1198,14 @@ function grav(cm){const d=cm/100;lagreOkt();$("gtekst").textContent=cm+" cm";gra
       const p=[x.ll[0][0]+(x.ll[1][0]-x.ll[0][0])*t,x.ll[0][1]+(x.ll[1][1]-x.ll[0][1])*t];
       L.circleMarker(p,{radius:9,color:"#ffffff",weight:2,fill:false}).addTo(lagSnitt)}});
   $("ginfo").innerHTML=treff.size?`På <b>${cm} cm</b> djupn (±5 cm): `+[...treff].map(esc).join(", "):`Ingen objekt på ${cm} cm djupn (±5 cm).`;
-  if($("profil").style.display!="none")teiknSnittIProfil(d)}
+  if($("profil").style.display!="none")teiknSnittIProfil(d);
+  treGrav()}
 function slaGravAv(stille){gravPa=false;lagreOkt();if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}
   if(lagSnitt)lagSnitt.clearLayers();segs.forEach(x=>x.lag.setStyle({opacity:1,fillOpacity:1}));
   if(lagFor)lagFor.setStyle({opacity:.9,fillOpacity:.6});
   if(!stille){$("gdjupn").value=0;$("gtekst").textContent="0 cm";verktoyTilstand(verkObj,verkDjupn)}
-  const l=document.getElementById("psnitt");if(l)l.remove()}
+  const l=document.getElementById("psnitt");if(l)l.remove();
+  treGrav()}
 function spelGrav(){if(gravTimer){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av";return}
   const g=$("gdjupn");if(+g.value>=+g.max)g.value=0;$("gspel").textContent="⏸ Pause";
   gravTimer=setInterval(()=>{g.value=+g.value+1;grav(+g.value);if(+g.value>=+g.max){clearInterval(gravTimer);gravTimer=null;$("gspel").textContent="▶ Spel av"}},60)}
@@ -1072,7 +1227,8 @@ function oppdaterUtval(){if(!siste)return;lagreOkt();document.querySelectorAll("
   if(!lagValt)lagValt=L.layerGroup().addTo(kart);lagValt.clearLayers();
   valt.forEach(fi=>{const f=siste.etter.features[fi];linjer(f.geometry).forEach(ln=>{const ll=ln.map(c=>[c[1],c[0]]);
     (ll.length>1?L.polyline(ll,{color:"#fff",weight:12,opacity:.6,interactive:false}):L.circleMarker(ll[0],{radius:11,color:"#fff",weight:3,fill:false,interactive:false})).addTo(lagValt)})});
-  lagValt.eachLayer(l=>l.bringToBack&&l.bringToBack())}
+  lagValt.eachLayer(l=>l.bringToBack&&l.bringToBack());
+  if(TRE.paa&&!gjenopprettar)treByggPaaNytt()}
 // punkta til eitt objekt med alt som trengst for eksport
 function punktAv(fi){const f=siste.etter.features[fi],pr=f.properties||{},ll=[];linjer(f.geometry).forEach(ln=>ln.forEach(c=>ll.push([c[1],c[0]])));
   const g=(k,i)=>{const a=pr[k];return a&&a[i]!=null?a[i]:null};
@@ -1215,7 +1371,7 @@ a.download=${JSON.stringify((filStamme()+"_rapport.html"))};a.click()}<\/script>
 let tverrModus=false,tverrA=null,lagTverr=null,tverrLinje=null;
 function startTverr(){if(!siste||!siste.etter)return;initKart();if(!lagTverr)lagTverr=L.layerGroup().addTo(kart);
   lagTverr.clearLayers();tverrModus=true;tverrA=null;kart.getContainer().style.cursor="crosshair";
-  $("tbtn").textContent="Klikk punkt A på kartet …";$("kart").scrollIntoView({behavior:"smooth",block:"center"})}
+  $("tbtn").textContent="Klikk punkt A på kartet …"}
 function lukkTverr(){$("tverr").style.display="none";tverrAB=null;lagreOkt();if(lagTverr)lagTverr.clearLayers();tverrModus=false;
   if(kart)kart.getContainer().style.cursor="";$("tbtn").textContent="✚ Tverrsnitt"}
 function tverrKlikk(e){if(!tverrModus){visPosVed(e.latlng,true);return}const ll=[e.latlng.lat,e.latlng.lng];
@@ -1255,7 +1411,7 @@ function visPos(fi,i,t){const f=siste.etter.features[fi],pr=f.properties||{};
   $("poskart").href=`https://www.google.com/maps/search/?api=1&query=${ll[0].toFixed(7)},${ll[1].toFixed(7)}`;
   posTekst=`${namn}\tE ${E==null?"":E.toFixed(3)}\tN ${N==null?"":N.toFixed(3)}\tUTM${z}\tdjupn ${d1==null?"":d1.toFixed(2)} m\t`+
     `høgd NN2000 ${h==null?"":h.toFixed(2)} m\t${ll[0].toFixed(7)}, ${ll[1].toFixed(7)}`;
-  $("pos").scrollIntoView({behavior:"smooth",block:"nearest"})}
+}
 async function kopierPos(){try{await navigator.clipboard.writeText(posTekst.replaceAll("\t","  "))}catch(e){prompt("Kopier:",posTekst)}}
 // lokale meter rundt A (aust, nord)
 function lokal(a){const t=Math.PI/180,k=Math.cos(a[0]*t);return p=>[(p[1]-a[1])*t*6371000*k,(p[0]-a[0])*t*6371000]}
@@ -1300,7 +1456,7 @@ function teiknTverr(Ag,Bg){const til=lokal(Ag),A=[0,0],B=til(Bg),Lg=Math.hypot(B
       ${(()=>{const pr=siste.etter.features[x.fi].properties||{},E=arrInt(pr.utm_e,x.i,x.t),N=arrInt(pr.utm_n,x.i,x.t),h=arrInt(pr.hoegd_nn2000_m,x.i,x.t);
         return `<td class=n>${E==null?"–":F(E,2)}</td><td class=n>${N==null?"–":F(N,2)}</td><td class=n>${h==null?"–":F(h,2)}</td>`})()}`;
     tr.style.cursor="pointer";tr.onclick=()=>visPos(x.fi,x.i,x.t);tb.appendChild(tr)});
-  $("tverr").scrollIntoView({behavior:"smooth",block:"nearest"})}
+}
 function avstand(a,b){const R=6371000,t=Math.PI/180,dl=(b[1]-a[1])*t,df=(b[0]-a[0])*t;
   const x=Math.sin(df/2)**2+Math.cos(a[0]*t)*Math.cos(b[0]*t)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
 let profilFi=0,profilVist=false;
@@ -1325,7 +1481,7 @@ function visProfil(fi){if(!siste||!siste.etter)return;profilFi=fi;profilVist=tru
   pts.forEach((p,j)=>{const tr=document.createElement("tr");tr.style.cursor="pointer";tr.innerHTML=`<td>${j+1}</td><td class=n>${ue[p.i]==null?"–":F(ue[p.i],3)}</td>
     <td class=n>${un[p.i]==null?"–":F(un[p.i],3)}</td><td class=n><b>${fm(d1[p.i])}</b></td><td class=n>${fm(ho[p.i])}</td><td class=n>${fm(hb[p.i])}</td>
     <td class=n>${fl[p.i]==null?"–":F(fl[p.i],1)+" cm"}</td>`;tr.onclick=()=>visPos(fi,p.i,null);ptb.appendChild(tr)});
-  $("psvg").innerHTML=g;profilY=Y;if(gravPa)teiknSnittIProfil(+$("gdjupn").value/100);$("profil").scrollIntoView({behavior:"smooth",block:"nearest"})}
+  $("psvg").innerHTML=g;profilY=Y;if(gravPa)teiknSnittIProfil(+$("gdjupn").value/100);if($("hogre").classList.contains("lukka"))bytPanel(false);$("profil").scrollIntoView({behavior:"smooth",block:"nearest"})}
 async function lastResFiler(){let l;try{l=await api("api/resultatfiler")}catch(e){return}
   $("rfiler").innerHTML=l.length?l.map(f=>`<a style="color:var(--blaa)" href="last-ned/resultat/${encodeURIComponent(f.fil)}">${esc(f.fil)}</a> (${f.kb} kB)`).join("<br>"):"Ingen enno."}
 
@@ -1569,6 +1725,233 @@ async function brukCom0com(port){await lastInnst();$("iform").elements.onevision
   await hentCom0com();c0cInnhald();com0comLinje()}
 
 startOkt();
+// ---------- layout B2 (0.9.25): infomenyen, panelet og breidda blir hugsa i nettlesaren ----------
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function kartStorleik(){setTimeout(()=>{lkart&&lkart.invalidateSize();kart&&kart.invalidateSize();treStorleik()},60)}
+function bytInfo(på){const e=$("info"),mini=på===undefined?!e.classList.contains("mini"):på;e.classList.toggle("mini",mini);
+  $("infoknapp").textContent=mini?"⇥":"⇤";$("infoknapp").title=mini?"Vis heile infomenyen":"Minimer infomenyen (nøkkeltala blir ståande)";
+  lsSet("geoscan_infomini",mini?"1":"0");kartStorleik()}
+function bytPanel(på){const e=$("hogre"),lukk=på===undefined?!e.classList.contains("lukka"):på;e.classList.toggle("lukka",lukk);
+  $("panelknapp").textContent=lukk?"«":"»";$("panelknapp").title=lukk?"Vis menyen":"Fald saman menyen til berre ikon";
+  lsSet("geoscan_panellukka",lukk?"1":"0");kartStorleik()}
+function settPanelBreidd(w){w=Math.max(300,Math.min(Math.round(w),Math.max(320,innerWidth-420)));$("hogre").style.setProperty("--pw",w+"px");return w}
+{const w=+lsGet("geoscan_panelbreidd",0);if(w)settPanelBreidd(w);else if(innerWidth<1500)settPanelBreidd(380)}
+if(lsGet("geoscan_infomini","0")=="1")bytInfo(true);
+if(lsGet("geoscan_panellukka","0")=="1")bytPanel(true);
+$("dra").addEventListener("mousedown",e=>{e.preventDefault();if($("hogre").classList.contains("lukka"))bytPanel(false);
+  const x0=e.clientX,w0=$("panel").getBoundingClientRect().width;let w=w0;document.body.style.cursor="col-resize";
+  const flytt=ev=>{w=settPanelBreidd(w0+(x0-ev.clientX));lkart&&lkart.invalidateSize({pan:false});kart&&kart.invalidateSize({pan:false});treStorleik()};
+  const slepp=()=>{document.removeEventListener("mousemove",flytt);document.removeEventListener("mouseup",slepp);document.body.style.cursor="";
+    lsSet("geoscan_panelbreidd",String(w));kartStorleik()};
+  document.addEventListener("mousemove",flytt);document.addEventListener("mouseup",slepp)});
+$("dra").addEventListener("dblclick",()=>{settPanelBreidd(440);lsSet("geoscan_panelbreidd","440");kartStorleik()});
+addEventListener("resize",()=>treStorleik());
+
+// ---------- 3D-grøft under Resultat (0.9.25) ----------
+// Røyr og kablar frå målinga (etter retting, og grå før retting) i ei grøft, med terreng (flyfoto/kart), bakgrunnsfiler,
+// «grav nedover» som eit plan og målsetting av/på. Byggjer berre på objekta Geoscan alt har (ingen radardata).
+// three.js (vendor/three.min.js, MIT) blir lasta først når 3D blir opna.
+let threeLast=null;
+function lastThree(){if(window.THREE)return Promise.resolve();if(!threeLast)threeLast=new Promise((ok,feil)=>{const s=document.createElement("script");
+  s.src="vendor/three.min.js";s.onload=()=>ok();s.onerror=()=>feil(new Error("fann ikkje three.min.js"));document.head.appendChild(s)});return threeLast}
+async function vis3D(på){
+  if(på&&!(siste&&siste.etter&&segs.length)){const m=$("rmeld");m.className="melding var";
+    m.innerHTML="<b>3D-grøfta treng objekt.</b> Vel ei måling frå OneVision med røyr eller kablar (Targets) først.";return}
+  TRE.paa=!!på;$("tre").style.display=på?"block":"none";$("reswrap").classList.toggle("tre3d",!!på);$("b2d").classList.toggle("gra",!!på);$("b3d").classList.toggle("gra",!på);
+  document.querySelectorAll("#reswrap .berre2d").forEach(e=>e.style.display=på?"none":"");
+  document.querySelectorAll("#reswrap .berre3d").forEach(e=>e.style.display=på?"":"none");
+  $("dbtn").style.display=!på&&siste&&siste.etter?"inline-block":"none";$("tbtn").style.display=på?"none":"";
+  $("treval").style.display=på?"block":"none";lukkTverr();lagreOkt();
+  if(!på)return;
+  try{await lastThree()}catch(e){$("tremeld").textContent="Kunne ikkje laste 3D: "+e.message;return}
+  treByggPaaNytt()}
+function settMaal(v){TRE.maal=!!v;$("tremaal").checked=TRE.maal;$("tmaal").textContent=TRE.maal?"📏 Målsetting på":"📏 Målsetting av";
+  $("tmaal").classList.toggle("gra",!TRE.maal);lagreOkt();if(TRE.paa&&window.THREE)treByggPaaNytt()}
+function bytMaal(){settMaal(!TRE.maal)}
+function treStorleik(){if(!TRE.r)return;const c=$("tre");const w=c.clientWidth,h=c.clientHeight;if(!w||!h)return;
+  TRE.r.setSize(w,h,false);TRE.cam.aspect=w/h;TRE.cam.updateProjectionMatrix();treTeikn()}
+function treTeikn(){if(TRE.ramme)return;TRE.ramme=requestAnimationFrame(()=>{TRE.ramme=null;treRender()})}
+function treKameraPos(){const t=Math.PI/180,el=Math.max(3,Math.min(89,TRE.el))*t,az=TRE.az*t,[x,y,z]=TRE.mal;
+  TRE.cam.position.set(x+TRE.dist*Math.cos(el)*Math.sin(az),y+TRE.dist*Math.sin(el),z+TRE.dist*Math.cos(el)*Math.cos(az));TRE.cam.lookAt(x,y,z)}
+function treRender(){if(!TRE.r||!TRE.paa)return;treKameraPos();TRE.r.render(TRE.sc,TRE.cam);
+  const c=$("tre"),W=c.clientWidth,H=c.clientHeight,v=new THREE.Vector3();
+  for(const l of TRE.lbl){v.set(l.p[0],l.p[1],l.p[2]).project(TRE.cam);const synleg=v.z<1&&Math.abs(v.x)<1.05&&Math.abs(v.y)<1.05;
+    l.el.style.display=synleg?"block":"none";if(synleg){l.el.style.left=((v.x+1)/2*W)+"px";l.el.style.top=((1-v.y)/2*H)+"px"}}}
+function treKamera(k){if(k=="behald"){treTeikn();return}const R=TRE.ramme3||{len:10,bre:3,ang:0};const L2=Math.max(R.len,R.bre);
+  if(k=="ovanfra"){TRE.el=88;TRE.az=-R.ang;TRE.dist=L2*1.5+4}
+  else if(k=="langs"){TRE.el=24;TRE.az=-R.ang+90;TRE.dist=L2*1.1+4}
+  else{TRE.el=50;TRE.az=-R.ang-30;TRE.dist=L2*1.45+5}
+  TRE.mal=[0,-0.6*TRE.ov,0];treTeikn()}
+function treInit(){if(TRE.r)return;const cv=$("trecv");
+  TRE.r=new THREE.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true});TRE.r.setClearColor(0xdfe8ee);TRE.r.setPixelRatio(Math.min(2,devicePixelRatio||1));
+  TRE.cam=new THREE.PerspectiveCamera(40,1,0.05,2000);
+  // mus: venstre = snu, høgre eller Shift = flytt, hjul = zoom. Klikk utan å dra = vel røyret.
+  let dra=null;
+  cv.addEventListener("contextmenu",e=>e.preventDefault());
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);dra={x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,flytt:e.button==2||e.shiftKey}});
+  cv.addEventListener("pointermove",e=>{if(!dra)return;const dx=e.clientX-dra.x,dy=e.clientY-dra.y;dra.x=e.clientX;dra.y=e.clientY;
+    if(dra.flytt){const s=TRE.dist/cv.clientHeight*1.1,a=TRE.az*Math.PI/180,h=[Math.cos(a),-Math.sin(a)],f=[-Math.sin(a),-Math.cos(a)];
+      TRE.mal[0]+=-h[0]*dx*s+f[0]*dy*s;TRE.mal[2]+=-h[1]*dx*s+f[1]*dy*s}
+    else{TRE.az-=dx*0.35;TRE.el=Math.max(3,Math.min(89,TRE.el+dy*0.3))}treTeikn()});
+  cv.addEventListener("pointerup",e=>{const d=dra;dra=null;if(d&&Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<4)treKlikk(e)});
+  cv.addEventListener("wheel",e=>{e.preventDefault();TRE.dist=Math.max(1.5,Math.min(800,TRE.dist*(e.deltaY>0?1.12:1/1.12)));treTeikn()},{passive:false})}
+function treKlikk(e){if(!TRE.sc)return;const r=$("trecv").getBoundingClientRect(),m=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+  const rc=new THREE.Raycaster();rc.setFromCamera(m,TRE.cam);const t=rc.intersectObjects(TRE.obj,false)[0];
+  if(t&&t.object.userData.fi!=null){const fi=t.object.userData.fi;velObjekt(fi,true);visProfil(fi);treByggPaaNytt()}}
+function treByggPaaNytt(){if(!TRE.paa||!window.THREE)return;treInit();treBygg();treStorleik()}
+// lokal ENU-ramme (meter) rundt midten av objekta: x = aust, z = −nord, y = opp (negativ under bakken, gonga med overhøgda)
+function treBygg(){const T=THREE;const jobb=++TRE.lagerJobb;TRE._lbl=lbl;
+  const sc=new T.Scene();TRE.sc=sc;TRE.obj=[];TRE.lbl.forEach(l=>l.el.remove());TRE.lbl=[];
+  sc.add(new T.HemisphereLight(0xffffff,0x667788,1.0));const dl=new T.DirectionalLight(0xffffff,1.0);dl.position.set(-30,60,40);sc.add(dl);
+  const ov=+$("treoverh").value||1;TRE.ov=ov;
+  const fe=siste.etter.features,fo=siste.for?siste.for.features:[];
+  const alle=[];fe.forEach(f=>linjer(f.geometry).forEach(ln=>ln.forEach(c=>alle.push([c[1],c[0]]))));
+  if(!alle.length)return;
+  const sn=[alle.reduce((a,p)=>a+p[0],0)/alle.length,alle.reduce((a,p)=>a+p[1],0)/alle.length];TRE.senter=sn;
+  const til=lokal(sn);TRE.til=til;const P=ll=>{const q=til(ll);return[q[0],-q[1]]};   // [x, z]
+  // grøfta: hovudretning (PCA) av alle punkta, med 0,6 m ekstra kvar veg
+  const xy=alle.map(P);let sxx=0,szz=0,sxz=0;xy.forEach(([x,z])=>{sxx+=x*x;szz+=z*z;sxz+=x*z});
+  const ang=0.5*Math.atan2(2*sxz,sxx-szz),u=[Math.cos(ang),Math.sin(ang)],w=[-u[1],u[0]];
+  let u0=1e9,u1=-1e9,w0=1e9,w1=-1e9;xy.forEach(([x,z])=>{const a=x*u[0]+z*u[1],b=x*w[0]+z*w[1];u0=Math.min(u0,a);u1=Math.max(u1,a);w0=Math.min(w0,b);w1=Math.max(w1,b)});
+  const pad=0.6;u0-=pad;u1+=pad;w0-=pad;w1+=pad;if(w1-w0<1.6){const m=(w0+w1)/2;w0=m-0.8;w1=m+0.8}
+  const hj=(a,b)=>[a*u[0]+b*w[0],a*u[1]+b*w[1]];const hjorne=[hj(u0,w0),hj(u1,w0),hj(u1,w1),hj(u0,w1)];
+  const dmax=Math.max(0,...segs.map(x=>Math.max(x.a??0,x.b??0)));
+  const dIn=parseFloat(String($("tredjupn").value).replace(",","."));const D=dIn>0?dIn:Math.max(0.6,Math.ceil((dmax+0.3)*10)/10);
+  TRE.ramme3={len:u1-u0,bre:w1-w0,ang:-ang*180/Math.PI,D};
+  const Y=d=>-d*ov;TRE.hj=hjorne;TRE.Y=Y;
+  // terreng: plan rundt grøfta med hol der grøfta er
+  const marg=Math.max(12,(u1-u0)*0.6);let xmin=1e9,xmax=-1e9,zmin=1e9,zmax=-1e9;
+  hjorne.forEach(([x,z])=>{xmin=Math.min(xmin,x);xmax=Math.max(xmax,x);zmin=Math.min(zmin,z);zmax=Math.max(zmax,z)});
+  xmin-=marg;xmax+=marg;zmin-=marg;zmax+=marg;const GW=xmax-xmin,GH=zmax-zmin;
+  const ac=document.createElement("canvas");const PX=Math.min(2048,Math.round(Math.max(GW,GH)*12));ac.width=Math.round(PX*GW/Math.max(GW,GH));ac.height=Math.round(PX*GH/Math.max(GW,GH));
+  const ag=ac.getContext("2d");ag.fillStyle="#fff";ag.fillRect(0,0,ac.width,ac.height);ag.fillStyle="#000";ag.beginPath();
+  hjorne.forEach(([x,z],i)=>{const cx=(x-xmin)/GW*ac.width,cy=(z-zmin)/GH*ac.height;i?ag.lineTo(cx,cy):ag.moveTo(cx,cy)});ag.fill();
+  const alfa=new T.CanvasTexture(ac);
+  const terrMat=new T.MeshLambertMaterial({color:0xd5e4cf,alphaMap:alfa,transparent:true,alphaTest:.5,side:T.DoubleSide});
+  const terr=new T.Mesh(new T.PlaneGeometry(GW,GH),terrMat);terr.rotation.x=-Math.PI/2;terr.position.set((xmin+xmax)/2,0,(zmin+zmax)/2);sc.add(terr);
+  // CanvasTexture: øvst i biletet = −z (nord). PlaneGeometry etter rotasjonen: v=1 = −z. flipY gjer at canvas-toppen blir v=1.
+  const terrVal=$("treterreng").value;const lag=terrVal=="flyfoto"?"flyfoto":terrVal=="kart"?kartlag:null;
+  // kartbiletet blir hugsa så lenge området og kartet er det same (ikkje henta på nytt ved kvar endring)
+  const tkey=[lag,sn[0].toFixed(6),sn[1].toFixed(6),xmin.toFixed(1),xmax.toFixed(1),zmin.toFixed(1),zmax.toFixed(1)].join("|");
+  const brukTx=tx=>{if(jobb!=TRE.lagerJobb||!tx)return;terrMat.map=tx;terrMat.color.set(0xffffff);terrMat.needsUpdate=true;treTeikn()};
+  $("tremeld").textContent="";
+  if(lag&&TRE.texKey==tkey&&TRE.tex)brukTx(TRE.tex);
+  else if(lag)treFlis(lag,[xmin,xmax,zmin,zmax],til,sn).then(tx=>{TRE.texKey=tkey;TRE.tex=tx;brukTx(tx)})
+    .catch(e=>{$("tremeld").textContent="Fekk ikkje kartet på terrenget ("+e.message+"). Krev internett.";});
+  // botn og veggar
+  const fyll=(pts,y,mat)=>{const s=new T.Shape();pts.forEach(([x,z],i)=>i?s.lineTo(x,-z):s.moveTo(x,-z));const m=new T.Mesh(new T.ShapeGeometry(s),mat);m.rotation.x=-Math.PI/2;m.position.y=y;sc.add(m);return m};
+  fyll(hjorne,Y(D),new T.MeshLambertMaterial({color:0x2a2f33,side:T.DoubleSide}));
+  if($("treveggar").checked){const wm=new T.MeshLambertMaterial({color:0x6fb6e6,transparent:true,opacity:.3,side:T.DoubleSide,depthWrite:false});
+    const lm=new T.LineBasicMaterial({color:0x2b6f9e,transparent:true,opacity:.75});
+    for(let i=0;i<4;i++){const a=hjorne[i],b=hjorne[(i+1)%4],g=new T.BufferGeometry();
+      g.setAttribute("position",new T.Float32BufferAttribute([a[0],0,a[1],b[0],0,b[1],b[0],Y(D),b[1],a[0],0,a[1],b[0],Y(D),b[1],a[0],Y(D),a[1]],3));g.computeVertexNormals();
+      sc.add(new T.Mesh(g,wm));const L2=Math.hypot(b[0]-a[0],b[1]-a[1]),pts=[];
+      for(let s=0;s<=L2+1e-6;s+=0.5){const t=s/L2,x=a[0]+(b[0]-a[0])*t,z=a[1]+(b[1]-a[1])*t;pts.push(x,0,z,x,Y(D),z)}
+      for(let d=0;d<=D+1e-6;d+=0.25)pts.push(a[0],Y(d),a[1],b[0],Y(d),b[1]);
+      const lg=new T.BufferGeometry();lg.setAttribute("position",new T.Float32BufferAttribute(pts,3));sc.add(new T.LineSegments(lg,lm))}}
+  // djupneskala på det eine hjørnet
+  for(let d=0.5;d<=D+1e-6;d+=0.5)lbl([hjorne[0][0],Y(d),hjorne[0][1]],F(d,1)+" m","svak");
+  // røyr og kablar
+  const fargeTal=c=>new T.Color(c);
+  const roeyr=(a,b,r,mat,fi)=>{const A=new T.Vector3(...a),B=new T.Vector3(...b),Ln=A.distanceTo(B);if(Ln<1e-4)return;
+    const m=new T.Mesh(new T.CylinderGeometry(r,r,Ln,16,1,false),mat);m.position.copy(A).add(B).multiplyScalar(.5);
+    m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),B.clone().sub(A).normalize());m.userData.fi=fi;sc.add(m);TRE.obj.push(m);
+    const k=new T.Mesh(new T.SphereGeometry(r,12,8),mat);k.position.copy(B);k.userData.fi=fi;sc.add(k);TRE.obj.push(k)};
+  const djupnTekst=$("tretekst").checked,berreValde=fe.length>25&&valt.size;
+  const objPkt=[];   // per objekt: [{x,z,y,d,r}] til målsettinga
+  fe.forEach((f,fi)=>{const pr=f.properties||{},d1=pr.djupn_retta_m||[],dia=+pr.diameter_mm>0?+pr.diameter_mm/1000:null,r=Math.max(dia?dia/2:0.04,0.07),vald=valt.has(fi);
+    const namn=[pr.id,pr.layer].filter(Boolean).join(" · ")||"objekt "+(fi+1);let k=0;const pp=[];
+    linjer(f.geometry).forEach(ln=>{const q=ln.map((c,j)=>{const [x,z]=P([c[1],c[0]]),d=d1[k+j];return{x,z,d,y:d==null?0:Y(d)}});
+      if(q.length==1){const p=q[0];const m=new T.Mesh(new T.SphereGeometry(Math.max(r,0.08),16,12),new T.MeshLambertMaterial({color:fargeTal(djFarge(p.d)),emissive:vald?0x444444:0}));
+        m.position.set(p.x,p.y,p.z);m.userData.fi=fi;sc.add(m);TRE.obj.push(m)}
+      for(let j=0;j+1<q.length;j++){const dm=q[j].d!=null&&q[j+1].d!=null?(q[j].d+q[j+1].d)/2:q[j].d;
+        roeyr([q[j].x,q[j].y,q[j].z],[q[j+1].x,q[j+1].y,q[j+1].z],r,new T.MeshLambertMaterial({color:fargeTal(djFarge(dm)),emissive:vald?0x555555:0}),fi)}
+      q.forEach(p=>pp.push(Object.assign(p,{r})));k+=ln.length});
+    objPkt.push({fi,namn,pp,r});
+    if(pp.length&&djupnTekst&&(!berreValde||vald)){const ds=pp.map(p=>p.d).filter(d=>d!=null),m=pp[Math.floor(pp.length/2)];
+      lbl([m.x,m.y+r+0.06*ov,m.z],esc(namn)+(ds.length?" · "+F(Math.min(...ds),2)+(Math.max(...ds)-Math.min(...ds)>0.05?"–"+F(Math.max(...ds),2):"")+" m":"")+(dia?" ("+Math.round(dia*1000)+" mm)":""),vald?"maal":"")}});
+  // før retting: grå og gjennomsiktige
+  if($("trefor").checked)fo.forEach((f,fi)=>{const d0=((fe[fi]||{}).properties||{}).djupn_for_m||[],dia=+((fe[fi]||{}).properties||{}).diameter_mm>0?+fe[fi].properties.diameter_mm/1000:null;
+    const mat=new T.MeshLambertMaterial({color:0x9aa7b1,transparent:true,opacity:.35,depthWrite:false});let k=0;
+    linjer(f.geometry).forEach(ln=>{const q=ln.map((c,j)=>{const [x,z]=P([c[1],c[0]]);return[x,d0[k+j]==null?0:Y(d0[k+j]),z]});
+      for(let j=0;j+1<q.length;j++){const A=new T.Vector3(...q[j]),B=new T.Vector3(...q[j+1]),Ln=A.distanceTo(B);if(Ln<1e-4)continue;
+        const m=new T.Mesh(new T.CylinderGeometry(dia?dia/2:0.035,dia?dia/2:0.035,Ln,10),mat);m.position.copy(A).add(B).multiplyScalar(.5);
+        m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),B.clone().sub(A).normalize());sc.add(m)}k+=ln.length})});
+  // bakgrunnsfiler (DXF/KOF): på bakken, eller i rett djupn når linja har høgd (NN2000) og objekta har bakkehøgd
+  if($("trebg").checked){const bk=[];fe.forEach(f=>((f.properties||{}).bakke_nn2000_m||[]).forEach(v=>{if(v!=null)bk.push(v)}));bk.sort((a,b)=>a-b);
+    const bakke=bk.length?bk[Math.floor(bk.length/2)]:null;
+    for(const fl of bgFiler){if(!fl.synleg)continue;const d=bgData[fl.id+"|"+fl.gjort];if(!d)continue;const skjult=new Set(fl.skjulte_lag||[]);
+      (d.features||[]).forEach(ft=>{if(skjult.has(ft.properties.lag))return;const g=ft.geometry;if(!g)return;
+        const lin=g.type=="LineString"?[g.coordinates]:g.type=="MultiLineString"?g.coordinates:g.type=="Polygon"?g.coordinates:[];
+        const col=new T.Color(fl.farge||ft.properties.farge||"#1f6fd1");
+        lin.forEach(ln=>{const pts=[];ln.forEach(c=>{const [x,z]=P([c[1],c[0]]);if(x<xmin||x>xmax||z<zmin||z>zmax)return;
+          const y=c.length>2&&bakke!=null?(c[2]-bakke)*ov:0.03;pts.push(new T.Vector3(x,Math.min(0.03,y),z))});
+          if(pts.length>1)sc.add(new T.Line(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:col})))})})}}
+  TRE.fyll=fyll;TRE.gravMesh=null;TRE.gravL=null;treGrav();
+  // målsetting
+  if(TRE.maal)treMaal(sc,hjorne,u,w,u0,u1,w0,w1,D,Y,objPkt);
+  treKamera(TRE.bygd?"behald":"skraatt");TRE.bygd=true;
+  $("treinfo").innerHTML="Dra = snu · rull = zoom · høgre knapp (eller Shift) = flytt · klikk på eit røyr = vel det"+
+    `<br>Grøft ${F(u1-u0,1)} × ${F(w1-w0,1)} m, djupn ${F(D,2)} m`+(ov>1?` · <b>overhøgd ${ov}×</b>`:"");
+  treTeikn()
+  function lbl(p,t,kl){const el=document.createElement("div");el.className="tl "+(kl||"");el.innerHTML=t;$("trelbl").appendChild(el);TRE.lbl.push({p,el})}
+  TRE._lbl=lbl}
+function treMaal(sc,hj,u,w,u0,u1,w0,w1,D,Y,objPkt){const T=THREE,lbl=TRE._lbl||(()=>{});
+  const lm=new T.LineBasicMaterial({color:0x111111}),ym=new T.LineBasicMaterial({color:0xd4a000});
+  const dim=(a,b,t,gul)=>{const A=new T.Vector3(...a),B=new T.Vector3(...b),m=gul?ym:lm;
+    sc.add(new T.Line(new T.BufferGeometry().setFromPoints([A,B]),m));
+    const d=B.clone().sub(A).normalize();let n=new T.Vector3(0,1,0);if(Math.abs(d.y)>.9)n=new T.Vector3(1,0,0);
+    const k=new T.Vector3().crossVectors(d,n).normalize().multiplyScalar(.12);
+    [A,B].forEach(P=>sc.add(new T.Line(new T.BufferGeometry().setFromPoints([P.clone().add(k),P.clone().sub(k)]),m)));
+    TRE._lbl([(A.x+B.x)/2,(A.y+B.y)/2,(A.z+B.z)/2],"📏 "+t,"maal")};
+  const P2=(a,b)=>[a*u[0]+b*w[0],a*u[1]+b*w[1]];
+  {const a=P2(u0,w0-0.5),b=P2(u1,w0-0.5);dim([a[0],0.02,a[1]],[b[0],0.02,b[1]],F(u1-u0,2)+" m")}
+  {const a=P2(u1+0.5,w0),b=P2(u1+0.5,w1);dim([a[0],0.02,a[1]],[b[0],0.02,b[1]],F(w1-w0,2)+" m")}
+  dim([hj[0][0],0,hj[0][1]],[hj[0][0],Y(D),hj[0][1]],F(D,2)+" m");
+  // djupn til toppen av kvart røyr, der det ligg grunnast
+  objPkt.slice(0,20).forEach(o=>{const p=o.pp.filter(q=>q.d!=null).sort((a,b)=>a.d-b.d)[0];if(!p)return;
+    dim([p.x,0,p.z],[p.x,p.y+o.r,p.z],F(Math.max(0,p.d-o.r),2)+" m",true)});
+  // klaring der to objekt kryssar kvarandre (ovanfrå), i høgd mellom røyra
+  const kr=[];for(let i=0;i<objPkt.length;i++)for(let j=i+1;j<objPkt.length;j++){const A=objPkt[i].pp,B=objPkt[j].pp;
+    for(let a=0;a+1<A.length;a++)for(let b=0;b+1<B.length;b++){const p=A[a],q=A[a+1],r=B[b],s=B[b+1];
+      const den=(q.x-p.x)*(s.z-r.z)-(q.z-p.z)*(s.x-r.x);if(Math.abs(den)<1e-9)continue;
+      const t=((r.x-p.x)*(s.z-r.z)-(r.z-p.z)*(s.x-r.x))/den,v=((r.x-p.x)*(q.z-p.z)-(r.z-p.z)*(q.x-p.x))/den;
+      if(t<0||t>1||v<0||v>1||p.d==null||q.d==null||r.d==null||s.d==null)continue;
+      const da=p.d+(q.d-p.d)*t,db=r.d+(s.d-r.d)*v,x=p.x+(q.x-p.x)*t,z=p.z+(q.z-p.z)*t;
+      kr.push({x,z,da,db,ra:objPkt[i].r,rb:objPkt[j].r})}}
+  kr.slice(0,12).forEach(c=>{const top=Math.min(c.da,c.db),bot=Math.max(c.da,c.db),ro=c.da<c.db?c.ra:c.rb,ru=c.da<c.db?c.rb:c.ra;
+    const kl=bot-ru-(top+ro);dim([c.x+0.08,Y(top+ro),c.z],[c.x+0.08,Y(bot-ru),c.z],F(Math.max(0,kl),2)+" m klaring",true)})}
+// Kart eller flyfoto på terrenget: hentar kartfliser for området og set dei saman til eitt bilete
+async function treFlis(lag,[xmin,xmax,zmin,zmax],til,sn){const K=KARTLAG[lag]||KARTLAG.topo;
+  const tilLL=(x,z)=>{const t=Math.PI/180,k=Math.cos(sn[0]*t);return[sn[0]+(-z)/(6371000*t),sn[1]+x/(6371000*t*k)]};
+  const nv=tilLL(xmin,zmin),sa=tilLL(xmax,zmax);   // nordvest (zmin = nord) og søraust
+  const px=(lat,lon,z)=>{const n=256*2**z,x=(lon+180)/360*n,s=Math.sin(lat*Math.PI/180);return[x,(0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n]};
+  let z=Math.min(K.nat,20);for(;z>12;z--){const a=px(nv[0],nv[1],z),b=px(sa[0],sa[1],z);if((Math.floor(b[0]/256)-Math.floor(a[0]/256)+1)*(Math.floor(b[1]/256)-Math.floor(a[1]/256)+1)<=48)break}
+  const a=px(nv[0],nv[1],z),b=px(sa[0],sa[1],z),c=document.createElement("canvas");c.width=Math.max(2,Math.round(b[0]-a[0]));c.height=Math.max(2,Math.round(b[1]-a[1]));
+  const g=c.getContext("2d");g.fillStyle="#d5e4cf";g.fillRect(0,0,c.width,c.height);
+  const job=[];for(let tx=Math.floor(a[0]/256);tx<=Math.floor(b[0]/256);tx++)for(let ty=Math.floor(a[1]/256);ty<=Math.floor(b[1]/256);ty++){
+    const url=K.url.replace("{z}",z).replace("{x}",tx).replace("{y}",ty);
+    job.push(new Promise(ok=>{const im=new Image();im.crossOrigin="anonymous";im.onload=()=>{g.drawImage(im,tx*256-a[0],ty*256-a[1]);ok(1)};im.onerror=()=>ok(0);im.src=url}))}
+  const n=(await Promise.all(job)).reduce((s,x)=>s+x,0);if(!n)throw new Error("ingen fliser");
+  try{g.getImageData(0,0,1,1)}catch(e){throw new Error("kartet kan ikkje brukast i 3D (CORS)")}
+  const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;tx.anisotropy=8;return tx}
+// Lagre biletet: 3D-teikninga med etikettane oppå, som PNG
+function treBilete(){if(!TRE.r)return;treRender();const src=$("trecv"),c=document.createElement("canvas");c.width=src.width;c.height=src.height;
+  const g=c.getContext("2d"),s=src.width/src.clientWidth;g.drawImage(src,0,0);g.font=`600 ${Math.round(12*s)}px system-ui,Segoe UI,sans-serif`;g.textBaseline="middle";
+  for(const l of TRE.lbl){if(l.el.style.display=="none")continue;const x=parseFloat(l.el.style.left)*s,y=parseFloat(l.el.style.top)*s,t=l.el.textContent,w=g.measureText(t).width+10*s,h=18*s;
+    const cs=getComputedStyle(l.el);g.fillStyle=cs.backgroundColor;g.fillRect(x-w/2,y-h/2,w,h);g.strokeStyle="#333";g.strokeRect(x-w/2,y-h/2,w,h);g.fillStyle=cs.color;g.fillText(t,x-w/2+5*s,y)}
+  g.fillStyle="rgba(255,255,255,.85)";g.fillRect(0,c.height-22*s,c.width,22*s);g.fillStyle="#000";
+  g.fillText(`${OPPHAV.namn} ${OPPHAV.versjon} – ${OPPHAV.produsent} – ${(sisteFil&&sisteFil.namn)||""} – ${new Date().toLocaleString("nb-NO")}`,8*s,c.height-11*s);
+  c.toBlob(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="geoscan_3d_"+new Date().toISOString().slice(0,16).replace(/[-:T]/g,"")+".png";a.click()},"image/png")}
+
+// «Grav nedover» i 3D: eitt plan i grøfta som følgjer glidebrytaren (utan å byggje heile scena på nytt)
+function treGrav(){if(!TRE.paa||!TRE.sc||!TRE.hj)return;const T=THREE;
+  if(TRE.gravMesh){TRE.sc.remove(TRE.gravMesh);TRE.gravMesh=null}if(TRE.gravL){TRE.gravL.el.remove();TRE.lbl=TRE.lbl.filter(l=>l!==TRE.gravL);TRE.gravL=null}
+  if(gravPa){const d=+$("gdjupn").value/100;
+    TRE.gravMesh=TRE.fyll(TRE.hj,TRE.Y(d),new T.MeshBasicMaterial({color:0xff2d7a,transparent:true,opacity:.22,side:T.DoubleSide,depthWrite:false}));
+    TRE._lbl([TRE.hj[1][0],TRE.Y(d),TRE.hj[1][1]],"Grav nedover: "+Math.round(d*100)+" cm","grav");TRE.gravL=TRE.lbl[TRE.lbl.length-1]}
+  treTeikn()}
 </script>
 </body>
 </html>

@@ -1393,3 +1393,55 @@ def test_finn_utstyr_filtrerer_kabel_og_bluetooth():
     assert [x["port"] for x in FU.filtrer(p, "kabel")] == ["COM3", "COM21"]
     assert [x["port"] for x in FU.filtrer(p, "bluetooth")] == ["COM10"]
     assert len(FU.filtrer(p, "alle")) == 3
+
+
+def test_satellittar_per_system_gsv_gsa():
+    """0.9.25: GSV (i sikte) og GSA (i bruk) per system – med og utan system-ID, og frå simulatoren."""
+    import satellittar as S
+    import simuler as SIM
+    s = S.Satellittar()
+    t = 1000.0
+    # NMEA 4.10 med system-ID i GSA og signal-ID i GSV (to signal for GPS: største talet gjeld)
+    lin = [N.build(["GNGSA", "A", "3", "2", "5", "7", "9", "", "", "", "", "", "", "", "", "1.2", "0.7", "1.0", "1"]),
+           N.build(["GNGSA", "A", "3", "65", "66", "", "", "", "", "", "", "", "", "", "", "1.2", "0.7", "1.0", "2"]),
+           N.build(["GPGSV", "1", "1", "11", "02", "40", "100", "45", "1"]),
+           N.build(["GPGSV", "1", "1", "9", "02", "40", "100", "40", "6"]),
+           N.build(["GLGSV", "1", "1", "8", "65", "30", "200", "38", "1"]),
+           N.build(["GAGSV", "1", "1", "7", "01", "20", "50", "30", "7"])]
+    for x in lin:
+        assert s.feed(x, t)
+    st = s.status(t + 1)
+    d = {x["kort"]: (x["bruk"], x["sikte"]) for x in st["system"]}
+    assert d == {"GPS": (4, 11), "GLO": (2, 8), "GAL": (None, 7)}
+    assert st["bruk"] == 6 and st["sikte"] == 26 and st["har_gsv"] and st["har_gsa"]
+    # gamle data tel ikkje
+    assert s.status(t + 10) is None
+    # GNGSA utan system-ID: systemet frå PRN-nummeret (GPS 1–32, GLONASS 65–96, Galileo 301–336, BeiDou 201–)
+    s2 = S.Satellittar()
+    s2.feed(N.build(["GNGSA", "A", "3", "3", "70", "305", "210", "", "", "", "", "", "", "", "", "1.0", "0.6", "0.8"]), t)
+    d2 = {x["kort"]: x["bruk"] for x in s2.status(t)["system"]}
+    assert d2 == {"GPS": 1, "GLO": 1, "GAL": 1, "BDS": 1}
+    # gjennom korrigeraren: linjene går uendra vidare
+    k = G.Korrigerar(dict(G.STANDARD))
+    for x in SIM.Mottakar.satellittar():
+        assert k.handle(x, t) == [x]
+    st3 = k.sat.status(t)
+    assert {x["kort"]: x["bruk"] for x in st3["system"]}["GPS"] == 10 and st3["bruk"] == 18
+
+
+def test_nettside_b2_element_og_3d():
+    """0.9.25: alle $("id") i index.html finst, dei fire fanene har ikon, og three.js ligg ved for 3D-grøfta."""
+    import re
+    web = Path(__file__).resolve().parent.parent / "pc" / "web"
+    s = (web / "index.html").read_text(encoding="utf-8")
+    ids = set(re.findall(r'id="([^"$]+)"', s))
+    ref = set(re.findall(r'\$\("([A-Za-z0-9_\-]+)"\)', s))
+    assert not ref - ids, sorted(ref - ids)
+    for f in ("status", "resultat", "send", "innst"):
+        assert f'data-f="{f}"' in s and f'id="f-{f}"' in s
+    for i in ("info", "hogre", "panel", "livekart", "kart", "tre", "satsys", "im-fix", "b3d", "tremaal"):
+        assert i in ids
+    assert (web / "vendor" / "three.min.js").stat().st_size > 100000
+    assert (web / "vendor" / "THREE-LICENSE").is_file()
+    # 0.9.24-feilen: deklarasjonen stod bak ein kommentar på same line
+    assert "let autoPause=true" in s and not re.search(r"//[^\n]*let autoPause", s)

@@ -2,6 +2,34 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.25 – 14. november 2026
+Ny skjerm (utkast B2, vald av Hans Petter 14.11 etter tre utkast), 3D-grøft og satellittar per system:
+- **Ny skjerm (B2): kartet fyller midten.** Infomenyen til venstre viser Fix, satellittar, QH/QV, PJK, helling med
+  vognskissa, retting, korreksjonar med aktivitetsstolpen og posisjonen – alltid, same kva fane som er open. Ho kan
+  minimerast (⇤) til ei smal stripe med nøkkeltala (fix, satellittar, QH/QV, helling, retting, korreksjonar, varsel).
+  Til høgre er ei ikonstripe (Status, Resultat, Send inn, Innstillingar, og nede Dagslys, Lyd, Varsel i Windows,
+  Avslutt) og eit panel med innhaldet i fana. Panelet kan faldast saman (») og gjerast breiare eller smalare ved å dra
+  i kanten (dobbeltklikk = standard). Vala blir hugsa i nettlesaren. Under Resultat viser kartet i midten
+  resultatkartet, elles live-kartet. Alle funksjonane frå 0.9.24 er med, berre flytta. Meldingane frå Hans Petter er
+  falda saman til tittelen, og berre den nyaste ulesne står open («vis» / «merk alle som lesne» for dei eldre).
+- **3D-grøft under Resultat (av/på).** Knappen «🧊 3D-grøft» over kartet viser røyr og kablar frå målinga i ei grøft
+  i 3D: farga etter djupn som i 2D, med diameter når han er kjend, og grå og gjennomsiktige der GRED HD/OneVision la
+  dei før retting. Grøfta følgjer hovudretninga til objekta. Terrenget kan ha flyfoto eller same kart som i 2D (krev
+  internett), og bakgrunnsfilene (DXF/KOF) blir lagde på bakken, eller i rett djupn når linjene har høgd. «Grav
+  nedover» er eit plan i grøfta. «📏 Målsetting» av/på viser lengd, breidd og djupn på grøfta, djupna til toppen av
+  kvart røyr og klaringa der to objekt kryssar kvarandre. Overhøgd 1–3×, kameraknappar (ovanfrå, skrått, langs
+  grøfta), klikk på eit røyr for å velje det, og «Lagre bilete» (PNG med namn, versjon og fil). Byggjer berre på
+  objekta Geoscan alt har – radardataa (.scan/.data) er ikkje med enno. three.js (MIT) ligg i `pc/web/vendor`.
+- **Satellittar per system (ønske frå Hans Petter 14.11).** Nytt `pc/satellittar.py` les GSA (i bruk) og GSV (i
+  sikte), med og utan system-ID (NMEA 4.10), og finn systemet frå PRN-nummeret når det trengst. Under Fix står t.d.
+  «10 av 12 GPS · 8 av 9 GLO · – av 7 GAL». R12i må sende GSA og GSV for porten (I/O Configuration → NMEA).
+  Til OneVision går framleis berre GGA. Simulatoren sender GSA/GSV, og ny test.
+- **Feilretting (viktig): Status vart ikkje oppdatert i 0.9.24.** I 0.9.23 hamna deklarasjonen av `autoPause`,
+  `lforrB`, `lforrRt` og `lpausa` bak ein kommentar på same line. Live-kartet stoppa då med «lforrB is not defined»
+  kvart sekund, før Fix, helling og korreksjonar vart skrivne. Tala vart difor ikkje oppdaterte. Retta, og funne med
+  ein test i nettlesaren (DEMO).
+- Målestokken på karta står no nede til høgre, så han ikkje kolliderer med knappane og «Grav nedover».
+
 ## 0.9.24 – 12. november 2026
 Etter pakka frå Norman 12.11 (målebok tom for straum, RTK borte frå kl. 15:15):
 - **Aktivitetsstolpe for korreksjonane (ønske frå Norman, som NTRIP-stolpen i Xsite).** Ruta heiter no

@@ -53,7 +53,24 @@ class Mottakar:
                        "1.0", "0001"])
         pashr = N.build(["PASHR", hh, f"{hdg:.2f}", "T", f"{roll:.2f}", f"{pitch:.2f}", "", "0.02", "0.02", "0.05", "2", "1"])
         gst = N.build(["GNGST", hh, "0.02", "0.012", "0.009", "35.0", "0.010", "0.009", "0.018"])   # QH ≈ 1,3 cm, QV 1,8 cm
-        return [pashr, gga, gst]
+        ut = [pashr, gga, gst]
+        if int(t * self.hz) % int(self.hz) == 0:      # ein gong i sekundet: satellittar per system (0.9.25)
+            ut += self.satellittar()
+        return ut
+
+    @staticmethod
+    def satellittar():
+        """GSA (i bruk) og GSV (i sikte) med system-ID som NMEA 4.10. Som R12i med RTK frå TH: berre GPS og
+        GLONASS i løysinga, Galileo og BeiDou i sikte."""
+        bruk = {"1": list(range(2, 12)), "2": list(range(65, 73))}
+        sikte = {"GP": 12, "GL": 9, "GA": 7, "GB": 6}
+        ut = []
+        for sid, prn in bruk.items():
+            ut.append(N.build(["GNGSA", "A", "3"] + [str(x) for x in prn] + [""] * (12 - len(prn)) +
+                              ["1.2", "0.7", "1.0", sid]))
+        for tk, n in sikte.items():
+            ut.append(N.build([tk + "GSV", "1", "1", str(n), "01", "45", "120", "44", "1"]))
+        return ut
 
     def serve(self, port, stop):
         srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

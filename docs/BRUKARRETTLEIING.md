@@ -23,6 +23,16 @@ Dobbeltklikk **Snowman Geoscan DEMO**. Ein simulert mottakar køyrer ei georadar
 Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje. Sjå gjennom alle fanene. Under
 **Resultat** ser du sporet farga etter helling. Demoen rører ikkje utstyret ditt.
 
+## Skjermen (frå 0.9.25)
+
+- **Kartet i midten.** Under Resultat er det resultatkartet, elles live-kartet med vogna.
+- **Infomenyen til venstre** viser Fix, satellittar per system, QH/QV, helling, retting, korreksjonar og posisjonen
+  heile tida. Trykk **⇤** for å minimere henne til nøkkeltala, og **⇥** (eller på tala) for å vise alt att.
+- **Ikona til høgre:** Status, Resultat, Send inn og Innstillingar. Panelet ved sida viser innhaldet. Trykk **»** (eller
+  på ikonet til fana som er open) for å falde panelet saman, og dra i kanten mellom kartet og panelet for å gjere det
+  breiare eller smalare (dobbeltklikk = standard). Nede står Dagslys, Lyd, Varsel i Windows og Avslutt.
+- Vala blir hugsa på PC-en. Meldingane frå Hans Petter står øvst, falda saman til tittelen.
+
 ## 3. Kople til R12i og OneVision
 
 1. **Lukk Trimble Access.** Berre eitt program kan bruke mottakaren om gongen.
@@ -207,6 +217,21 @@ Trykk **📄 Lag rapport** i eksportlinja. Rapporten tek med dei valde objekta, 
 Trykk **Skriv ut / lagre som PDF**, eller last ned rapporten som HTML. Namnet og signaturen til Snowman Geoscan
 står nedst på kvar side.
 
+### 3D-grøft (frå 0.9.25)
+
+Trykk **🧊 3D-grøft** over resultatkartet (krev ei måling med objekt). Røyr og kablar blir viste i ei grøft:
+- farga etter djupn som i 2D, med diameter når han er kjend, og grå og gjennomsiktige der GRED HD/OneVision la dei før
+  retting
+- **dra** for å snu, **rull** for å zoome, **høgre knapp** (eller Shift) for å flytte; **⟲ Ovanfrå**, **↗ Skrått** og
+  **↔ Langs grøfta** set kameraet; klikk på eit røyr for å velje det og sjå djupneprofilen
+- **📏 Målsetting** av/på: lengd, breidd og djupn på grøfta, djupna til toppen av kvart røyr og klaringa der to objekt
+  kryssar
+- **Grav nedover** er eit plan i grøfta som følgjer glidebrytaren
+- i panelet: djupna på grøfta, overhøgd (1–3×), terreng (flyfoto, same kart som i 2D, eller utan kart – kart krev
+  internett), veggar, objekt før retting, djupnetekst og bakgrunnsfiler. **📷 Lagre bilete** lagar ein PNG.
+
+3D-grøfta byggjer på objekta frå målinga. Sjølve radarbiletet er ikkje med enno.
+
 ## 6. Testsjekklista, og send inn det Hans Petter treng
 
 Fana **Send inn**:
@@ -283,6 +308,13 @@ Under Fix på Status står **QH** (horisontal) og **QV** (vertikal) nøyaktighei
 (1 σ, NMEA GST), same som QH/QV i Xsite. Grønt under 3 cm, gult under 10 cm, raudt over. Står det «slå på GST», må
 GST setjast til same rate som GGA i webgrensesnittet til R12i: I/O Configuration → Port Configuration → USB → NMEA.
 
+
+## Satellittar per system (frå 0.9.25)
+
+Under Fix står kor mange satellittar som er **i bruk** i løysinga (GSA) og **i sikte** (GSV) for GPS, GLONASS (GLO),
+Galileo (GAL) og BeiDou (BDS), til dømes «10 av 12 GPS». Står det at mottakaren ikkje sender GSA/GSV, slå dei på for
+porten i webgrensesnittet til R12i: I/O Configuration → Port Configuration → USB → NMEA, same rate som GST.
+Til OneVision blir framleis berre GGA sendt.
 
 ## GPS-oppsett (frå 0.9.18)
 

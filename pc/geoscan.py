@@ -26,10 +26,11 @@ from pathlib import Path
 import helling as H
 import koordinat as K
 import nmea as N
+import satellittar as S
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.24"
+VERSJON = "0.9.25"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -159,6 +160,7 @@ class Korrigerar:
         self.gn_red = {"m": self.lever[2], "kjelde": "antatt: IMU av frå start – R12i sender antenna (9.11 kl. 08:52)"}
         self.siste_epoke = None          # (talker, h_ell, fix, t) – førre GGA, til å måle hoppet ved IN/GN-byte
         self.vakt = Vakt(cfg)
+        self.sat = S.Satellittar()       # satellittar per system frå GSV/GSA (0.9.25)
         self.epoker = {}                 # UTC-tid → posisjon frå mottakaren (til samanlikning med PJK)
         self.zone = int(cfg["sone"]) if str(cfg.get("sone", "auto")).isdigit() else None
         if cfg.get("logg"):
@@ -175,6 +177,9 @@ class Korrigerar:
             self.status["feil_sjekksum"] += 1
             return []
         with self.lock:
+            if line[3:6] in ("GSV", "GSA"):  # satellittar per system (0.9.25)
+                self.sat.feed(line, now)
+                return [line]
             if line[3:6] == "GST":          # nøyaktigheit (1 σ) frå mottakaren, som QH/QV i Xsite
                 self._gst(line)
                 return [line]
@@ -730,6 +735,8 @@ class App:
             ny = k.get(nk)
             if ny:
                 k[nk] = dict(ny, alder=round(time.time() - ny["t"], 1))
+        with self.k.lock:
+            k["satsys"] = self.k.sat.status()
         V = self.k.vakt
         ga = None if self.last_gga_t is None else time.time() - self.last_gga_t
         with self.k.lock:

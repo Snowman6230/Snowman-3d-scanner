@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-14-v0925-ny-skjerm",
+   "dato": "2026-11-14",
+   "versjon": "0.9.25",
+   "tittel": "Versjon 0.9.25: ny skjerm med kartet i midten, 3D-grøft og satellittar per system",
+   "tekst": "Hei Norman! Nytt i versjon 0.9.25:\n\n1. NY SKJERM (versjon 0.9.25)\n• Kartet fyller midten av skjermen. Til venstre står Fix, satellittar, QH/QV, helling, retting og korreksjonar heile tida, same kva fane du er på.\n• Trykk ⇤ øvst til venstre for å minimere infomenyen. Då står berre nøkkeltala att.\n• Til høgre er ikona Status, Resultat, Send inn og Innstillingar. Panelet ved sida kan faldast saman med » og gjerast breiare ved å dra i kanten.\n• Alt du hadde før er med, berre flytta. Dagslys, lyd, varsel i Windows og Avslutt står nede i ikonstripa.\n\n2. 3D-GRØFT UNDER RESULTAT (versjon 0.9.25)\n• Trykk «🧊 3D-grøft» over kartet. Røyr og kablar frå målinga blir viste i ei grøft, farga etter djupn, og grå der OneVision la dei før retting.\n• «📏 Målsetting» viser mål på grøfta, djupna til kvart røyr og klaringa der røyr kryssar. «Grav nedover» er eit plan i grøfta.\n• Terrenget kan ha flyfoto (krev nett). Dra for å snu, rull for å zoome, høgre knapp for å flytte. «Lagre bilete» lagar ein PNG.\n• Radarbiletet sjølv er ikkje med i 3D enno. Det krev at vi kan lese radarfilene (.scan) frå OneVision.\n\n3. SATELLITTAR PER SYSTEM (versjon 0.9.25)\n• Under Fix står kor mange satellittar som er i bruk og i sikte for GPS, GLONASS, Galileo og BeiDou.\n• Slå på GSA og GSV for USB-porten i R12i (I/O Configuration → Port Configuration → USB → NMEA), same rate som GST. Til OneVision går framleis berre GGA.\n\n4. FEILRETTING (versjon 0.9.25)\n• I versjon 0.9.24 vart tala på statussida ikkje oppdaterte (ein feil i live-kartet stoppa dei). Det er retta i 0.9.25.\n\nDETTE TRENG EG\n• Éi måling der same swath finst både i OneVision-mappa (Data/RAW_*.scan og PRC_*.scan, dei første ca. 5 MB) og i IQMaps (.data, .path og .index), og eit skjermbilete av eit djupnesnitt i IQMaps. Då kan eg prøve å få radarbiletet inn i 3D.\n\nHelsing Hans Petter",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-12-v0924-korreksjonar",
    "dato": "2026-11-12",
    "versjon": "0.9.24",
