@@ -1445,3 +1445,13 @@ def test_nettside_b2_element_og_3d():
     assert (web / "vendor" / "THREE-LICENSE").is_file()
     # 0.9.24-feilen: deklarasjonen stod bak ein kommentar på same line
     assert "let autoPause=true" in s and not re.search(r"//[^\n]*let autoPause", s)
+
+
+def test_gps_oppsett_tekst_og_epost_0927():
+    """0.9.27: GPS-oppsettet er namngitt etter situasjonen, og e-postadressa er Gmail."""
+    import opphav
+    s = (Path(__file__).resolve().parent.parent / "pc" / "web" / "index.html").read_text(encoding="utf-8")
+    assert "Brukar du Trimble Access?" in s and "Feilsøking – ingen korreksjonar frå Geoscan (ikkje RTK)" in s
+    assert 'id="gpstab"' in s and 'id="fixhint"' in s and 'id="gpsavvik"' in s
+    assert ">Berre rådata" not in s
+    assert opphav.KONTAKT_EPOST == "hansps69@gmail.com" and "hansps@alpindata.no" not in s

@@ -245,7 +245,7 @@ Fana **Send inn**:
    Trykk **Lagre svara**.
 2. Legg ved filer: ei ekte eksportfil, SCANNH.xml frå R12i, bilete av vogna og masta, og skjermbilete av
    GPS-oppsettet i OneVision.
-3. Trykk **Lag pakke**. Trykk så **✉ Skriv e-post til hansps@alpindata.no**: e-postprogrammet opnar seg med
+3. Trykk **Lag pakke**. Trykk så **✉ Skriv e-post til hansps69@gmail.com**: e-postprogrammet opnar seg med
    mottakar og tekst. Trykk **Opne mappa med pakka**, dra zip-fila inn i e-posten og send. Er fila over 20 MB,
    del henne via OneDrive og send lenkja. Du kan òg trykke **Last ned** og sende fila på anna vis. Pakka har
    aldri passord eller brukarnamn med seg.
@@ -317,17 +317,29 @@ Galileo (GAL) og BeiDou (BDS), til dømes «10 av 12 GPS». Står det at mottaka
 porten i webgrensesnittet til R12i: I/O Configuration → Port Configuration → USB → NMEA, same rate som GST.
 Til OneVision blir framleis berre GGA sendt.
 
-## GPS-oppsett (frå 0.9.18)
+## GPS-oppsett (frå 0.9.18, nye namn frå 0.9.27)
 
-Øvst under Innstillingar vel du kva slags posisjon som kjem frå mottakaren:
-- **R12i utan Trimble Access** – Snowman Geoscan hentar NTRIP. Trimble Access skal vere lukka.
-- **R12i med Trimble Access (IMU)** – Access hentar NTRIP og slår på IMU-en. Kople Access til R12i over Bluetooth,
+Øvst under Innstillingar svarar du på «Brukar du Trimble Access?». Ein tabell under valet viser kva som skjer:
+
+| Val | Trimble Access | Korreksjonar til R12i | RTK |
+|---|---|---|---|
+| **Utan Trimble Access** (vanleg) | lukka | Geoscan hentar dei (NTRIP) | ja |
+| **Med Trimble Access og IMU** | open, kopla til R12i over Bluetooth | Access hentar dei | ja |
+| **Feilsøking** | – | ingen frå Geoscan | berre om R12i får korreksjonar ein annan veg |
+
+- **Utan Trimble Access (vanleg)** – Snowman Geoscan hentar NTRIP. Trimble Access skal vere lukka.
+- **Med Trimble Access og IMU** – Access hentar NTRIP og slår på IMU-en. Kople Access til R12i over Bluetooth,
   så Geoscan har USB. Geoscan hentar ikkje NTRIP. Frå 0.9.21 sender Geoscan punktet frå R12i **urørt** til OneVision
   (spissen av stonga, `$INGGA`). Berre høgda blir gjort om til NN2000 med geoiden frå Kartverket. Stanghøgda i
   Access og mastehøgda i Geoscan skal begge vere 1,808 m. Fell IMU-en ut og R12i sender `$GNGGA`, måler Geoscan
   hoppet i høgd: hoppar ho om lag 2 m, sender R12i antenna, og Geoscan trekkjer frå mast + 0,179. Held ho seg,
   er stanghøgda alt trekt frå, og Geoscan endrar ingenting. Masta blir då ikkje retta for helling sidevegs.
-- **Berre rådata** – antenneposisjonen blir send vidare utan korreksjonar frå Geoscan.
+- **Feilsøking – ingen korreksjonar frå Geoscan** (heitte «Berre rådata» før 0.9.27) – antenneposisjonen blir send
+  vidare som han kjem. Geoscan hentar ikkje NTRIP, så det blir **ikkje RTK** med mindre R12i får korreksjonar ein
+  annan veg. Er dette valt og det ikkje er RTK FIX, står det ei åtvaring under Fix.
+
+Valet set òg «Hent korreksjonar med Snowman Geoscan» (NTRIP) og «R12i rettar masta sjølv» (Vogn og mast). Endrar du
+ein av dei for hand slik at dei ikkje passar med valet, står det ei åtvaring under GPS-oppsett.
 
 ## GPS-forskyvinga i OneVision (frå 0.9.18)
 

@@ -42,6 +42,7 @@ h1{font-size:19px;margin:0;font-weight:700}
 .satsys div{background:var(--kort2);border:1px solid var(--linje);border-radius:5px;padding:3px 2px;text-align:center;font-size:11px;color:var(--svak);line-height:1.25}
 .satsys b{display:block;font-size:15px;color:var(--tekst)}
 .satsys .ingen b{color:var(--svak)}
+#gpstab tr.valt td{background:rgba(78,168,255,.18);font-weight:600}#gpstab td,#gpstab th{font-size:12.5px;vertical-align:top}
 #midt{flex:1;position:relative;min-width:0;background:#0b0f12}
 .kartflate{position:absolute;inset:0}
 #livekart,#kart{position:absolute;inset:0}
@@ -214,7 +215,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div class="ihovud"><span class="l">Posisjon og kvalitet</span>
     <button class="b gra" id="infoknapp" onclick="bytInfo()" title="Minimer infomenyen (nøkkeltala blir ståande)">⇤</button></div>
   <div class="ifull">
-    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div><div class="s" id="noy" style="margin-top:6px;font-size:17px"></div><div class="s" id="pjk" style="margin-top:6px"></div><div id="satsys" class="satsys"></div></div>
+    <div class="k"><div class="l">Fix</div><div class="v" id="fix">–</div><div class="s" id="sat"></div><div class="s" id="noy" style="margin-top:6px;font-size:17px"></div><div class="s" id="pjk" style="margin-top:6px"></div><div id="satsys" class="satsys"></div><div class="s" id="fixhint" style="display:none;margin-top:6px;color:var(--var);font-weight:700"></div></div>
     <div class="k"><div class="l">Helling</div><div class="v" id="hell">–</div><div class="s" id="hsrc"></div>
       <svg width="120" height="70" viewBox="-60 -35 120 70" aria-label="Vogna sett bakfrå"><line x1="-55" y1="25" x2="55" y2="25" stroke="var(--linje)" stroke-width="2"/>
       <g id="vogn"><rect x="-40" y="10" width="80" height="14" rx="3" fill="var(--for)"/><line x1="0" y1="10" x2="0" y2="-28" stroke="var(--svak)" stroke-width="3"/><circle cx="0" cy="-30" r="5" fill="var(--tekst)"/></g></svg></div>
@@ -471,7 +472,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div class="k">
     <h2>Lag pakke og send til Hans Petter</h2>
     <p class="hj">Pakka (ei zip-fil) inneheld svara, filene over, loggane frå skanningane og innstillingane – <b>aldri passord eller
-    brukarnamn</b>. Send henne på e-post til <b><a id="epost1" style="color:var(--blaa)" href="mailto:hansps@alpindata.no">hansps@alpindata.no</a></b>
+    brukarnamn</b>. Send henne på e-post til <b><a id="epost1" style="color:var(--blaa)" href="mailto:hansps69@gmail.com">hansps69@gmail.com</a></b>
     (er fila over 20 MB, del henne via OneDrive/Google Drive og send lenkja).</p>
     <div class="verktoy">
       <label style="font-size:13px;color:var(--svak)"><input type="checkbox" id="praa" checked>ta med rådata (større fil, men turen kan spelast av att)</label>
@@ -490,11 +491,21 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <span style="flex:1"></span>
     <button type="button" class="b" id="lsomstart" style="display:none;background:var(--var)" onclick="startPaaNytt()">Start på nytt no – bruk endringane</button></div>
   <div class="k"><h2>GPS-oppsett</h2>
-    <div class="felt"><label><span>Kva slags posisjon kjem frå mottakaren?</span><select name="gps_oppsett" onchange="velGpsOppsett(this.value)">
-      <option value="geoscan_ntrip">R12i utan Trimble Access – Snowman Geoscan hentar NTRIP (stanghøgd = mastehøgd)</option>
-      <option value="access">R12i med Trimble Access (IMU) – Access hentar NTRIP og rettar masta, Geoscan sender punktet urørt</option>
-      <option value="raa">Berre rådata – antenneposisjonen, ingen NTRIP frå Geoscan</option></select></label></div>
-    <p class="hj" id="gpsforkl" style="margin-top:6px"></p>
+    <!-- 0.9.27: vala er namngitte etter situasjonen (Trimble Access eller ikkje), og tabellen viser kva som skjer.
+         «Berre rådata» vart misforstått (Norman 15.11: «då skal Snowman bruke RTK og NTRIP vel?»). -->
+    <div class="felt"><label><span>Brukar du Trimble Access?</span><select name="gps_oppsett" onchange="velGpsOppsett(this.value)">
+      <option value="geoscan_ntrip">Utan Trimble Access (vanleg) – Geoscan hentar korreksjonane · RTK</option>
+      <option value="access">Med Trimble Access og IMU – Access hentar korreksjonane · RTK</option>
+      <option value="raa">Feilsøking – ingen korreksjonar frå Geoscan (ikkje RTK)</option></select></label></div>
+    <div class="tabell" style="margin-top:8px"><table id="gpstab">
+      <thead><tr><th>Val</th><th>Trimble Access</th><th>Korreksjonar til R12i</th><th>RTK</th></tr></thead>
+      <tbody>
+        <tr data-v="geoscan_ntrip"><td><b>Utan Trimble Access</b> (vanleg)</td><td>lukka</td><td>Geoscan hentar dei (NTRIP)</td><td class="ok">ja</td></tr>
+        <tr data-v="access"><td><b>Med Trimble Access og IMU</b></td><td>open, kopla til R12i over Bluetooth</td><td>Access hentar dei</td><td class="ok">ja</td></tr>
+        <tr data-v="raa"><td><b>Feilsøking</b></td><td>–</td><td>ingen frå Geoscan</td><td class="var">berre om R12i får korreksjonar ein annan veg</td></tr>
+      </tbody></table></div>
+    <p class="melding var" id="gpsavvik" style="display:none;margin-top:8px"></p>
+    <details style="margin-top:8px"><summary class="hj" style="cursor:pointer">Vis detaljar</summary><p class="hj" id="gpsforkl" style="margin-top:6px"></p></details>
   </div>
   <div class="k"><h2>Portar</h2>
     <p class="hj">Tilgjengelege portar på denne PC-en: <span id="iporter">–</span></p>
@@ -518,7 +529,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
         <option value="rett_antenne">«rett antenne» – OneVision-oppsettet står som før (tilrådd)</option>
         <option value="referansepunkt">referansepunktet på radaren – sett antennehøgda i OneVision til 0</option></select></label>
     </div>
-    <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="mottakar_kompenserer">R12i rettar masta sjølv (tilt på, stanghøgd = mastehøgd)</label></p>
+    <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="mottakar_kompenserer" onchange="sjekkGpsAvvik()">R12i rettar masta sjølv (tilt på, stanghøgd = mastehøgd)</label>
+      <br><span style="font-size:12px">Blir sett av GPS-oppsett øvst. Endrar du det her, står det ei åtvaring der.</span></p>
     <div class="k" style="background:var(--kort2);margin-top:10px" id="scboks">
       <b>OneVision (Stream C.xml)</b> <span class="hj">– GPS-forskyvinga kan ikkje endrast inne i OneVision, så Geoscan skriv ho i fila.
       OneVision flyttar sjølv punktet frå spissen av stonga til radaren med desse tala.</span>
@@ -547,7 +559,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <label><input type="checkbox" name="status_lan">Vis statussida på mobil/nettbrett på same nett (berre lesing)</label></p>
   </div>
   <div class="k"><h2>NTRIP (korreksjonar til R12i)</h2>
-    <p class="hj"><label><input type="checkbox" name="ntrip_pa">Hent korreksjonar med Snowman Geoscan (Trimble Access skal då vere lukka)</label></p>
+    <p class="hj"><label><input type="checkbox" name="ntrip_pa" onchange="sjekkGpsAvvik()">Hent korreksjonar med Snowman Geoscan (Trimble Access skal då vere lukka)</label>
+      <br><span style="font-size:12px">Blir sett av GPS-oppsett øvst. Endrar du det her, står det ei åtvaring der.</span></p>
     <div class="felt">
       <label><span>Caster (adresse)</span><input name="caster" autocomplete="off"></label>
       <label><span>Port</span><input name="ntrip_port" type="number"></label>
@@ -695,6 +708,8 @@ async function tikk(){if(avslutta)return;let s;try{const r=await fetch("status")
   OPPHAV={namn:s.namn||OPPHAV.namn,produsent:s.produsent||OPPHAV.produsent,signatur:s.signatur||"",versjon:s.oppdatering.lokal};$("demo").style.display=s.demo?"block":"none";$("demoeks").style.display=s.demo?"inline-block":"none";visOppd(s.oppdatering);visUst(s.oppdatering);
   if(k.pos)oppdaterLive(k.pos,k);
   const f=FIX[k.fix]||[k.fix==null?"–":"FIX "+k.fix,"var"];set("fix",f[0],f[1]);
+  {const h=$("fixhint"),vis=s.gps_oppsett=="raa"&&k.fix!=4&&s.gnss_alder!=null&&s.gnss_alder<5;h.style.display=vis?"block":"none";
+   if(vis)h.textContent="Feilsøking er vald under Innstillingar → GPS-oppsett: Geoscan hentar ikkje korreksjonar, så det blir ikkje RTK."}
   set("sat",(k.sats||"–")+" satellittar · data "+(s.gnss_alder==null?"–":F(s.gnss_alder,1)+" s"));
   // Nøyaktigheit (1 σ) frå GST, som QH/QV i Xsite: grøn under 3 cm, gul under 10 cm, raud over
   {const q=k.noy,ok=q&&q.alder!=null&&q.alder<5,kl=v=>v<3?"ok":v<10?"var":"feil";
@@ -1542,7 +1557,7 @@ async function lagPakke(){set("pmeld","Lagar pakke …");
       <a class="b" href="${mailtoLenke(r)}">✉ Skriv e-post til ${esc(EPOST)}</a></div>
     <div class="hj" style="margin-top:6px">1) Trykk «Skriv e-post» – e-postprogrammet opnar seg med mottakar og tekst. 2) Trykk «Opne mappa med pakka»
       og dra fila <b>${esc(r.fil)}</b> inn i e-posten. 3) Send.</div>`}catch(e){set("pmeld",e.message,"feil")}}
-let EPOST="hansps@alpindata.no";
+let EPOST="hansps69@gmail.com";
 function mailtoLenke(r){const sv=$("snamn").value||"",d=new Date().toLocaleDateString("nb-NO");
   const tekst=`Hei Hans Petter,\n\nVedlagt er testpakka frå Snowman Geoscan (${r.fil}, ${F(r.mb,1)} MB).\n\nSjekkliste: ${$("sjstat").textContent}\n\nHelsing ${sv}`;
   return `mailto:${EPOST}?subject=${encodeURIComponent("Snowman Geoscan – testpakke "+d+(sv?" – "+sv:""))}&body=${encodeURIComponent(tekst)}`}
@@ -1555,8 +1570,14 @@ function lsVis(t,c){const e=$("lagrestatus");e.classList.remove("ok","var","feil
 // GPS-oppsett: set NTRIP og «R12i rettar masta sjølv» etter valet, og forklar kva det betyr
 const GPS_OPPSETT={geoscan_ntrip:{ntrip_pa:true,mottakar_kompenserer:true,t:"Snowman Geoscan hentar korreksjonane og sender dei til R12i. Trimble Access skal vere lukka. Utan IMU sender R12i antenneposisjonen ($GNGGA)."},
   access:{ntrip_pa:false,mottakar_kompenserer:true,t:"Trimble Access hentar korreksjonane og slår på IMU-en. Kople Access til R12i over Bluetooth, så Geoscan har USB. R12i sender spissen av stonga ($INGGA), og Geoscan sender punktet urørt vidare (berre høgda blir gjort om til NN2000). Fell IMU-en ut ($GNGGA), måler Geoscan hoppet i høgd og trekkjer frå mast + 0,179 berre når R12i sender antenna. Stanghøgda i Access skal vere 1,808, og mastehøgda her det same."},
-  raa:{ntrip_pa:false,mottakar_kompenserer:false,t:"Geoscan sender antenneposisjonen vidare som han kjem, utan korreksjonar frå Geoscan. Til feilsøking, eller når korreksjonane kjem ein annan veg."}};
-function visGpsForkl(v){const o=GPS_OPPSETT[v];$("gpsforkl").textContent=o?o.t:""}
+  raa:{ntrip_pa:false,mottakar_kompenserer:false,t:"Berre til feilsøking. Geoscan hentar ingen korreksjonar og sender antenneposisjonen vidare som han kjem. Då blir det ikkje RTK, med mindre R12i får korreksjonar ein annan veg (til dømes frå Trimble Access)."}};
+function visGpsForkl(v){const o=GPS_OPPSETT[v];$("gpsforkl").textContent=o?o.t:"";
+  document.querySelectorAll("#gpstab tbody tr").forEach(tr=>tr.classList.toggle("valt",tr.dataset.v==v));sjekkGpsAvvik()}
+// 0.9.27: åtvaring når avkryssingane lenger nede er endra for hand og ikkje passar med GPS-oppsettet
+function sjekkGpsAvvik(){const f=$("iform"),e=$("gpsavvik");if(!f||!e||!f.elements.gps_oppsett)return;const o=GPS_OPPSETT[f.elements.gps_oppsett.value];if(!o){e.style.display="none";return}
+  const av=[];if(f.elements.ntrip_pa&&f.elements.ntrip_pa.checked!=o.ntrip_pa)av.push(`«Hent korreksjonar med Snowman Geoscan» er ${f.elements.ntrip_pa.checked?"på":"av"} (NTRIP-boksen lenger nede)`);
+  if(f.elements.mottakar_kompenserer&&f.elements.mottakar_kompenserer.checked!=o.mottakar_kompenserer)av.push(`«R12i rettar masta sjølv» er ${f.elements.mottakar_kompenserer.checked?"på":"av"} (under Vogn og mast)`);
+  e.style.display=av.length?"block":"none";e.innerHTML=av.length?"⚠ Endra for hand, passar ikkje med valet over: "+av.map(esc).join("; ")+". Vel GPS-oppsettet på nytt for å setje det tilbake.":""}
 function velGpsOppsett(v){const o=GPS_OPPSETT[v],f=$("iform");if(!o)return;
   for(const k of ["ntrip_pa","mottakar_kompenserer"]){const el=f.elements[k];if(el&&el.checked!=o[k]){el.checked=o[k];el.dispatchEvent(new Event("change",{bubbles:true}))}}
   visGpsForkl(v)}

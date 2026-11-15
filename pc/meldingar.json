@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-15-v0927-gps-oppsett",
+   "dato": "2026-11-15",
+   "versjon": "0.9.27",
+   "tittel": "Versjon 0.9.27: tydelegare GPS-oppsett og ny e-postadresse (hansps69@gmail.com)",
+   "tekst": "Hei Norman! Takk for spørsmålet om «Berre rådata». Svaret er nei: med det valet hentar ikkje Geoscan NTRIP, så det blir ikkje RTK frå Geoscan. Namnet var uklart, så i versjon 0.9.27 er det endra:\n\n1. GPS-OPPSETT (versjon 0.9.27)\n• Under Innstillingar heiter spørsmålet no «Brukar du Trimble Access?».\n• Vala er «Utan Trimble Access (vanleg)», «Med Trimble Access og IMU» og «Feilsøking – ingen korreksjonar frå Geoscan (ikkje RTK)». Den siste heitte «Berre rådata» før.\n• Ein tabell under valet viser om Trimble Access skal vere open, kven som hentar korreksjonane og om det blir RTK.\n• Har du valt Feilsøking og det ikkje er RTK FIX, står det ei åtvaring under Fix (versjon 0.9.27).\n• Vel «Utan Trimble Access (vanleg)» eller «Med Trimble Access og IMU» for å få RTK, og trykk «Start på nytt no».\n\n2. NY E-POSTADRESSE (versjon 0.9.27)\n• Send testpakkar, svar og filer om Snowman Geoscan til hansps69@gmail.com. E-postknappen under «Send inn» brukar no den adressa.\n\nHelsing Hans Petter",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-15-v0926-menyknapp",
    "dato": "2026-11-15",
    "versjon": "0.9.26",

@@ -28,7 +28,7 @@ mellombelse verdiar. Flytt svar til «Avklart» med dato.
 
 ## Testpakkar frå Norman og svar tilbake
 
-Norman fyller ut testsjekklista og spørsmåla under «Send inn», og sender pakka (zip) til hansps@alpindata.no.
+Norman fyller ut testsjekklista og spørsmåla under «Send inn», og sender pakka (zip) til hansps69@gmail.com (frå 15.11.2026; før: hansps@alpindata.no). Gmail er kopla til Claude, så pakkane kan hentast derifrå.
 Når Hans Petter gir deg ei pakke:
 
 1. Les `SJEKKLISTE.txt`, `SVAR.txt`, `filer/`, `logg/` og `system.json`. Rådata (`logg/raa_*.nmea`) kan

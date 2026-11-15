@@ -30,7 +30,7 @@ import satellittar as S
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.26"
+VERSJON = "0.9.27"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -749,7 +749,9 @@ class App:
                 "stripe": [float(self.cfg.get("skannebreidd") or 0.96), float(self.cfg.get("skannebreidd_ytre") or 0.0)],
                 "tcp_port": self.cfg.get("tcp_port"), "tcp_klientar": len(self.ut.clients), "djupnfeil_25": d25, "radar_djupn": rd,
                 "namn": NAMN, "produsent": PRODUSENT, "signatur": SIGNATUR,
-                "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo"))}
+                "oppdatering": {k2: v for k2, v in self.oppd.items()}, "demo": bool(self.cfg.get("demo")),
+                "gps_oppsett": self.cfg.get("gps_oppsett") or ("geoscan_ntrip" if (self.cfg.get("ntrip") or {}).get("pa")
+                                                              else "access" if self.cfg.get("mottakar_kompenserer") else "raa")}
 
 
 def tilstand(app):

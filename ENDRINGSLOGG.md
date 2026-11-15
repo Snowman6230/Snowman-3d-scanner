@@ -2,6 +2,19 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.27 – 15. november 2026
+- **GPS-oppsett blir lettare å forstå.** Norman spurde 15.11 om Geoscan brukar RTK og NTRIP med «Berre rådata».
+  Det gjer han ikkje, men namnet sa det ikkje. Vala heiter no etter situasjonen: «Utan Trimble Access (vanleg)»,
+  «Med Trimble Access og IMU» og «Feilsøking – ingen korreksjonar frå Geoscan (ikkje RTK)», og spørsmålet er
+  «Brukar du Trimble Access?». Under valet står ein tabell (Trimble Access, kven hentar korreksjonane, RTK) med
+  valet utheva. Den tekniske forklaringa ligg bak «Vis detaljar».
+- Åtvaring under Fix når Feilsøking er valt og det ikkje er RTK FIX. Statusen sender `gps_oppsett`.
+- Åtvaring under GPS-oppsett når «Hent korreksjonar med Snowman Geoscan» eller «R12i rettar masta sjølv» er endra for
+  hand og ikkje passar med valet. Avkryssingane kan framleis endrast (som før), men det er no tydeleg.
+- **Ny e-postadresse for testpakkar og tilbakemeldingar: hansps69@gmail.com** (før hansps@alpindata.no), i «Send inn»,
+  e-postknappen, pakka (`opphav.KONTAKT_EPOST`), brukarrettleiinga og testplanen. Gmail er kopla til Claude, så svar
+  og pakkar kan lesast direkte.
+
 ## 0.9.26 – 15. november 2026
 - Menyen til høgre: knappen for å falde saman står no **øvst**, lik og spegelvend av knappen i infomenyen til venstre
   (ønske frå Hans Petter 15.11). Før stod han nedst, under Avslutt. ⇥ fald menyen saman til berre ikon, ⇤ viser

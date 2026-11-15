@@ -11,7 +11,7 @@ import hashlib
 
 NAMN = "Snowman Geoscan"
 PRODUSENT = "Alpindata HP Brunstad Sørensen"
-KONTAKT_EPOST = "hansps@alpindata.no"   # testpakkar og tilbakemeldingar blir sende hit
+KONTAKT_EPOST = "hansps69@gmail.com"   # testpakkar og tilbakemeldingar blir sende hit (frå 0.9.27: Gmail, som Claude er kopla til)
 COPYRIGHT = "Copyright © 2026 Hans Petter Brunstad Sørensen (Alpindata). Alle rettar reserverte."
 _KJERNE = "SNOWMAN GEOSCAN|ALPINDATA|HANS PETTER BRUNSTAD SØRENSEN|SYKKYLVEN|2026"
 SIGNATUR = "SNWGEO-" + hashlib.sha256(_KJERNE.encode("utf-8")).hexdigest()[:16].upper()
