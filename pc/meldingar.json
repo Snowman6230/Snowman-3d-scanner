@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-15-v0926-menyknapp",
+   "dato": "2026-11-15",
+   "versjon": "0.9.26",
+   "tittel": "Versjon 0.9.26: knappen for menyen til høgre står no øvst",
+   "tekst": "Hei Norman! Liten endring i versjon 0.9.26:\n\n• Knappen som fald saman menyen til høgre står no øvst i menyen (versjon 0.9.26), lik knappen i infomenyen til venstre. Før stod han nedst, under Avslutt.\n• ⇥ fald menyen saman til berre ikon, ⇤ viser han att (versjon 0.9.26). Ved sida av knappen står namnet på fana som er open.\n\nAlle funksjonane er dei same som i versjon 0.9.25.\n\nHelsing Hans Petter",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-14-v0925-ny-skjerm",
    "dato": "2026-11-14",
    "versjon": "0.9.25",

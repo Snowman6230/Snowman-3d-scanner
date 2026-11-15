@@ -28,9 +28,10 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
 - **Kartet i midten.** Under Resultat er det resultatkartet, elles live-kartet med vogna.
 - **Infomenyen til venstre** viser Fix, satellittar per system, QH/QV, helling, retting, korreksjonar og posisjonen
   heile tida. Trykk **⇤** for å minimere henne til nøkkeltala, og **⇥** (eller på tala) for å vise alt att.
-- **Ikona til høgre:** Status, Resultat, Send inn og Innstillingar. Panelet ved sida viser innhaldet. Trykk **»** (eller
-  på ikonet til fana som er open) for å falde panelet saman, og dra i kanten mellom kartet og panelet for å gjere det
-  breiare eller smalare (dobbeltklikk = standard). Nede står Dagslys, Lyd, Varsel i Windows og Avslutt.
+- **Ikona til høgre:** Status, Resultat, Send inn og Innstillingar. Panelet ved sida viser innhaldet. Knappen **⇥**
+  øvst i menyen (lik knappen i infomenyen til venstre) fald panelet saman til berre ikon, og **⇤** viser det att. Du
+  kan òg trykkje på ikonet til fana som er open. Dra i kanten mellom kartet og panelet for å gjere det breiare eller
+  smalare (dobbeltklikk = standard). Nede står Dagslys, Lyd, Varsel i Windows og Avslutt.
 - Vala blir hugsa på PC-en. Meldingane frå Hans Petter står øvst, falda saman til tittelen.
 
 ## 3. Kople til R12i og OneVision
@@ -45,7 +46,7 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
 
 ### Skjerm i sollys
 
-Trykk **«☀ Dagslys»** oppe til høgre. Skjermen får kvit bakgrunn, svart tekst og sterkare fargar, som er
+Trykk **«☀ Dagslys»** nede i ikonstripa til høgre. Skjermen får kvit bakgrunn, svart tekst og sterkare fargar, som er
 lettare å lese ute. **«🌙 Mørk»** byter tilbake. Valet blir hugsa. Skru gjerne opp lysstyrken på PC-en òg.
 
 ### Live-kart på Status

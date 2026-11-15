@@ -2,6 +2,12 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.26 – 15. november 2026
+- Menyen til høgre: knappen for å falde saman står no **øvst**, lik og spegelvend av knappen i infomenyen til venstre
+  (ønske frå Hans Petter 15.11). Før stod han nedst, under Avslutt. ⇥ fald menyen saman til berre ikon, ⇤ viser
+  han att. Ved sida av knappen står namnet på fana som er open.
+- Brukarrettleiinga: Dagslys står nede i ikonstripa, og knappen for menyen er forklart.
+
 ## 0.9.25 – 14. november 2026
 Ny skjerm (utkast B2, vald av Hans Petter 14.11 etter tre utkast), 3D-grøft og satellittar per system:
 - **Ny skjerm (B2): kartet fyller midten.** Infomenyen til venstre viser Fix, satellittar, QH/QV, PJK, helling med

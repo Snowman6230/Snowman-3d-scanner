@@ -65,7 +65,14 @@ h1{font-size:19px;margin:0;font-weight:700}
 #dra{flex:0 0 7px;cursor:col-resize;background:var(--linje);position:relative}
 #dra:after{content:"⋮";position:absolute;top:50%;left:0;width:7px;text-align:center;color:var(--svak);transform:translateY(-50%)}
 #dra:hover{background:var(--blaa)}
-#hogre{display:flex;background:var(--kort);--pw:440px}
+#hogre{display:flex;flex-direction:column;background:var(--kort);--pw:440px}
+#hogre .hrad{flex:1;display:flex;min-height:0}
+/* 0.9.25: knappen for å falde saman står øvst, lik og spegelvend av knappen i infomenyen til venstre */
+#hogre .ihovud{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border-bottom:1px solid var(--linje);background:var(--kort);flex:0 0 auto}
+#hogre .ihovud .b{padding:2px 10px}
+#hogre .hhovud{justify-content:flex-start}
+#hogre.lukka .hhovud{justify-content:center;padding:8px 2px}
+#hogre.lukka #paneltittel{display:none}
 #ikonar{flex:0 0 78px;width:78px;display:flex;flex-direction:column;border-right:1px solid var(--linje);overflow-y:auto;overflow-x:hidden}
 #ikonar button{background:none;border:0;border-left:3px solid transparent;color:var(--svak);font:inherit;font-size:12px;font-weight:700;padding:10px 3px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.2;text-align:center}
 #ikonar button b{font-size:23px;line-height:1}
@@ -290,6 +297,9 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
 <div id="dra" title="Dra for å gjere menyen breiare eller smalare (dobbeltklikk = standard)"></div>
 <!-- ================= MENYEN TIL HØGRE: ikon + panel (0.9.25) ================= -->
 <aside id="hogre">
+  <div class="ihovud hhovud"><button class="b gra" id="panelknapp" onclick="bytPanel()" title="Fald saman menyen til berre ikon">⇥</button>
+    <span class="l" id="paneltittel">Status</span></div>
+  <div class="hrad">
   <nav id="ikonar">
     <button data-f="status" class="aktiv"><b>📍</b>Status</button>
     <button data-f="resultat"><b>📊</b>Resultat</button>
@@ -300,7 +310,6 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <button class="rk" id="vaktlyd" onclick="bytVaktLyd()" title="Lyd når eit nytt varsel kjem">🔊 Lyd på</button>
     <button class="rk" id="vaktwin" onclick="slaPaWinVarsel()" style="display:none" title="Varsel i Windows, òg når Geoscan ligg bak OneVision">🔔 Varsel i Windows</button>
     <button class="rk" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button>
-    <button class="rk" id="panelknapp" onclick="bytPanel()" title="Fald saman menyen til berre ikon">»</button>
   </nav>
   <main id="panel">
 
@@ -581,6 +590,7 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   </form>
 </section>
 </main>
+  </div>
 </aside>
 </div>
 
@@ -657,7 +667,7 @@ document.querySelectorAll("#ikonar button[data-f]").forEach(b=>b.onclick=()=>{
   // Trykk på fana som alt er open: fald panelet saman (eller opp att). Anna fane: opne panelet.
   if(b.dataset.f==fane&&!$("hogre").classList.contains("lukka")){bytPanel();return}
   if($("hogre").classList.contains("lukka"))bytPanel();visFane(b.dataset.f)});
-function visFane(f){fane=f;document.querySelectorAll("#ikonar button[data-f]").forEach(b=>b.classList.toggle("aktiv",b.dataset.f==f));
+function visFane(f){fane=f;set("paneltittel",{status:"Status",resultat:"Resultat",send:"Send inn",innst:"Innstillingar"}[f]||"");document.querySelectorAll("#ikonar button[data-f]").forEach(b=>b.classList.toggle("aktiv",b.dataset.f==f));
   document.querySelectorAll(".fane").forEach(s=>s.classList.toggle("aktiv",s.id=="f-"+f));
   // Kartet i midten: resultatkartet under Resultat, live-kartet elles (0.9.25)
   $("reswrap").style.display=f=="resultat"?"block":"none";$("livewrap").style.display=f=="resultat"?"none":"block";
@@ -1733,7 +1743,7 @@ function bytInfo(på){const e=$("info"),mini=på===undefined?!e.classList.contai
   $("infoknapp").textContent=mini?"⇥":"⇤";$("infoknapp").title=mini?"Vis heile infomenyen":"Minimer infomenyen (nøkkeltala blir ståande)";
   lsSet("geoscan_infomini",mini?"1":"0");kartStorleik()}
 function bytPanel(på){const e=$("hogre"),lukk=på===undefined?!e.classList.contains("lukka"):på;e.classList.toggle("lukka",lukk);
-  $("panelknapp").textContent=lukk?"«":"»";$("panelknapp").title=lukk?"Vis menyen":"Fald saman menyen til berre ikon";
+  $("panelknapp").textContent=lukk?"⇤":"⇥";$("panelknapp").title=lukk?"Vis heile menyen":"Fald saman menyen til berre ikon";
   lsSet("geoscan_panellukka",lukk?"1":"0");kartStorleik()}
 function settPanelBreidd(w){w=Math.max(300,Math.min(Math.round(w),Math.max(320,innerWidth-420)));$("hogre").style.setProperty("--pw",w+"px");return w}
 {const w=+lsGet("geoscan_panelbreidd",0);if(w)settPanelBreidd(w);else if(innerWidth<1500)settPanelBreidd(380)}
