@@ -51,6 +51,7 @@ def hent(cfg_path, cfg):
         "sone": str(cfg.get("sone", "32")),
         "opptak": bool(cfg.get("opptak", True)),
         "status_lan": bool(cfg.get("status_lan")),
+        "app_modus": bool(cfg.get("app_modus", True)),
         "stamp_null": cfg.get("stamp_null", 0.0), "krenging_null": cfg.get("krenging_null", 0.0),
         "snu_stamp": bool(cfg.get("snu_stamp")), "snu_krenging": bool(cfg.get("snu_krenging")),
         "ntrip_pa": bool(n.get("pa")), "caster": n.get("caster", ""), "ntrip_port": n.get("port", 2101),
@@ -176,6 +177,8 @@ def lagre(cfg_path, d, streng=True):
         raise ValueError("UTM-sone må vere 32, 33, 35 eller auto")
     cfg["opptak"] = bool(d.get("opptak"))
     cfg["status_lan"] = bool(d.get("status_lan"))
+    if "app_modus" in d:
+        cfg["app_modus"] = bool(d.get("app_modus"))
     cfg["stamp_null"] = tal("stamp_null", -20, 20, "stamp null", cfg.get("stamp_null", 0.0))
     cfg["krenging_null"] = tal("krenging_null", -20, 20, "krenging null", cfg.get("krenging_null", 0.0))
     cfg["snu_stamp"], cfg["snu_krenging"] = bool(d.get("snu_stamp")), bool(d.get("snu_krenging"))

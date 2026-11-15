@@ -31,8 +31,20 @@ Nettlesaren opnar seg med Snowman Geoscan, og øvst står det ei raud DEMO-linje
 - **Ikona til høgre:** Status, Resultat, Send inn og Innstillingar. Panelet ved sida viser innhaldet. Knappen **⇥**
   øvst i menyen (lik knappen i infomenyen til venstre) fald panelet saman til berre ikon, og **⇤** viser det att. Du
   kan òg trykkje på ikonet til fana som er open. Dra i kanten mellom kartet og panelet for å gjere det breiare eller
-  smalare (dobbeltklikk = standard). Nede står Dagslys, Lyd, Varsel i Windows og Avslutt.
+  smalare (dobbeltklikk = standard). Nede står Dagslys, Lyd og Varsel i Windows. **⏻ Avslutt** står øvst til høgre.
 - Vala blir hugsa på PC-en. Meldingane frå Hans Petter står øvst, falda saman til tittelen.
+
+### Eige vindauge (frå 0.9.28)
+
+Geoscan opnar statussida i eit **eige vindauge** (Edge eller Chrome i app-modus), ikkje som ei fane:
+- Det er eit vanleg Windows-vindauge med knappane **minimer**, **maksimer** og **lukk**, og eige ikon på
+  oppgåvelinja. Byt mellom Geoscan og OneVision med **Alt+Tab** eller oppgåvelinja, eller set dei side om side med
+  **Windows-tast + ← / →**. Vindauget hugsar storleik og plassering.
+- **⏻ Avslutt** øvst til høgre lagrar alt og lukkar både vindauget og cmd-vindauget.
+- Vindauget har eiga nettlesarprofil, så Avslutt rører ikkje andre Edge- eller Chrome-vindauge. Første gong blir
+  visingsvala i nettlesaren (menybreidd, kart) sette til standard éin gong. Innstillingane til Geoscan blir ikkje rørte.
+- Vil du ha vanleg fane som før: slå av **Opne i eige vindauge (app-modus)** under Innstillingar → Retting og
+  lagring. Det gjeld frå neste start. Finst ikkje Edge eller Chrome, blir det òg vanleg fane.
 
 ## 3. Kople til R12i og OneVision
 

@@ -35,7 +35,7 @@ HER = Path(__file__).resolve().parent
 REPO = "Snowman6230/Snowman-3d-scanner"
 GREIN = "main"
 ALDRI = {"geoscan_config.json", "ntrip_lokal.json", "oppdatering_lokal.json"}
-ALDRI_MAPPER = {"logg", "logg_demo", "reserve", "innsendt", "pakkar", "resultat", "bakgrunn", "__pycache__", ".venv"}
+ALDRI_MAPPER = {"logg", "logg_demo", "reserve", "innsendt", "pakkar", "resultat", "bakgrunn", "nettlesar", "__pycache__", ".venv"}
 
 
 def _token():

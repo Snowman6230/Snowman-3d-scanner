@@ -2,6 +2,14 @@
  "_om": "Meldingar frå utviklaren til operatøren. Nyaste først. «sjekk» gir svar på punkt i testsjekklista (id: d1, r2, n2 …); «prov_att» ber operatøren teste punktet på nytt. Blir oppdatert av utviklaren og kjem ut med oppdateringa.",
  "meldingar": [
   {
+   "id": "2026-11-15-v0928-avslutt-vindauge",
+   "dato": "2026-11-15",
+   "versjon": "0.9.28",
+   "tittel": "Versjon 0.9.28: Avslutt øvst til høgre, og Geoscan i eige vindauge",
+   "tekst": "Hei Norman! Takk for tipset om Avslutt-knappen. I versjon 0.9.28:\n\n1. AVSLUTT ØVST TIL HØGRE (versjon 0.9.28)\n• «⏻ Avslutt» står no øvst til høgre, der du teikna krysset. Han lagrar alt og lukkar både vindauget og cmd-vindauget.\n\n2. EIGE VINDAUGE (versjon 0.9.28)\n• Geoscan opnar seg no i eit eige vindauge i staden for ei fane i nettlesaren.\n• Det er eit vanleg vindauge: du kan minimere, maksimere og lukke det, og det har eige ikon på oppgåvelinja. Byt mellom Geoscan og OneVision med Alt+Tab, eller set dei side om side med Windows-tast + pil venstre/høgre.\n• Andre nettlesarvindauge du har oppe, blir ikkje lukka når du trykkjer Avslutt.\n• Første gong startar menybreidd og kartval på standard éin gong. Innstillingane dine er urørte.\n• Vil du heller ha vanleg fane: Innstillingar → Retting og lagring → slå av «Opne i eige vindauge (app-modus)».\n\nDet nye vindauget kjem frå neste gong du startar Geoscan (etter oppdateringa).\n\nHelsing Hans Petter",
+   "sjekk": {}
+  },
+  {
    "id": "2026-11-15-v0927-gps-oppsett",
    "dato": "2026-11-15",
    "versjon": "0.9.27",

@@ -18,6 +18,11 @@ html,body{height:100%}
 body{display:flex;flex-direction:column;overflow:hidden}
 header.topp{display:flex;align-items:center;gap:12px;padding:6px 14px;background:var(--kort);border-bottom:1px solid var(--linje);flex:0 0 auto}
 h1{font-size:19px;margin:0;font-weight:700}
+.avsluttknapp{display:inline-flex;align-items:center;gap:7px;margin-left:10px;padding:7px 14px;border-radius:8px;border:1.5px solid #c0392b;
+  background:#3a1a1a;color:#ff8a80;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.avsluttknapp:hover{background:#c0392b;color:#fff}
+body.dagslys .avsluttknapp{background:#fff;color:#c00000;border:2px solid #c00000}
+body.dagslys .avsluttknapp:hover{background:#c00000;color:#fff}
 #ver{font-weight:400;color:var(--svak);font-size:14px}
 .prod{color:var(--svak);font-size:13px;margin:2px 0 10px}
 #stripar{flex:0 0 auto;max-height:34vh;overflow:auto;padding:0 10px}
@@ -186,6 +191,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
   <div class="prod" style="margin:0">Alpindata HP Brunstad Sørensen</div></div>
   <span style="flex:1"></span>
   <span class="hj" id="oktinfo" style="text-align:right"></span>
+  <!-- 0.9.28: Avslutt øvst til høgre (ønske frå Norman 15.11), ikkje nedst i ikonstripa der han vart kutta på låge skjermar -->
+  <button class="avsluttknapp" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3v8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M6.6 6.6a7.5 7.5 0 1 0 10.8 0" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg><span>Avslutt</span></button>
 </header>
 <div id="stripar">
   <div id="kontakt" class="banner kontaktb" style="display:none"><b style="font-size:20px">⛔ Geoscan svarar ikkje</b> <span id="kontakttid"></span><br>
@@ -310,7 +317,6 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
     <button class="rk" id="temaknapp" onclick="bytTema()" title="Byt mellom mørk skjerm og høg kontrast for sollys">☀ Dagslys</button>
     <button class="rk" id="vaktlyd" onclick="bytVaktLyd()" title="Lyd når eit nytt varsel kjem">🔊 Lyd på</button>
     <button class="rk" id="vaktwin" onclick="slaPaWinVarsel()" style="display:none" title="Varsel i Windows, òg når Geoscan ligg bak OneVision">🔔 Varsel i Windows</button>
-    <button class="rk" onclick="avslutt()" title="Lagrar alt og stoppar Snowman Geoscan">⏻ Avslutt</button>
   </nav>
   <main id="panel">
 
@@ -556,7 +562,8 @@ body.dagslys .banner,body.dagslys .mld,body.dagslys .lagrestatus{border-width:2p
       <label><span>UTM-sone for loggen</span><select name="sone"><option>32</option><option>33</option><option>35</option><option value="auto">auto</option></select></label>
     </div>
     <p class="hj" style="margin-top:10px"><label><input type="checkbox" name="opptak">Lagre all rådata frå mottakaren (tilrådd under testing)</label><br>
-    <label><input type="checkbox" name="status_lan">Vis statussida på mobil/nettbrett på same nett (berre lesing)</label></p>
+    <label><input type="checkbox" name="status_lan">Vis statussida på mobil/nettbrett på same nett (berre lesing)</label><br>
+    <label title="Eit vanleg vindauge med minimer/maksimer/lukk og eige ikon på oppgåvelinja (Alt+Tab). Avslutt lukkar det saman med Geoscan. Av: vanleg fane i nettlesaren som før."><input type="checkbox" name="app_modus">Opne i eige vindauge (app-modus) – Avslutt lukkar òg vindauget (gjeld frå neste start)</label></p>
   </div>
   <div class="k"><h2>NTRIP (korreksjonar til R12i)</h2>
     <p class="hj"><label><input type="checkbox" name="ntrip_pa" onchange="sjekkGpsAvvik()">Hent korreksjonar med Snowman Geoscan (Trimble Access skal då vere lukka)</label>
@@ -850,7 +857,9 @@ async function gjenopprett(o){const ui=o.ui||{};gjenopprettar=true;
   if(ui.fane)visFane(ui.fane)}
 async function avslutt(){if(!confirm("Avslutte Snowman Geoscan?\n\nAlt blir lagra, og neste gong kan du halde fram der du slapp."))return;
   clearTimeout(oktTimer);try{if(OKT)await post("api/okt/lagre",{ui:uiTilstand()});await post("api/avslutt")}catch(e){}
-  avslutta=true;$("avslutta").style.display="flex"}
+  avslutta=true;$("avslutta").style.display="flex";
+  // 0.9.28: i appvindauget lukkar Geoscan vindauget sjølv. Prøv òg frå sida (går når vindauget berre har éi side i historikken).
+  setTimeout(()=>{try{window.close()}catch(e){}},2500)}
 // ---------- oppdatering under Innstillingar ----------
 function visUst(o){if(!$("ust"))return;
   $("ust").innerHTML=`Installert: <b>v${esc(o.lokal)}</b>`+(o.github?` · på GitHub: <b>v${esc(o.github)}</b>`:"")+

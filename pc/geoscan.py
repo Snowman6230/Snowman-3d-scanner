@@ -30,7 +30,7 @@ import satellittar as S
 from geoide import GEOID
 
 HER = Path(__file__).resolve().parent
-VERSJON = "0.9.27"
+VERSJON = "0.9.28"
 from opphav import NAMN, PRODUSENT, SIGNATUR   # namnet og opphavet (sjå opphav.py)
 STANDARD = {
     "inn": [{"port": "COM23", "baud": 115200}],
@@ -63,6 +63,7 @@ STANDARD = {
     "status_lan": False,
     "sjekk_oppdatering": True,
     "opne_nettlesar": True,
+    "app_modus": True,          # 0.9.28: statussida i eige appvindauge (Edge/Chrome --app), som Avslutt kan lukke
     "vis_oppstartlogo": True,
     "statuslinje_sek": 60,
     "ntrip": {"pa": False, "rtcm_til": None, "gga_intervall": 10},
@@ -833,9 +834,11 @@ def main(argv=None):
     if cfg.get("vis_oppstartlogo", True) and not a.omstart:
         oppstartlogo()
     k = app.k
+    import nettlesar as NL
     if cfg.get("status_port") and cfg.get("opne_nettlesar", True) and not a.omstart:
-        import webbrowser
-        threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{cfg['status_port']}")).start()
+        # 0.9.28: eige appvindauge (vanlege vindaugeknappar, eiga profil), elles vanleg fane som før
+        threading.Timer(1.5, lambda: print("  Statussida: " + {"app": "eige vindauge (app-modus)", "fane": "fane i nettlesaren"}[
+            NL.opne(f"http://localhost:{cfg['status_port']}", bool(cfg.get("app_modus", True)))])).start()
     if cfg.get("demo"):
         print("*** DEMO: simulert mottakar og NTRIP-caster. Dette er IKKJE ekte målingar. ***")
     print(f"Spakarm fram {k.lever[0]} m, høgre {k.lever[1]} m, opp {k.lever[2]} m, "
@@ -857,6 +860,8 @@ def main(argv=None):
             if app.oppd.get("avslutt"):
                 print("Snowman Geoscan er avslutta. Alt er lagra – neste gong kan du halde fram der du slapp.", flush=True)
                 time.sleep(1.5)
+                if cfg.get("app_modus", True):
+                    NL.lukk()        # 0.9.28: lukk appvindauget òg (ønske frå Norman 15.11)
                 sys.exit(0)
             nokkel = tilstand(app)
             if nokkel != sist or time.time() - sist_t >= intervall:

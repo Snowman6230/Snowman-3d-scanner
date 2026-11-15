@@ -1455,3 +1455,21 @@ def test_gps_oppsett_tekst_og_epost_0927():
     assert 'id="gpstab"' in s and 'id="fixhint"' in s and 'id="gpsavvik"' in s
     assert ">Berre rådata" not in s
     assert opphav.KONTAKT_EPOST == "hansps69@gmail.com" and "hansps@alpindata.no" not in s
+
+
+def test_appvindauge_0928(tmp_path, monkeypatch):
+    """0.9.28: statussida i eige appvindauge (ikkje kiosk), eiga profil, og vanleg fane når nettlesar manglar eller valet er av."""
+    import nettlesar as NL
+    a = NL.argument("msedge.exe", "http://localhost:8088", tmp_path / "p", True)
+    assert "--app=http://localhost:8088" in a and f"--user-data-dir={tmp_path / 'p'}" in a
+    assert "--no-first-run" in a and "--window-size=1500,950" in a and not any("kiosk" in x for x in a)
+    assert "--window-size=1500,950" not in NL.argument("msedge.exe", "u", tmp_path / "p", False)
+    opna = []
+    monkeypatch.setattr(NL.webbrowser, "open", lambda u: opna.append(u))
+    monkeypatch.setattr(NL, "finn_nettlesar", lambda: None)
+    assert NL.opne("http://localhost:8088") == "fane" and opna == ["http://localhost:8088"]
+    monkeypatch.setattr(NL, "finn_nettlesar", lambda: "/finst/ikkje/msedge")
+    assert NL.opne("http://x", app_modus=False) == "fane"
+    s = (Path(__file__).resolve().parent.parent / "pc" / "web" / "index.html").read_text(encoding="utf-8")
+    assert 'class="avsluttknapp"' in s and 'name="app_modus"' in s
+    assert G.STANDARD["app_modus"] is True

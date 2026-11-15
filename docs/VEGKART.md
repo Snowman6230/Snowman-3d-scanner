@@ -52,7 +52,8 @@ fram og tilbake.
 | 0.9.25 ✓ | Ny skjerm (B2): kartet i midten, infomeny til venstre (kan minimerast), ikonmeny og panel til høgre (kan faldast saman og skalerast). 3D-grøft under Resultat med flyfoto og målsetting av/på. Satellittar per system (GSA/GSV). Retta feilen som stoppa Status i 0.9.24 |
 | 0.9.26 ✓ | Knappen for menyen til høgre øvst, lik infomenyen til venstre |
 | 0.9.27 ✓ | Tydelegare GPS-oppsett (namn etter situasjonen, tabell, åtvaringar). Ny e-postadresse hansps69@gmail.com |
-| 0.9.28 | App-modus i nettlesaren. Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG. Kalibrering av x/y mot innmålt røyr (grusbana 11.11 og 12.11). |
+| 0.9.28 ✓ | Avslutt øvst til høgre. Eige vindauge (app-modus) som Avslutt lukkar saman med cmd (ønske frå Norman 15.11) |
+| 0.9.29 | Lesar for hellingsmålaren som blir vald (WitMotion/Rion), eller ingenting om det blir SBG. Kalibrering av x/y mot innmålt røyr (grusbana 11.11 og 12.11). |
 | 0.9.2x | Rettingar etter felttesten med røyret. Eventuelt opplasting av testpakkar til privat repo (P2) |
 | **1.0** | Når krava over er oppfylte |
 

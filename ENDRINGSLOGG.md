@@ -2,6 +2,19 @@
 
 *Alpindata HP Brunstad Sørensen*
 
+## 0.9.28 – 15. november 2026
+Ønske frå Norman 15.11: Avslutt øvst til høgre, og han skal lukke både nettlesaren og cmd-vindauget.
+- **⏻ Avslutt øvst til høgre** i tittellina, med straumsymbol og raud kant (òg i Dagslys). Han stod før nedst i
+  ikonstripa, der han vart kutta på låge skjermar.
+- **Eige vindauge (app-modus).** Nytt `pc/nettlesar.py`: statussida blir opna i Edge (eller Chrome) med `--app=`,
+  `--user-data-dir` (eiga profil i `%LOCALAPPDATA%\SnowmanGeoscan\nettlesar`), `--no-first-run`. Det er eit
+  vanleg vindauge med minimer/maksimer/lukk, eige ikon på oppgåvelinja og Alt+Tab – ikkje kioskmodus. Avslutt
+  lukkar vindauget: prosessen Geoscan starta, og nettlesarprosessar med profilen til Geoscan (PowerShell), så andre
+  Edge-/Chrome-vindauge ikkje blir rørte. Sida prøver òg `window.close()`.
+- Ny innstilling `app_modus` (standard på) under Retting og lagring: «Opne i eige vindauge (app-modus)». Av, eller
+  utan Edge/Chrome: vanleg fane som før. `nettlesar` er lagt til mappene oppdateringa aldri rører.
+- Ny test.
+
 ## 0.9.27 – 15. november 2026
 - **GPS-oppsett blir lettare å forstå.** Norman spurde 15.11 om Geoscan brukar RTK og NTRIP med «Berre rådata».
   Det gjer han ikkje, men namnet sa det ikkje. Vala heiter no etter situasjonen: «Utan Trimble Access (vanleg)»,
