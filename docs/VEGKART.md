@@ -2,15 +2,22 @@
 
 *Alpindata HP Brunstad Sørensen*
 
-Skrive 9. november 2026, då versjon 0.9.18 var ute. Dette er ein plan og ei idéliste, ikkje lovnader. Punkta
+Skrive 9. november 2026, då versjon 0.9.18 var ute. Oppdatert 16. november 2026 (versjon 0.9.28). Dette er ein plan og ei idéliste, ikkje lovnader. Punkta
 etter 1.0 er moglegheiter som bør vurderast mot kva Norman og andre kundar faktisk treng.
 
-## Kvar vi står (0.9.18)
+## Kvar vi står (0.9.28)
 
 Kjeda R12i → Snowman Geoscan → com0com → OneVision verkar, med NTRIP, RTK FIX, 10 Hz, QH/QV, live-kart med
 skannestripe, val av GPS-oppsett, skriving av `Stream C.xml` og Resultat med objekt frå `.svy`, tverrsnitt og
-grav nedover. Det som manglar mest, er **prov frå felt**: at posisjonane i OneVision stemmer når ein køyrer
-fram og tilbake.
+grav nedover. Sidan 0.9.18 har det kome:
+- bakgrunnsfiler (DXF/KOF), kvalitetsvakt med lyd og Windows-varsel, og aktivitetsstolpe for korreksjonane
+- ny skjerm (B2): kartet i midten, infomeny til venstre og ikonmeny til høgre, som begge kan minimerast
+- 3D-grøft under Resultat med røyra etter og før retting, flyfoto og målsetting
+- satellittar per system (GSA/GSV) og tydelegare GPS-oppsett
+- eige vindauge (app-modus) og Avslutt som lukkar både vindauget og cmd
+
+Det som manglar mest, er framleis **prov frå felt**: at posisjonane i OneVision stemmer når ein køyrer fram og
+tilbake.
 
 ## Versjon 1.0 – krav
 
@@ -34,8 +41,8 @@ fram og tilbake.
 
 **Ferdig i programmet:**
 
-7. Bakgrunnsfiler (DXF og KOF) i kartet.
-8. Status-sida utan rulling: kart og info på same skjerm.
+7. ✓ Bakgrunnsfiler (DXF og KOF) i kartet (0.9.19).
+8. ✓ Status-sida utan rulling: kart og info på same skjerm (0.9.25).
 9. Brukarrettleiing og ei éi-sides «kom i gang» med skjermbilete frå den versjonen Norman har.
 10. Testsjekklista oppdatert til 1.0, og alle punkt godkjende éin gong.
 
@@ -59,8 +66,9 @@ fram og tilbake.
 
 ## Etter 1.0 – versjon 1.x (vidare på same grunnmur)
 
-- **1.1 – Djupnesnitt.** Rette sjølve radarbiletet (kvar sweep) for helling, ikkje berre objekta.
-  Krev `.data`/`.scan`-formatet stadfest (DJUPNESNITT.md).
+- **1.1 – Djupnesnitt og radarvolum i 3D.** Rette sjølve radarbiletet (kvar sweep) for helling, ikkje berre
+  objekta, og vise det som volum i 3D-grøfta (som «Volume» i IQMaps). 3D-grøfta med objekta finst alt (0.9.25).
+  Krev `.data`/`.scan`-formatet stadfest (DJUPNESNITT.md) – Norman er beden om éi måling i begge formata.
 - **1.2 – Dekning.** Kart over kva som er skanna: glipper mellom stripene, prosent dekt av eit område, og
   forslag til neste stripe.
 - **1.3 – Meir på kartet.** IFC/BIM-modellar, utsetting (navigere til eit punkt eller langs ei line),
